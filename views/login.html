@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - AnhTraiStore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body { background: linear-gradient(135deg, var(--slate-100) 0%, var(--white) 100%); min-height: 100vh; }
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .auth-card {
+            background: var(--white);
+            border-radius: var(--radius-2xl);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: var(--shadow-xl);
+        }
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .auth-logo a {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            text-decoration: none;
+        }
+        .auth-logo a span { color: var(--primary); }
+        .auth-title {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 24px;
+            color: var(--dark);
+        }
+        .auth-alert {
+            padding: 14px 16px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .auth-alert.error { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+        .auth-alert.success { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 6px;
+            color: var(--dark);
+        }
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all var(--transition-base);
+        }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-bg); }
+        .btn-auth {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-auth:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45); }
+        .btn-auth:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .auth-options { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+        .auth-options input { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+        .auth-options label { font-size: 0.875rem; color: var(--slate-600); cursor: pointer; }
+        .auth-divider {
+            text-align: center;
+            margin: 24px 0;
+            position: relative;
+        }
+        .auth-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--slate-200);
+        }
+        .auth-divider span {
+            background: var(--white);
+            padding: 0 16px;
+            position: relative;
+            font-size: 0.8rem;
+            color: var(--slate-500);
+        }
+        .btn-social {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--white);
+            margin-bottom: 12px;
+        }
+        .btn-social:hover { border-color: var(--slate-300); background: var(--slate-50); }
+        .auth-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.875rem;
+            color: var(--slate-500);
+        }
+        .auth-footer a { color: var(--primary); font-weight: 600; text-decoration: none; }
+        .auth-footer a:hover { text-decoration: underline; }
+        @media (max-width: 480px) {
+            .auth-card { padding: 32px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <a href="/">Anh<span>Trai</span>Store</a>
+            </div>
+            <h1 class="auth-title">Đăng nhập tài khoản</h1>
+
+            <div id="errorMessage" style="display:none" class="auth-alert error">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control" name="email" id="emailInput" placeholder="example@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" class="form-control" name="password" id="passwordInput" placeholder="Nhập mật khẩu" required>
+                </div>
+                <div class="auth-options">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Lưu mật khẩu</label>
+                </div>
+                <button type="submit" class="btn-auth" id="submitBtn">
+                    <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                </button>
+            </form>
+
+            <div class="auth-divider"><span>hoặc</span></div>
+
+            <button class="btn-social" onclick="alert('Google login coming soon!')">
+                <i class="fab fa-google" style="color:#EA4335"></i> Đăng nhập với Google
+            </button>
+
+            <div class="auth-footer">
+                Quên mật khẩu? <a href="/forgot-password">Khôi phục mật khẩu</a><br><br>
+                Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const savedEmail = localStorage.getItem('savedEmail');
+        const savedPassword = localStorage.getItem('savedPassword');
+        if (localStorage.getItem('rememberMe') === 'true' && savedEmail && savedPassword) {
+            document.getElementById('emailInput').value = savedEmail;
+            document.getElementById('passwordInput').value = savedPassword;
+            document.getElementById('rememberMe').checked = true;
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const submitBtn = document.getElementById('submitBtn');
+            errorEl.style.display = 'none';
+
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const isRemember = document.getElementById('rememberMe').checked;
+
+            if (isRemember) {
+                localStorage.setItem('savedEmail', email);
+                localStorage.setItem('savedPassword', password);
+                localStorage.setItem('rememberMe', 'true');
+            } else {
+                localStorage.removeItem('savedEmail');
+                localStorage.removeItem('savedPassword');
+                localStorage.removeItem('rememberMe');
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Đang xử lý...';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    errorText.textContent = data.error;
+                    errorEl.style.display = 'flex';
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Đăng nhập';
+                    return;
+                }
+
+                window.location.href = data.redirectUrl || '/';
+            } catch (error) {
+                errorText.textContent = 'Đã xảy ra lỗi. Vui lòng thử lại!';
+                errorEl.style.display = 'flex';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Đăng nhập';
+            }
+        });
+    </script>
+    <style>.spin { animation: spin 1s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+</body>
+</html>

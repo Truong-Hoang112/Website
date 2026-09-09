@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý thương hiệu - Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <a href="/admin">
+                    <div class="sidebar-logo-icon"><i class="fas fa-store"></i></div>
+                    <div>
+                        <div class="sidebar-logo-text">AnhTraiStore</div>
+                        <div class="sidebar-logo-sub">Admin Panel</div>
+                    </div>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section"><div class="nav-section-title">Tổng quan</div>
+                    <a href="/admin" class="nav-item"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                </div>
+                <div class="nav-section"><div class="nav-section-title">Quản lý</div>
+                    <a href="/admin/products" class="nav-item"><i class="fas fa-box"></i> Sản phẩm</a>
+                    <a href="/admin/orders" class="nav-item"><i class="fas fa-shopping-bag"></i> Đơn hàng</a>
+                    <a href="/admin/users" class="nav-item"><i class="fas fa-users"></i> Khách hàng</a>
+                    <a href="/admin/reviews" class="nav-item"><i class="fas fa-star"></i> Đánh giá</a>
+                    <a href="/admin/contacts" class="nav-item"><i class="fas fa-envelope"></i> Liên hệ</a>
+                </div>
+                <div class="nav-section"><div class="nav-section-title">Hệ thống</div>
+                    <a href="/" class="nav-item" target="_blank"><i class="fas fa-external-link-alt"></i> Xem cửa hàng</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user" id="adminUser">
+                    <div class="sidebar-avatar">A</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">Admin</div>
+                        <div class="sidebar-user-role">Quản trị viên</div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="top-header-left">
+                    <h1 class="top-header-title">Quản lý thương hiệu</h1>
+                </div>
+                <div class="top-header-right">
+                    <span class="header-date" id="currentDate"></span>
+                    <button class="btn btn-primary" onclick="openModal()">
+                        <i class="fas fa-plus"></i> Thêm thương hiệu
+                    </button>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div id="alertBox"></div>
+                
+                <div class="card">
+                    <div class="card-body" style="padding: 0;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">#</th>
+                                    <th>Tên thương hiệu</th>
+                                    <th>Slug</th>
+                                    <th>Trạng thái</th>
+                                    <th style="width: 150px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="brandsBody">
+                                <tr><td colspan="5" style="text-align: center; padding: 48px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--gray-400);"></i></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="brandModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle"><i class="fas fa-tag"></i> Thêm thương hiệu</h2>
+                <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="brandForm">
+                    <input type="hidden" id="brandId">
+                    <div class="form-group">
+                        <label class="form-label">Tên thương hiệu <span style="color: var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="brandName" required placeholder="VD: Apple, Samsung">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Slug</label>
+                        <input type="text" class="form-control" id="brandSlug" placeholder="auto-generated-from-name">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Hủy bỏ</button>
+                <button class="btn btn-primary" onclick="saveBrand()"><i class="fas fa-save"></i> Lưu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editingId = null;
+
+        async function adminLogout() {
+            if (!confirm('Đăng xuất?')) return;
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+            try {
+                const userRes = await fetch('/api/auth/me', { credentials: 'include' });
+                const userData = await userRes.json();
+                if (userData.user) {
+                    document.getElementById('adminUser').innerHTML = `<div class="sidebar-avatar">${userData.user.full_name?.charAt(0) || 'A'}</div><div class="sidebar-user-info"><div class="sidebar-user-name">${userData.user.full_name || 'Admin'}</div><div class="sidebar-user-role">Quản trị viên</div></div>`;
+                }
+            } catch (e) {}
+            loadBrands();
+
+            document.getElementById('brandName').addEventListener('input', function() {
+                document.getElementById('brandSlug').value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            });
+        });
+
+        async function loadBrands() {
+            try {
+                const res = await fetch('/api/brands', { credentials: 'include' });
+                const data = await res.json();
+                const brands = data.brands || [];
+                const tbody = document.getElementById('brandsBody');
+
+                if (brands.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-tag"></i><h3>Chưa có thương hiệu nào</h3></div></td></tr>`;
+                    return;
+                }
+
+                let html = '';
+                brands.forEach((b, i) => {
+                    html += `<tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${b.name}</strong></td>
+                        <td><code style="font-size: 0.8rem;">${b.slug}</code></td>
+                        <td><span class="badge ${b.is_active == 1 ? 'badge-success' : 'badge-danger'}">${b.is_active == 1 ? 'Hoạt động' : 'Không hoạt động'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="editBrand(${b.id}, '${b.name}', '${b.slug}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteBrand(${b.id})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+            } catch (e) {
+                document.getElementById('brandsBody').innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Lỗi tải dữ liệu</h3></div></td></tr>`;
+            }
+        }
+
+        function openModal() {
+            editingId = null;
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Thêm thương hiệu';
+            document.getElementById('brandForm').reset();
+            document.getElementById('brandId').value = '';
+            document.getElementById('brandModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('brandModal').classList.remove('show');
+            editingId = null;
+        }
+
+        function editBrand(id, name, slug) {
+            editingId = id;
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Sửa thương hiệu';
+            document.getElementById('brandId').value = id;
+            document.getElementById('brandName').value = name;
+            document.getElementById('brandSlug').value = slug;
+            document.getElementById('brandModal').classList.add('show');
+        }
+
+        async function saveBrand() {
+            const name = document.getElementById('brandName').value.trim();
+            const slug = document.getElementById('brandSlug').value.trim() || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+            if (!name) {
+                showAlert('Vui lòng nhập tên thương hiệu!', 'error');
+                return;
+            }
+
+            try {
+                const url = editingId ? `/api/brands/${editingId}` : '/api/brands';
+                const method = editingId ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'include',
+                    body: JSON.stringify({ name, slug, is_active: 1 })
+                });
+
+                if (res.ok) {
+                    showAlert(editingId ? 'Cập nhật thành công!' : 'Thêm thành công!', 'success');
+                    closeModal();
+                    loadBrands();
+                } else {
+                    showAlert('Có lỗi xảy ra!', 'error');
+                }
+            } catch (e) {
+                showAlert('Lỗi khi lưu!', 'error');
+            }
+        }
+
+        async function deleteBrand(id) {
+            if (!confirm('Xóa thương hiệu này?')) return;
+            try {
+                const res = await fetch(`/api/brands/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'include'
+                });
+                if (res.ok) {
+                    showAlert('Xóa thành công!', 'success');
+                    loadBrands();
+                }
+            } catch (e) {
+                showAlert('Lỗi khi xóa!', 'error');
+            }
+        }
+
+        function showAlert(message, type) {
+            const box = document.getElementById('alertBox');
+            box.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => { box.innerHTML = ''; }, 3000);
+        }
+
+        document.getElementById('brandModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chính sách - AnhTraiStore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome-6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, var(--dark) 0%, var(--slate-800) 100%);
+            padding: 60px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 30% 0%, rgba(79, 70, 229, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .page-header p {
+            color: rgba(255,255,255,0.7);
+            font-size: 1rem;
+            position: relative;
+        }
+        
+        .content-wrap {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+        
+        .toc-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-2xl);
+            padding: 24px;
+            margin-bottom: 32px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .toc-item {
+            padding: 10px 20px;
+            background: var(--slate-50);
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--slate-600);
+            text-decoration: none;
+            transition: all var(--transition-base);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toc-item:hover {
+            background: var(--primary-bg);
+            color: var(--primary);
+        }
+        .toc-item i { font-size: 1rem; }
+        
+        .policy-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-2xl);
+            padding: 32px;
+            margin-bottom: 24px;
+            transition: all var(--transition-base);
+        }
+        .policy-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 10px 40px -10px rgba(79, 70, 229, 0.15);
+        }
+        .policy-card h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .policy-card h2 i {
+            width: 44px;
+            height: 44px;
+            background: var(--primary-bg);
+            color: var(--primary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .policy-card p {
+            color: var(--slate-600);
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+        .policy-card ul {
+            padding-left: 0;
+            list-style: none;
+        }
+        .policy-card li {
+            color: var(--slate-600);
+            line-height: 1.8;
+            margin-bottom: 10px;
+            padding-left: 24px;
+            position: relative;
+        }
+        .policy-card li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+        .policy-card li strong { color: var(--dark); }
+        
+        .highlight-box {
+            background: var(--primary-bg);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            border-radius: var(--radius-xl);
+            padding: 20px;
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .highlight-box i {
+            color: var(--primary);
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .highlight-box p {
+            margin: 0;
+            color: var(--slate-700);
+        }
+        
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .payment-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--slate-50);
+            border-radius: var(--radius-lg);
+        }
+        .payment-item i {
+            width: 40px;
+            height: 40px;
+            background: var(--white);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        .payment-item span { font-weight: 600; color: var(--dark); font-size: 0.9rem; }
+        
+        @media (max-width: 768px) {
+            .page-header { padding: 40px 0; }
+            .page-header h1 { font-size: 1.5rem; }
+            .policy-card { padding: 24px; }
+            .payment-methods { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-inner">
+            <span class="topbar-item"><i class="bi bi-shield-check"></i> Hàng chính hãng 100%</span>
+            <span class="topbar-item"><i class="bi bi-truck"></i> Miễn phí ship đơn từ 500K</span>
+            <span class="topbar-item"><i class="bi bi-arrow-repeat"></i> Đổi trả trong 30 ngày</span>
+            <span class="topbar-item"><i class="bi bi-telephone"></i> Hotline: 1800 2097</span>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">Anh<span>Trai</span>Store</a>
+            <div class="search-wrap">
+                <button class="search-btn"><i class="bi bi-search"></i></button>
+                <input type="text" id="searchInput" placeholder="Bạn muốn tìm gì hôm nay?" autocomplete="off">
+                <div id="searchSuggest" class="search-suggest"></div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/products" class="nav-link"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a></li>
+                <li><a href="/products?sort=discount" class="nav-link"><i class="bi bi-tag"></i> Khuyến mãi</a></li>
+                <li><a href="/policy" class="nav-link active"><i class="bi bi-file-text"></i> Chính sách</a></li>
+                <li><a href="/contact" class="nav-link"><i class="bi bi-headset"></i> Liên hệ</a></li>
+            </ul>
+            <a href="/cart" class="cart-link">
+                <i class="bi bi-bag"></i> Giỏ hàng
+                <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+            </a>
+            <div id="userArea"></div>
+            <button class="hamburger-nav" onclick="openMobileMenu()"><i class="bi bi-list"></i></button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <span class="navbar-brand">Anh<span>Trai</span>Store</span>
+            <button class="mobile-menu-close" onclick="closeMobileMenu()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="mobile-search">
+            <input type="text" id="mobileSearchInput" placeholder="Tìm sản phẩm...">
+        </div>
+        <nav class="mobile-nav">
+            <a href="/products" class="mobile-nav-item"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a>
+            <a href="/products?sort=discount" class="mobile-nav-item"><i class="bi bi-tag"></i> Khuyến mãi</a>
+            <a href="/policy" class="mobile-nav-item active"><i class="bi bi-file-text"></i> Chính sách</a>
+            <a href="/contact" class="mobile-nav-item"><i class="bi bi-headset"></i> Liên hệ</a>
+            <div class="mobile-nav-divider"></div>
+            <a href="/cart" class="mobile-nav-item"><i class="bi bi-bag"></i> Giỏ hàng</a>
+            <div id="mobileUserArea"></div>
+        </nav>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1><i class="bi bi-shield-check"></i> Chính sách</h1>
+            <p>Cam kết mang đến dịch vụ tốt nhất cho khách hàng</p>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-wrap">
+        <!-- Table of Contents -->
+        <div class="toc-card">
+            <a href="#return" class="toc-item"><i class="bi bi-arrow-repeat"></i> Đổi trả</a>
+            <a href="#warranty" class="toc-item"><i class="bi bi-shield-check"></i> Bảo hành</a>
+            <a href="#shipping" class="toc-item"><i class="bi bi-truck"></i> Vận chuyển</a>
+            <a href="#payment" class="toc-item"><i class="bi bi-credit-card"></i> Thanh toán</a>
+        </div>
+
+        <!-- Return Policy -->
+        <div class="policy-card" id="return">
+            <h2><i class="bi bi-arrow-repeat"></i> Chính sách đổi trả hàng</h2>
+            <p>AnhTraiStore cam kết mang đến cho khách hàng những sản phẩm chất lượng nhất. Nếu bạn không hài lòng, chúng tôi sẵn sàng hỗ trợ đổi trả với các điều kiện sau:</p>
+            <ul>
+                <li>Đổi trả trong vòng <strong>30 ngày</strong> kể từ ngày nhận hàng</li>
+                <li>Sản phẩm còn nguyên vẹn, chưa qua sử dụng và còn đầy đủ phụ kiện đi kèm</li>
+                <li>Còn tem mác, phiếu bảo hành và hóa đơn mua hàng</li>
+                <li>Sản phẩm không bị hư hỏng do lỗi từ phía khách hàng</li>
+            </ul>
+            <div class="highlight-box">
+                <i class="bi bi-info-circle-fill"></i>
+                <p><strong>Lưu ý:</strong> Phí vận chuyển đổi trả được khách hàng chịu trong trường hợp đổi trả do lỗi từ phía khách. Đổi trả miễn phí chỉ áp dụng cho lỗi từ nhà sản xuất.</p>
+            </div>
+        </div>
+
+        <!-- Warranty Policy -->
+        <div class="policy-card" id="warranty">
+            <h2><i class="bi bi-shield-check"></i> Chính sách bảo hành</h2>
+            <p>Tất cả sản phẩm tại AnhTraiStore đều được bảo hành chính hãng theo quy định của từng hãng:</p>
+            <ul>
+                <li><strong>Điện thoại:</strong> Bảo hành 12 tháng theo chính sách hãng (Apple, Samsung, Xiaomi...)</li>
+                <li><strong>Phụ kiện:</strong> Bảo hành từ 06 đến 12 tháng tùy sản phẩm</li>
+                <li>Bảo hành tại tất cả chi nhánh hoặc trung tâm bảo hành ủy quyền</li>
+            </ul>
+            <h4 style="margin: 20px 0 12px; color: var(--danger); font-size: 1rem;">Trường hợp không được bảo hành:</h4>
+            <ul>
+                <li>Sản phẩm bị hư hỏng do va đập, rơi vỡ, vào nước</li>
+                <li>Sản phẩm bị sửa chữa tại nơi không phải trung tâm bảo hành ủy quyền</li>
+                <li>Sản phẩm có dấu hiệu bị cạy mở, thay đổi linh kiện</li>
+                <li>Sản phẩm hết thời hạn bảo hành</li>
+            </ul>
+        </div>
+
+        <!-- Shipping Policy -->
+        <div class="policy-card" id="shipping">
+            <h2><i class="bi bi-truck"></i> Chính sách vận chuyển</h2>
+            <p>AnhTraiStore vận chuyển hàng hóa toàn quốc với chi phí tối ưu nhất:</p>
+            <ul>
+                <li><strong>Miễn phí vận chuyển</strong> cho đơn hàng từ <strong>500.000đ</strong></li>
+                <li><strong>Phí ship 30.000đ</strong> cho đơn hàng dưới 500.000đ</li>
+                <li>Thời gian giao hàng: <strong>2-5 ngày làm việc</strong> tùy khu vực</li>
+                <li>Giao hàng nhanh trong ngày cho khu vực TP.HCM (phụ phí)</li>
+                <li>Theo dõi đơn hàng trực tiếp qua website hoặc ứng dụng</li>
+            </ul>
+            <div class="highlight-box">
+                <i class="bi bi-truck" style="font-size: 1.5rem;"></i>
+                <p>Đơn hàng từ 2.000.000đ được <strong>giao hàng nhanh 24h</strong> hoàn toàn miễn phí!</p>
+            </div>
+        </div>
+
+        <!-- Payment Policy -->
+        <div class="policy-card" id="payment">
+            <h2><i class="bi bi-credit-card"></i> Phương thức thanh toán</h2>
+            <p>AnhTraiStore hỗ trợ nhiều hình thức thanh toán an toàn và tiện lợi:</p>
+            <div class="payment-methods">
+                <div class="payment-item">
+                    <i class="bi bi-truck"></i>
+                    <span>Thanh toán khi nhận hàng (COD)</span>
+                </div>
+                <div class="payment-item">
+                    <i class="bi bi-credit-card-2-front"></i>
+                    <span>Thẻ ATM nội địa</span>
+                </div>
+                <div class="payment-item">
+                    <i class="bi bi-credit-card"></i>
+                    <span>Thẻ Visa / Mastercard</span>
+                </div>
+                <div class="payment-item">
+                    <i class="bi bi-wallet2"></i>
+                    <span>Ví MoMo, ZaloPay, VNPay</span>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 20px;">
+                <i class="bi bi-shield-lock-fill"></i>
+                <p>Tất cả giao dịch thanh toán được bảo mật bằng công nghệ mã hóa SSL 256-bit. Thông tin thẻ của bạn hoàn toàn an toàn.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px;">
+                <div>
+                    <div class="footer-brand">AnhTrai<span>Store</span></div>
+                    <p class="footer-desc">Chuỗi cửa hàng điện thoại & phụ kiện chính hãng uy tín toàn quốc.</p>
+                </div>
+                <div>
+                    <div class="footer-heading">Sản phẩm</div>
+                    <ul class="footer-links">
+                        <li><a href="/products">Tất cả sản phẩm</a></li>
+                        <li><a href="/products?sort=discount">Khuyến mãi</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-heading">Hỗ trợ</div>
+                    <ul class="footer-links">
+                        <li><a href="/policy">Chính sách</a></li>
+                        <li><a href="/contact">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-heading">Liên hệ</div>
+                    <div class="footer-contact-item"><i class="bi bi-telephone"></i><span>1800 2097</span></div>
+                    <div class="footer-contact-item"><i class="bi bi-envelope"></i><span>anhtraisstore@gmail.com</span></div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>&copy; 2026 AnhTraiStore. Tất cả quyền được bảo lưu.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/chatbox.js"></script>
+    <div id="aiChatboxRoot"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/components/ai-chatbox.html')
+                .then(r => r.text())
+                .then(h => {
+                    var root = document.getElementById('aiChatboxRoot');
+                    if (root) { root.innerHTML = h; if (window.initChatbox) initChatbox(); }
+                });
+        });
+    </script>
+</body>
+</html>

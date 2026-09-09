@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn hàng - AnhTraiStore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-bg: #eef2ff;
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --info: #8b5cf6;
+            --info-bg: #f5f3ff;
+            --dark: #0f172a;
+            --slate-700: #334155;
+            --slate-600: #475569;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --slate-200: #e2e8f0;
+            --slate-100: #f1f5f9;
+            --white: #ffffff;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-2xl: 24px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
+            --transition: all 0.25s ease;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 48px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .page-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .page-header-content { position: relative; z-index: 1; }
+        .page-header-icon { font-size: 3rem; margin-bottom: 12px; }
+        .page-header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; }
+        .page-header p { opacity: 0.9; font-size: 1rem; }
+        
+        /* ===== MAIN CONTAINER ===== */
+        .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+        
+        /* ===== STATS BAR ===== */
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--white);
+            padding: 16px 20px;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            white-space: nowrap;
+            min-width: max-content;
+        }
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        .stat-icon.total { background: var(--primary-bg); color: var(--primary); }
+        .stat-icon.pending { background: var(--warning-bg); color: var(--warning); }
+        .stat-icon.shipping { background: var(--info-bg); color: var(--info); }
+        .stat-icon.done { background: var(--success-bg); color: var(--success); }
+        .stat-number { font-size: 1.5rem; font-weight: 800; color: var(--dark); line-height: 1; }
+        .stat-label { font-size: 0.8rem; color: var(--slate-500); font-weight: 500; }
+        
+        /* ===== ORDER CARD ===== */
+        .order-card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--slate-100);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+        .order-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+        
+        /* Order Header */
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--slate-100);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .order-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .order-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-bg);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+        .order-info h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 2px;
+        }
+        .order-date {
+            font-size: 0.8rem;
+            color: var(--slate-500);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-badge i { font-size: 0.875rem; }
+        .status-pending { background: var(--warning-bg); color: #b45309; }
+        .status-confirmed { background: var(--info-bg); color: #7c3aed; }
+        .status-shipping { background: var(--primary-bg); color: #4338ca; }
+        .status-delivered { background: var(--success-bg); color: #047857; }
+        .status-cancelled { background: var(--danger-bg); color: #b91c1c; }
+        
+        /* Order Body */
+        .order-body { padding: 16px 24px; }
+        
+        /* Progress Bar */
+        .progress-track {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+        .progress-step {
+            display: flex;
+            align-items: center;
+        }
+        .progress-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--slate-100);
+            color: var(--slate-400);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            transition: var(--transition);
+        }
+        .progress-step.completed .progress-dot { background: var(--success); color: white; }
+        .progress-step.active .progress-dot { background: var(--primary); color: white; box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
+        .progress-line {
+            width: 60px;
+            height: 3px;
+            background: var(--slate-100);
+            position: relative;
+        }
+        .progress-line::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: var(--success);
+            transition: width 0.5s ease;
+        }
+        .progress-line.filled::after { width: 100%; }
+        
+        /* Order Footer */
+        .order-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: var(--slate-50);
+            border-top: 1px solid var(--slate-100);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .order-total {
+            display: flex;
+            flex-direction: column;
+        }
+        .order-total-label { font-size: 0.75rem; color: var(--slate-500); }
+        .order-total-value { font-size: 1.25rem; font-weight: 800; color: var(--danger); }
+        .order-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        .order-action:hover { background: var(--primary-dark); color: white; transform: translateY(-1px); }
+        
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+        }
+        .empty-icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
+        .empty-state h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; color: var(--dark); }
+        .empty-state p { color: var(--slate-500); margin-bottom: 24px; }
+        .btn-shop {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        .btn-shop:hover { background: var(--primary-dark); color: white; transform: translateY(-2px); }
+        
+        /* ===== LOADING ===== */
+        .loading { text-align: center; padding: 60px; background: var(--white); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); }
+        .loading i { font-size: 2.5rem; color: var(--primary); animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .page-header { padding: 32px 16px; }
+            .page-header h1 { font-size: 1.5rem; }
+            .container { padding: 24px 16px; }
+            .order-header { padding: 16px; }
+            .order-body { padding: 12px 16px; }
+            .order-footer { padding: 12px 16px; }
+            .progress-line { width: 30px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-inner">
+            <span class="topbar-item"><i class="bi bi-shield-check"></i> Hàng chính hãng 100%</span>
+            <span class="topbar-item"><i class="bi bi-truck"></i> Miễn phí ship đơn từ 500K</span>
+            <span class="topbar-item"><i class="bi bi-arrow-repeat"></i> Đổi trả trong 30 ngày</span>
+            <span class="topbar-item"><i class="bi bi-telephone"></i> Hotline: 1800 2097</span>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">Anh<span>Trai</span>Store</a>
+            <div class="search-wrap">
+                <button class="search-btn"><i class="bi bi-search"></i></button>
+                <input type="text" id="searchInput" placeholder="Bạn muốn tìm gì hôm nay?" autocomplete="off">
+                <div id="searchSuggest" class="search-suggest"></div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/products" class="nav-link"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a></li>
+                <li><a href="/products?sort=discount" class="nav-link"><i class="bi bi-tag"></i> Khuyến mãi</a></li>
+                <li><a href="/policy" class="nav-link"><i class="bi bi-file-text"></i> Chính sách</a></li>
+                <li><a href="/contact" class="nav-link"><i class="bi bi-headset"></i> Liên hệ</a></li>
+            </ul>
+            <a href="/cart" class="cart-link"><i class="bi bi-bag"></i> Giỏ hàng <span class="cart-badge" id="cartBadge" style="display:none">0</span></a>
+            <div id="userArea"></div>
+            <button class="hamburger-nav" onclick="openMobileMenu()"><i class="bi bi-list"></i></button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <span class="navbar-brand">Anh<span>Trai</span>Store</span>
+            <button class="mobile-menu-close" onclick="closeMobileMenu()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="mobile-search">
+            <input type="text" id="mobileSearchInput" placeholder="Tìm sản phẩm...">
+        </div>
+        <nav class="mobile-nav">
+            <a href="/products" class="mobile-nav-item"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a>
+            <a href="/products?sort=discount" class="mobile-nav-item"><i class="bi bi-tag"></i> Khuyến mãi</a>
+            <a href="/policy" class="mobile-nav-item"><i class="bi bi-file-text"></i> Chính sách</a>
+            <a href="/contact" class="mobile-nav-item"><i class="bi bi-headset"></i> Liên hệ</a>
+            <div class="mobile-nav-divider"></div>
+            <a href="/cart" class="mobile-nav-item"><i class="bi bi-bag"></i> Giỏ hàng</a>
+            <div id="mobileUserArea"></div>
+        </nav>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <div class="page-header-icon"><i class="bi bi-receipt"></i></div>
+            <h1>Đơn hàng của tôi</h1>
+            <p>Theo dõi và quản lý đơn hàng dễ dàng</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-item">
+                <div class="stat-icon total"><i class="bi bi-list-ul"></i></div>
+                <div>
+                    <div class="stat-number" id="statTotal">0</div>
+                    <div class="stat-label">Tổng đơn</div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon pending"><i class="bi bi-clock"></i></div>
+                <div>
+                    <div class="stat-number" id="statPending">0</div>
+                    <div class="stat-label">Chờ xử lý</div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon shipping"><i class="bi bi-truck"></i></div>
+                <div>
+                    <div class="stat-number" id="statShipping">0</div>
+                    <div class="stat-label">Đang giao</div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon done"><i class="bi bi-check-circle"></i></div>
+                <div>
+                    <div class="stat-number" id="statDelivered">0</div>
+                    <div class="stat-label">Hoàn thành</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders List -->
+        <div id="ordersContent"></div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initApp();
+            await loadOrders();
+        });
+
+        async function loadOrders() {
+            try {
+                document.getElementById('ordersContent').innerHTML = '<div class="loading"><i class="bi bi-arrow-repeat"></i></div>';
+
+                const response = await fetch('/api/orders');
+                const data = await response.json();
+                const container = document.getElementById('ordersContent');
+
+                // Stats
+                let stats = { total: 0, pending: 0, shipping: 0, delivered: 0 };
+                if (data.orders) {
+                    stats.total = data.orders.length;
+                    data.orders.forEach(o => {
+                        if (o.status === 'pending') stats.pending++;
+                        if (o.status === 'shipping') stats.shipping++;
+                        if (o.status === 'delivered') stats.delivered++;
+                    });
+                }
+                document.getElementById('statTotal').textContent = stats.total;
+                document.getElementById('statPending').textContent = stats.pending;
+                document.getElementById('statShipping').textContent = stats.shipping;
+                document.getElementById('statDelivered').textContent = stats.delivered;
+
+                if (!data.orders || data.orders.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-bag-x"></i></div>
+                            <h3>Chưa có đơn hàng nào</h3>
+                            <p>Hãy bắt đầu mua sắm để có đơn hàng đầu tiên nhé!</p>
+                            <a href="/products" class="btn-shop"><i class="bi bi-bag"></i> Mua sắm ngay</a>
+                        </div>`;
+                    return;
+                }
+
+                const statusConfig = {
+                    'pending': { label: 'Chờ xác nhận', icon: 'bi-clock', class: 'status-pending' },
+                    'confirmed': { label: 'Đã xác nhận', icon: 'bi-check-circle', class: 'status-confirmed' },
+                    'shipping': { label: 'Đang giao', icon: 'bi-truck', class: 'status-shipping' },
+                    'delivered': { label: 'Hoàn thành', icon: 'bi-check-circle-fill', class: 'status-delivered' },
+                    'cancelled': { label: 'Đã hủy', icon: 'bi-x-circle', class: 'status-cancelled' }
+                };
+
+                const timelineSteps = {
+                    'pending': 0,
+                    'confirmed': 1,
+                    'shipping': 2,
+                    'delivered': 3,
+                    'cancelled': -1
+                };
+
+                let html = '';
+                data.orders.forEach(order => {
+                    const status = statusConfig[order.status] || statusConfig.pending;
+                    const date = new Date(order.created_at).toLocaleDateString('vi-VN', { 
+                        day: '2-digit', month: '2-digit', year: 'numeric'
+                    });
+                    const currentStep = timelineSteps[order.status] ?? 0;
+                    
+                    html += `
+                    <a href="/order/${order.id}" class="order-card">
+                        <div class="order-header">
+                            <div class="order-meta">
+                                <div class="order-icon"><i class="bi bi-receipt"></i></div>
+                                <div class="order-info">
+                                    <h3>${order.payment_code}</h3>
+                                    <span class="order-date"><i class="bi bi-calendar3"></i> ${date}</span>
+                                </div>
+                            </div>
+                            <span class="status-badge ${status.class}">
+                                <i class="bi ${status.icon}"></i> ${status.label}
+                            </span>
+                        </div>
+                        <div class="order-body">
+                            ${order.status !== 'cancelled' ? `
+                            <div class="progress-track">
+                                <div class="progress-step ${currentStep >= 0 ? (currentStep > 0 ? 'completed' : 'active') : ''}">
+                                    <div class="progress-dot">${currentStep > 0 ? '<i class="bi bi-check"></i>' : '1'}</div>
+                                </div>
+                                <div class="progress-line ${currentStep >= 1 ? 'filled' : ''}"></div>
+                                <div class="progress-step ${currentStep >= 1 ? (currentStep > 1 ? 'completed' : 'active') : ''}">
+                                    <div class="progress-dot">${currentStep > 1 ? '<i class="bi bi-check"></i>' : '2'}</div>
+                                </div>
+                                <div class="progress-line ${currentStep >= 2 ? 'filled' : ''}"></div>
+                                <div class="progress-step ${currentStep >= 2 ? (currentStep > 2 ? 'completed' : 'active') : ''}">
+                                    <div class="progress-dot">${currentStep > 2 ? '<i class="bi bi-check"></i>' : '3'}</div>
+                                </div>
+                                <div class="progress-line ${currentStep >= 3 ? 'filled' : ''}"></div>
+                                <div class="progress-step ${currentStep >= 3 ? 'completed' : ''}">
+                                    <div class="progress-dot"><i class="bi bi-check"></i></div>
+                                </div>
+                            </div>
+                            ` : '<p style="color:var(--slate-500);font-size:0.875rem;text-align:center">Đơn hàng đã bị hủy</p>'}
+                        </div>
+                        <div class="order-footer">
+                            <div class="order-total">
+                                <span class="order-total-label">Tổng thanh toán</span>
+                                <span class="order-total-value">${formatPrice(order.total_price)}đ</span>
+                            </div>
+                            <span class="order-action">
+                                <i class="bi bi-eye"></i> Chi tiết
+                            </span>
+                        </div>
+                    </a>`;
+                });
+
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('ordersContent').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                        <h3>Đã xảy ra lỗi</h3>
+                        <p>Không thể tải đơn hàng. Vui lòng thử lại!</p>
+                        <a href="javascript:location.reload()" class="btn-shop"><i class="bi bi-arrow-repeat"></i> Tải lại</a>
+                    </div>`;
+            }
+        }
+    </script>
+    <script src="/js/chatbox.js"></script>
+    <div id="aiChatboxRoot"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/components/ai-chatbox.html').then(r => r.text()).then(h => {
+                var root = document.getElementById('aiChatboxRoot');
+                if (root) root.innerHTML = h;
+            });
+        });
+    </script>
+</body>
+</html>

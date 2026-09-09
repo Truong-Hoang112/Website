@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản - AnhTraiStore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-bg: #eef2ff;
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --dark: #1e293b;
+            --gray-600: #64748b;
+            --gray-500: #64748b;
+            --gray-400: #94a3b8;
+            --gray-300: #cbd5e1;
+            --gray-200: #e2e8f0;
+            --gray-100: #f1f5f9;
+            --white: #ffffff;
+            --radius-xl: 16px;
+            --radius-2xl: 24px;
+            --shadow-lg: 0 10px 40px -10px rgba(0,0,0,0.15);
+            --shadow-xl: 0 20px 50px -12px rgba(0,0,0,0.2);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; margin: 0; }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, #3730a3 100%);
+            color: white;
+            padding: 60px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: pulse 15s ease infinite;
+        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .page-header-content { position: relative; z-index: 1; }
+        .page-header-icon { font-size: 4rem; margin-bottom: 16px; display: block; }
+        .page-header h1 { font-size: 2.25rem; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.02em; }
+        .page-header p { opacity: 0.9; margin: 0; font-size: 1.05rem; }
+
+        /* Container */
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+        .profile-container { max-width: 1100px; margin: -40px auto 40px; padding: 0 24px; position: relative; z-index: 2; }
+
+        /* Profile Grid */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+        }
+
+        /* Sidebar Card */
+        .profile-sidebar {
+            background: var(--white);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            height: fit-content;
+        }
+        .profile-user-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+        }
+        .profile-user-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        }
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+        .profile-user-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
+        }
+        .profile-user-role {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            padding: 4px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50px;
+            display: inline-block;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Sidebar Menu */
+        .profile-menu {
+            padding: 16px 0;
+        }
+        .profile-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 24px;
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+        .profile-menu-item:hover {
+            background: var(--gray-100);
+            border-left-color: var(--primary);
+            color: var(--primary);
+        }
+        .profile-menu-item i { font-size: 1.2rem; width: 24px; text-align: center; }
+        .profile-menu-item.active {
+            background: var(--primary-bg);
+            border-left-color: var(--primary);
+            color: var(--primary);
+        }
+        .profile-menu-item.logout { color: var(--danger); }
+        .profile-menu-item.logout:hover { background: var(--danger-bg); border-left-color: var(--danger); }
+
+        /* Main Card */
+        .profile-main {
+            background: var(--white);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+        .profile-section-header {
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .profile-section-header i { color: var(--primary); font-size: 1.5rem; }
+        .profile-section-title { font-size: 1.2rem; font-weight: 700; color: var(--dark); margin: 0; }
+
+        /* Form */
+        .profile-form {
+            padding: 28px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        .form-label span { color: var(--danger); }
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-xl);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--white);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+        .form-input:disabled {
+            background: var(--gray-100);
+            color: var(--gray-500);
+        }
+        .form-input::placeholder { color: var(--gray-400); }
+        select.form-input { cursor: pointer; }
+        select.form-input:disabled { cursor: not-allowed; }
+
+        /* Address Grid */
+        .address-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .address-grid .form-group:nth-child(4) { grid-column: 1 / -1; }
+
+        /* Save Button */
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 16px 36px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5); }
+        .form-actions { display: flex; justify-content: flex-end; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--gray-200); }
+
+        /* Admin Button */
+        .btn-admin {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 16px 24px;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        .btn-admin:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5); }
+
+        /* Success Message */
+        .alert {
+            padding: 16px 20px;
+            border-radius: var(--radius-xl);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+        .alert-success { background: var(--success-bg); color: #047857; border: 1px solid #a7f3d0; }
+        .alert-error { background: var(--danger-bg); color: #b91c1c; border: 1px solid #fecaca; }
+        .alert i { font-size: 1.2rem; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .profile-grid { grid-template-columns: 1fr; }
+            .profile-sidebar { order: -1; }
+            .profile-user-card { padding: 24px; }
+        }
+        @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: 1; }
+            .address-grid { grid-template-columns: 1fr; }
+            .address-grid .form-group:nth-child(4) { grid-column: 1; }
+            .page-header h1 { font-size: 1.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-inner">
+            <span class="topbar-item"><i class="bi bi-shield-check"></i> Hàng chính hãng 100%</span>
+            <span class="topbar-item"><i class="bi bi-truck"></i> Miễn phí ship đơn từ 500K</span>
+            <span class="topbar-item"><i class="bi bi-arrow-repeat"></i> Đổi trả trong 30 ngày</span>
+            <span class="topbar-item"><i class="bi bi-telephone"></i> Hotline: 1800 2097</span>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">AnhTraiStore</a>
+            <div class="search-wrap">
+                <input type="text" id="searchInput" placeholder="Bạn muốn tìm gì hôm nay?" autocomplete="off">
+                <button class="search-btn" onclick="goSearch()"><i class="bi bi-search"></i></button>
+                <div id="searchSuggest" class="search-suggest"></div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/products" class="nav-link"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a></li>
+                <li><a href="/products?sort=discount" class="nav-link"><i class="bi bi-tag"></i> Khuyến mãi</a></li>
+                <li><a href="/policy" class="nav-link"><i class="bi bi-file-text"></i> Chính sách</a></li>
+                <li><a href="/contact" class="nav-link"><i class="bi bi-headset"></i> Liên hệ</a></li>
+            </ul>
+            <a href="/cart" class="cart-link"><i class="bi bi-bag"></i> Giỏ hàng <span class="cart-badge" id="cartBadge" style="display:none">0</span></a>
+            <div id="userArea"></div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <span class="page-header-icon">👤</span>
+            <h1>Tài khoản của tôi</h1>
+            <p>Quản lý thông tin cá nhân và đơn hàng</p>
+        </div>
+    </div>
+
+    <div class="profile-container">
+        <div class="profile-grid">
+            <!-- Sidebar -->
+            <div class="profile-sidebar">
+                <div class="profile-user-card">
+                    <div class="profile-avatar"><i class="bi bi-person-fill"></i></div>
+                    <div class="profile-user-name" id="profileUserName">Đang tải...</div>
+                    <div class="profile-user-role" id="profileUserRole">Khách hàng</div>
+                </div>
+                <div class="profile-menu">
+                    <a href="/profile" class="profile-menu-item active">
+                        <i class="bi bi-person"></i> Thông tin cá nhân
+                    </a>
+                    <a href="/orders" class="profile-menu-item">
+                        <i class="bi bi-bag-check"></i> Đơn hàng của tôi
+                    </a>
+                    <a href="javascript:void(0)" class="profile-menu-item logout" onclick="logout()">
+                        <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                    </a>
+                </div>
+                <div id="adminBtnContainer"></div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="profile-main">
+                <div class="profile-section-header">
+                    <i class="bi bi-pencil-square"></i>
+                    <h2 class="profile-section-title">Cập nhật thông tin</h2>
+                </div>
+                <div class="profile-form">
+                    <div id="alertContainer"></div>
+                    
+                    <form id="profileForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Họ và tên <span>*</span></label>
+                                <input type="text" class="form-input" name="full_name" id="fullName" required placeholder="Nhập họ tên đầy đủ">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-input" name="phone" id="phone" placeholder="Nhập số điện thoại">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Ngày sinh</label>
+                                <input type="date" class="form-input" name="birthdate" id="birthdate">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Giới tính</label>
+                                <select class="form-input" name="gender" id="gender">
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="male">Nam</option>
+                                    <option value="female">Nữ</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="email" disabled placeholder="Email của bạn">
+                            </div>
+                        </div>
+
+                        <div class="profile-section-header" style="margin: 0 -28px 20px; padding: 20px 28px; border-top: 1px solid var(--gray-200); border-bottom: 1px solid var(--gray-200);">
+                            <i class="bi bi-house"></i>
+                            <h2 class="profile-section-title">Địa chỉ giao hàng</h2>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Số nhà, tên đường</label>
+                            <input type="text" class="form-input" name="street" id="street" placeholder="Ví dụ: 123 Nguyễn Trãi, Phường Bến Nghé">
+                        </div>
+
+                        <div class="address-grid">
+                            <div class="form-group">
+                                <label class="form-label">Tỉnh/Thành phố <span>*</span></label>
+                                <select class="form-input" name="province" id="province" required>
+                                    <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Quận/Huyện <span>*</span></label>
+                                <select class="form-input" name="district" id="district" required disabled>
+                                    <option value="">-- Chọn Quận/Huyện --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phường/Xã <span>*</span></label>
+                                <select class="form-input" name="ward" id="ward" required disabled>
+                                    <option value="">-- Chọn Phường/Xã --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="address" id="address">
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-check-circle"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/vietnam-address.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initApp();
+            initAddressDropdowns();
+
+            const userRes = await fetch('/api/auth/me');
+            const userData = await userRes.json();
+
+            if (!userData.user) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const user = userData.user;
+            
+            // Update sidebar
+            document.getElementById('profileUserName').textContent = user.full_name || user.email;
+            document.getElementById('profileUserRole').textContent = user.role === 'admin' ? 'Quản trị viên' : 'Khách hàng';
+
+            // Fill form
+            document.getElementById('fullName').value = user.full_name || '';
+            document.getElementById('phone').value = user.phone || '';
+            document.getElementById('email').value = user.email;
+            document.getElementById('birthdate').value = user.birthdate || '';
+            document.getElementById('gender').value = user.gender || '';
+
+            // Parse and fill saved address
+            if (user.address) {
+                parseAndFillAddress(user.address);
+            }
+
+            // Admin button
+            if (user.role === 'admin') {
+                document.getElementById('adminBtnContainer').innerHTML = `
+                    <a href="/admin" class="btn-admin">
+                        <i class="bi bi-speedometer2"></i> Trang quản trị
+                    </a>`;
+            }
+
+            // Form submit
+            document.getElementById('profileForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+
+                try {
+                    const res = await fetch('/api/auth/profile', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            full_name: formData.get('full_name'),
+                            phone: formData.get('phone'),
+                            birthdate: formData.get('birthdate'),
+                            gender: formData.get('gender'),
+                            address: document.getElementById('address').value
+                        })
+                    });
+
+                    const result = await res.json();
+                    if (result.success) {
+                        showAlert('Cập nhật thông tin thành công!', 'success');
+                        document.getElementById('profileUserName').textContent = formData.get('full_name');
+                    } else {
+                        showAlert(result.error || 'Có lỗi xảy ra!', 'error');
+                    }
+                } catch (error) {
+                    showAlert('Đã xảy ra lỗi khi cập nhật!', 'error');
+                }
+            });
+        });
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `
+                <div class="alert alert-${type}">
+                    <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    ${message}
+                </div>`;
+            if (type === 'success') {
+                setTimeout(() => container.innerHTML = '', 3000);
+            }
+        }
+
+        function initAddressDropdowns() {
+            const provinceSelect = document.getElementById('province');
+            const districtSelect = document.getElementById('district');
+            const wardSelect = document.getElementById('ward');
+
+            // Populate provinces
+            const provinces = getProvinces();
+            provinces.forEach(province => {
+                const option = document.createElement('option');
+                option.value = province;
+                option.textContent = province;
+                provinceSelect.appendChild(option);
+            });
+
+            // Province change -> update districts
+            provinceSelect.addEventListener('change', function() {
+                districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                districtSelect.disabled = !this.value;
+                wardSelect.disabled = true;
+
+                if (this.value) {
+                    const districts = getDistricts(this.value);
+                    districts.forEach(district => {
+                        const option = document.createElement('option');
+                        option.value = district;
+                        option.textContent = district;
+                        districtSelect.appendChild(option);
+                    });
+                }
+                updateFullAddress();
+            });
+
+            // District change -> update wards
+            districtSelect.addEventListener('change', function() {
+                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                wardSelect.disabled = !this.value;
+
+                if (this.value) {
+                    const wards = getWards(provinceSelect.value, this.value);
+                    wards.forEach(ward => {
+                        const option = document.createElement('option');
+                        option.value = ward;
+                        option.textContent = ward;
+                        wardSelect.appendChild(option);
+                    });
+                }
+                updateFullAddress();
+            });
+
+            // Ward change -> update full address
+            wardSelect.addEventListener('change', updateFullAddress);
+            document.getElementById('street').addEventListener('input', updateFullAddress);
+        }
+
+        function updateFullAddress() {
+            const street = document.getElementById('street').value;
+            const ward = document.getElementById('ward').value;
+            const district = document.getElementById('district').value;
+            const province = document.getElementById('province').value;
+
+            const parts = [street, ward, district, province].filter(p => p.trim());
+            document.getElementById('address').value = parts.join(', ');
+        }
+
+        function parseAndFillAddress(address) {
+            const parts = address.split(',').map(p => p.trim());
+            const provinceSelect = document.getElementById('province');
+            const districtSelect = document.getElementById('district');
+            const wardSelect = document.getElementById('ward');
+
+            if (parts.length >= 3) {
+                for (let i = parts.length - 1; i >= 0; i--) {
+                    const province = parts.slice(i).join(', ');
+                    if (VIETNAM_ADDRESS[province]) {
+                        provinceSelect.value = province;
+                        provinceSelect.dispatchEvent(new Event('change'));
+
+                        const districts = getDistricts(province);
+                        const districtPart = parts[i - 1] || '';
+                        const district = districts.find(d => districtPart.includes(d) || d.includes(districtPart));
+                        if (district && parts[i - 1]) {
+                            setTimeout(() => {
+                                districtSelect.value = district;
+                                districtSelect.dispatchEvent(new Event('change'));
+
+                                const wards = getWards(province, district);
+                                const wardPart = parts[i - 2] || '';
+                                const ward = wards.find(w => wardPart.includes(w) || w.includes(wardPart));
+                                if (ward && parts[i - 2]) {
+                                    setTimeout(() => {
+                                        wardSelect.value = ward;
+                                        wardSelect.dispatchEvent(new Event('change'));
+                                    }, 100);
+                                }
+                            }, 100);
+                        }
+
+                        if (i >= 2) {
+                            const street = parts.slice(0, i - 1).join(', ');
+                            document.getElementById('street').value = street;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (!document.getElementById('address').value) {
+                document.getElementById('street').value = address;
+                updateFullAddress();
+            }
+        }
+    </script>
+    <div id="aiChatboxRoot"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/components/ai-chatbox.html').then(r => r.text()).then(h => {
+                var root = document.getElementById('aiChatboxRoot');
+                if (root) root.innerHTML = h;
+            });
+        });
+    </script>
+</body>
+</html>

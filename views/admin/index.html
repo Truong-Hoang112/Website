@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <a href="/admin">
+                    <div class="sidebar-logo-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div>
+                        <div class="sidebar-logo-text">AnhTraiStore</div>
+                        <div class="sidebar-logo-sub">Admin Panel</div>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Tổng quan</div>
+                    <a href="/admin" class="nav-item active">
+                        <i class="fas fa-chart-pie"></i>
+                        Dashboard
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Quản lý</div>
+                    <a href="/admin/products" class="nav-item">
+                        <i class="fas fa-box"></i>
+                        Sản phẩm
+                    </a>
+                    <a href="/admin/orders" class="nav-item">
+                        <i class="fas fa-shopping-bag"></i>
+                        Đơn hàng
+                    </a>
+                    <a href="/admin/users" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        Khách hàng
+                    </a>
+                    <a href="/admin/reviews" class="nav-item">
+                        <i class="fas fa-star"></i>
+                        Đánh giá
+                    </a>
+                    <a href="/admin/contacts" class="nav-item">
+                        <i class="fas fa-envelope"></i>
+                        Liên hệ
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Hệ thống</div>
+                    <a href="/" class="nav-item" target="_blank">
+                        <i class="fas fa-external-link-alt"></i>
+                        Xem cửa hàng
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-user" id="adminUser">
+                    <div class="sidebar-avatar">A</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">Admin</div>
+                        <div class="sidebar-user-role">Quản trị viên</div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="adminLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Đăng xuất
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="top-header-left">
+                    <h1 class="top-header-title">Dashboard</h1>
+                </div>
+                <div class="top-header-right">
+                    <span class="header-date" id="currentDate"></span>
+                    <a href="/admin/products" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Thêm sản phẩm
+                    </a>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <!-- Stats Grid -->
+                <div class="stats-grid" id="statsGrid"></div>
+
+                <!-- Content Grid -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                    <!-- Recent Orders -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-shopping-bag"></i>
+                                Đơn hàng mới nhất
+                            </h2>
+                            <a href="/admin/orders" class="btn btn-secondary btn-sm">
+                                Xem tất cả
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table" id="recentOrdersTable"></table>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div style="display: flex; flex-direction: column; gap: 24px;">
+                        <!-- Quick Actions -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">
+                                    <i class="fas fa-bolt"></i>
+                                    Thao tác nhanh
+                                </h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="quick-actions">
+                                    <a href="/admin/products" class="quick-action">
+                                        <i class="fas fa-plus-circle"></i>
+                                        Thêm sản phẩm
+                                    </a>
+                                    <a href="/admin/orders?status=pending" class="quick-action">
+                                        <i class="fas fa-clock"></i>
+                                        Đơn chờ duyệt
+                                    </a>
+                                    <a href="/admin/users" class="quick-action">
+                                        <i class="fas fa-user-friends"></i>
+                                        Khách hàng
+                                    </a>
+                                    <a href="/admin/reviews" class="quick-action">
+                                        <i class="fas fa-star-half-alt"></i>
+                                        Đánh giá
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Products -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">
+                                    <i class="fas fa-fire"></i>
+                                    Top sản phẩm
+                                </h2>
+                            </div>
+                            <div class="card-body" id="topProductsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function adminLogout() {
+            if (!confirm('Đăng xuất?')) return;
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAdminData();
+        });
+
+        async function loadAdminData() {
+            // Set date
+            const now = new Date();
+            const options = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('vi-VN', options);
+
+            // Load admin user
+            try {
+                const userRes = await fetch('/api/auth/me', { credentials: 'include' });
+                const userData = await userRes.json();
+                if (userData.user) {
+                    const initial = userData.user.full_name ? userData.user.full_name.charAt(0).toUpperCase() : 'A';
+                    document.getElementById('adminUser').innerHTML = `
+                        <div class="sidebar-avatar">${initial}</div>
+                        <div class="sidebar-user-info">
+                            <div class="sidebar-user-name">${userData.user.full_name || 'Admin'}</div>
+                            <div class="sidebar-user-role">Quản trị viên</div>
+                        </div>`;
+                }
+            } catch (e) {}
+
+            // Load stats
+            try {
+                const statsRes = await fetch('/admin/stats', { credentials: 'include' });
+                const stats = await statsRes.json();
+                renderStats(stats);
+            } catch (e) {}
+
+            // Load recent orders
+            try {
+                const ordersRes = await fetch('/admin/orders/list', { credentials: 'include' });
+                const ordersData = await ordersRes.json();
+                renderRecentOrders(ordersData.orders);
+            } catch (e) {}
+        }
+
+        function renderStats(stats) {
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card revenue">
+                    <div class="stat-header">
+                        <span class="stat-label">Doanh thu</span>
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">${formatPrice(stats.total_revenue)}đ</div>
+                    <div class="stat-change up">
+                        <i class="fas fa-arrow-up"></i>
+                        Từ đơn đã giao
+                    </div>
+                </div>
+                <div class="stat-card orders">
+                    <div class="stat-header">
+                        <span class="stat-label">Đơn hàng</span>
+                        <div class="stat-icon">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">${stats.total_orders}</div>
+                    <div class="stat-change ${stats.pending_orders > 0 ? 'down' : 'up'}">
+                        ${stats.pending_orders > 0 ? stats.pending_orders + ' chờ xác nhận' : 'Không có đơn chờ'}
+                    </div>
+                </div>
+                <div class="stat-card products">
+                    <div class="stat-header">
+                        <span class="stat-label">Sản phẩm</span>
+                        <div class="stat-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">${stats.total_products}</div>
+                    <div class="stat-change ${stats.low_stock > 0 ? 'down' : 'up'}">
+                        ${stats.low_stock > 0 ? stats.low_stock + ' sắp hết' : 'Tất cả còn hàng'}
+                    </div>
+                </div>
+                <div class="stat-card users">
+                    <div class="stat-header">
+                        <span class="stat-label">Khách hàng</span>
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">${stats.total_users}</div>
+                    <div class="stat-change up">
+                        ${stats.total_reviews} đánh giá
+                    </div>
+                </div>`;
+        }
+
+        function renderRecentOrders(orders) {
+            if (!orders || orders.length === 0) {
+                document.getElementById('recentOrdersTable').innerHTML = `
+                    <tbody>
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <h3>Chưa có đơn hàng nào</h3>
+                                    <p>Đơn hàng sẽ xuất hiện khi có khách đặt hàng</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>`;
+                return;
+            }
+
+            let html = `<thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Trạng thái</th><th>Ngày đặt</th></tr></thead><tbody>`;
+            orders.slice(0, 6).forEach(o => {
+                html += `<tr>
+                    <td><span class="order-code">${o.payment_code || 'N/A'}</span></td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar" style="width:36px;height:36px;font-size:0.8rem;">
+                                ${(o.customer_name || 'K').charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div class="user-name">${o.customer_name || 'Khách'}</div>
+                                <div class="user-email">${o.shipping_phone || ''}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="font-weight:700;color:var(--primary)">${formatPrice(o.total_price)}đ</td>
+                    <td><span class="status-badge ${o.status}">${getStatusLabel(o.status)}</span></td>
+                    <td style="color:var(--gray-500)">${new Date(o.created_at).toLocaleDateString('vi-VN')}</td>
+                </tr>`;
+            });
+            html += '</tbody>';
+            document.getElementById('recentOrdersTable').innerHTML = html;
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'pending': 'Chờ xác nhận',
+                'confirmed': 'Đã xác nhận',
+                'shipping': 'Đang giao',
+                'delivered': 'Đã giao',
+                'cancelled': 'Đã hủy'
+            };
+            return labels[status] || status;
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN').format(price || 0);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng - AnhTraiStore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .breadcrumb-bar {
+            background: var(--white);
+            padding: 16px 0;
+            border-bottom: 1px solid var(--slate-200);
+        }
+        .breadcrumb-bar .container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+        }
+        .breadcrumb-bar a { color: var(--slate-500); transition: color var(--transition-fast); }
+        .breadcrumb-bar a:hover { color: var(--primary); }
+        .breadcrumb-bar i { font-size: 0.6rem; color: var(--slate-400); }
+        .breadcrumb-bar span { color: var(--dark); font-weight: 600; }
+
+        .cart-wrap {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 32px;
+        }
+        .cart-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-2xl);
+            overflow: hidden;
+        }
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--slate-200);
+            background: var(--slate-50);
+        }
+        .cart-title {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cart-title input { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; }
+        .btn-clear {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: var(--radius-md);
+            transition: background var(--transition-fast);
+        }
+        .btn-clear:hover { background: rgba(239, 68, 68, 0.1); }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: auto 100px 1fr auto;
+            gap: 20px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--slate-100);
+            align-items: center;
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .item-check { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; }
+        .cart-item-img {
+            width: 100px;
+            height: 100px;
+            background: var(--slate-100);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+        .cart-item-info { min-width: 0; }
+        .cart-item-brand {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .cart-item-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .cart-item-name a { color: var(--dark); text-decoration: none; }
+        .cart-item-name a:hover { color: var(--primary); }
+        .cart-item-price {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        .cart-item-old {
+            font-size: 0.8rem;
+            color: var(--slate-400);
+            text-decoration: line-through;
+            margin-left: 8px;
+        }
+        .cart-item-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+        }
+        .cart-item-subtotal {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--dark);
+        }
+        .qty-ctrl {
+            display: flex;
+            align-items: center;
+            background: var(--slate-100);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+        .qty-ctrl button {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--slate-600);
+            transition: background var(--transition-fast);
+        }
+        .qty-ctrl button:hover { background: var(--slate-200); }
+        .qty-ctrl input {
+            width: 50px;
+            height: 36px;
+            border: none;
+            background: var(--white);
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            outline: none;
+        }
+        .btn-remove {
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: var(--slate-400);
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+        .btn-remove:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        .summary-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-2xl);
+            padding: 28px;
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+        .summary-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--slate-200);
+        }
+        .shipping-note {
+            padding: 12px 16px;
+            background: var(--primary-bg);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-lg);
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+        .summary-row .label { color: var(--slate-600); }
+        .summary-row .value { font-weight: 600; }
+        .summary-divider { height: 1px; background: var(--slate-200); margin: 16px 0; }
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .summary-total .label { font-weight: 700; font-size: 1rem; }
+        .summary-total .value { font-size: 1.25rem; font-weight: 800; color: var(--danger); }
+        .btn-checkout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 700;
+            transition: all var(--transition-base);
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+            margin-bottom: 12px;
+        }
+        .btn-checkout:hover {
+            background: var(--primary-dark);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45);
+        }
+        .btn-continue {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px;
+            background: var(--slate-100);
+            color: var(--slate-600);
+            border-radius: var(--radius-lg);
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all var(--transition-base);
+            text-decoration: none;
+        }
+        .btn-continue:hover { background: var(--slate-200); color: var(--dark); }
+
+        .empty-cart {
+            text-align: center;
+            padding: 80px 40px;
+        }
+        .empty-cart-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+        .empty-cart h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+        .empty-cart p { color: var(--slate-500); margin-bottom: 24px; }
+        .btn-shop {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: var(--radius-lg);
+            font-weight: 700;
+            text-decoration: none;
+            transition: all var(--transition-base);
+        }
+        .btn-shop:hover { background: var(--primary-dark); color: #fff; }
+
+        @media (max-width: 1024px) {
+            .cart-wrap { grid-template-columns: 1fr; }
+            .summary-card { position: static; }
+        }
+        @media (max-width: 768px) {
+            .cart-item { grid-template-columns: auto 80px 1fr; gap: 12px; }
+            .cart-item-actions { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }
+            .cart-item-img { width: 80px; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-inner">
+            <span class="topbar-item"><i class="bi bi-shield-check"></i> Hàng chính hãng 100%</span>
+            <span class="topbar-item"><i class="bi bi-truck"></i> Miễn phí ship đơn từ 500K</span>
+            <span class="topbar-item"><i class="bi bi-arrow-repeat"></i> Đổi trả trong 30 ngày</span>
+            <span class="topbar-item"><i class="bi bi-telephone"></i> Hotline: 1800 2097</span>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">Anh<span>Trai</span>Store</a>
+            <div class="search-wrap">
+                <button class="search-btn"><i class="bi bi-search"></i></button>
+                <input type="text" id="searchInput" placeholder="Bạn muốn tìm gì hôm nay?" autocomplete="off">
+                <div id="searchSuggest" class="search-suggest"></div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/products" class="nav-link"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a></li>
+                <li><a href="/products?sort=discount" class="nav-link"><i class="bi bi-tag"></i> Khuyến mãi</a></li>
+                <li><a href="/policy" class="nav-link"><i class="bi bi-file-text"></i> Chính sách</a></li>
+                <li><a href="/contact" class="nav-link"><i class="bi bi-headset"></i> Liên hệ</a></li>
+            </ul>
+            <a href="/cart" class="cart-link active">
+                <i class="bi bi-bag"></i> Giỏ hàng
+                <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+            </a>
+            <div id="userArea"></div>
+            <button class="hamburger-nav" onclick="openMobileMenu()"><i class="bi bi-list"></i></button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <span class="navbar-brand">Anh<span>Trai</span>Store</span>
+            <button class="mobile-menu-close" onclick="closeMobileMenu()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="mobile-search">
+            <input type="text" id="mobileSearchInput" placeholder="Tìm sản phẩm...">
+        </div>
+        <nav class="mobile-nav">
+            <a href="/products" class="mobile-nav-item"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a>
+            <a href="/products?sort=discount" class="mobile-nav-item"><i class="bi bi-tag"></i> Khuyến mãi</a>
+            <a href="/policy" class="mobile-nav-item"><i class="bi bi-file-text"></i> Chính sách</a>
+            <a href="/contact" class="mobile-nav-item"><i class="bi bi-headset"></i> Liên hệ</a>
+            <div class="mobile-nav-divider"></div>
+            <a href="/cart" class="mobile-nav-item active"><i class="bi bi-bag"></i> Giỏ hàng</a>
+            <div id="mobileUserArea"></div>
+        </nav>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+        <div class="container">
+            <a href="/">Trang chủ</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Giỏ hàng</span>
+        </div>
+    </div>
+
+    <div class="cart-wrap">
+        <div id="cartContent"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px;">
+                <div>
+                    <div class="footer-brand">AnhTrai<span>Store</span></div>
+                    <p class="footer-desc">Chuỗi cửa hàng điện thoại & phụ kiện chính hãng uy tín toàn quốc.</p>
+                </div>
+                <div>
+                    <div class="footer-heading">Sản phẩm</div>
+                    <ul class="footer-links">
+                        <li><a href="/products">Tất cả sản phẩm</a></li>
+                        <li><a href="/products?sort=discount">Khuyến mãi</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-heading">Chính sách</div>
+                    <ul class="footer-links">
+                        <li><a href="/policy">Đổi trả hàng</a></li>
+                        <li><a href="/contact">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-heading">Liên hệ</div>
+                    <div class="footer-contact-item"><i class="bi bi-telephone"></i><span>1800 2097</span></div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>&copy; 2026 AnhTraiStore. Tất cả quyền được bảo lưu.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initApp();
+            await loadCart();
+        });
+
+        async function loadCart() {
+            try {
+                const response = await fetch('/api/cart');
+                const data = await response.json();
+                renderCart(data);
+            } catch (error) {
+                console.error('Error loading cart:', error);
+            }
+        }
+
+        function getThumbUrl(thumb) {
+            if (!thumb) return '';
+            if (thumb.startsWith('http')) return thumb;
+            if (thumb.startsWith('/uploads/')) return '/assets' + thumb;
+            if (thumb.startsWith('/')) return thumb;
+            return '/assets/images/products/' + thumb;
+        }
+
+        function renderCart(data) {
+            const container = document.getElementById('cartContent');
+
+            if (data.items.length === 0) {
+                container.innerHTML = '<div class="cart-card" style="grid-column:1/-1"><div class="empty-cart"><div class="empty-cart-icon">🛒</div><h3>Giỏ hàng trống!</h3><p>Bạn chưa có sản phẩm nào trong giỏ hàng.</p><a href="/products" class="btn-shop"><i class="bi bi-bag"></i> Mua sắm ngay</a></div></div>';
+                return;
+            }
+
+            let itemsHtml = '';
+            data.items.forEach(item => {
+                const img = item.thumbnail ? '<img src="' + getThumbUrl(item.thumbnail) + '" alt="' + item.name + '">' : '<i class="bi bi-phone" style="font-size:2rem;color:var(--slate-300)"></i>';
+                const oldPrice = item.old_price ? '<span class="cart-item-old">' + formatPrice(item.old_price) + 'đ</span>' : '';
+                
+                itemsHtml += '<div class="cart-item" id="item-' + item.cart_id + '">' +
+                    '<input type="checkbox" class="item-check" data-id="' + item.cart_id + '" data-price="' + item.price + '" data-qty="' + item.quantity + '" checked>' +
+                    '<a href="/product/' + item.product_id + '"><div class="cart-item-img">' + img + '</div></a>' +
+                    '<div class="cart-item-info">' +
+                        '<div class="cart-item-brand">' + (item.brand_name || '') + '</div>' +
+                        '<div class="cart-item-name"><a href="/product/' + item.product_id + '">' + item.name + '</a></div>' +
+                        '<div><span class="cart-item-price">' + formatPrice(item.price) + 'đ</span>' + oldPrice + '</div>' +
+                    '</div>' +
+                    '<div class="cart-item-actions">' +
+                        '<div class="cart-item-subtotal" id="subtotal-' + item.cart_id + '">' + formatPrice(item.price * item.quantity) + 'đ</div>' +
+                        '<div class="qty-ctrl">' +
+                            '<button onclick="changeQty(' + item.cart_id + ', -1, ' + item.stock + ')">−</button>' +
+                            '<input type="number" id="qty-' + item.cart_id + '" value="' + item.quantity + '" min="1" max="' + item.stock + '" onchange="updateQty(' + item.cart_id + ')">' +
+                            '<button onclick="changeQty(' + item.cart_id + ', 1, ' + item.stock + ')">+</button>' +
+                        '</div>' +
+                        '<button class="btn-remove" onclick="removeItem(' + item.cart_id + ')"><i class="bi bi-trash3"></i> Xóa</button>' +
+                    '</div>' +
+                '</div>';
+            });
+
+            container.innerHTML = '<div>' +
+                '<div class="cart-card">' +
+                    '<div class="cart-header">' +
+                        '<div style="display:flex;align-items:center;gap:12px">' +
+                            '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0">' +
+                                '<input type="checkbox" id="checkAll" style="accent-color:var(--primary)" checked>' +
+                                '<span class="cart-title">Giỏ hàng (<span id="totalItems">' + data.items.length + '</span> sản phẩm)</span>' +
+                            '</label>' +
+                        '</div>' +
+                        '<button class="btn-clear" onclick="clearCart()"><i class="bi bi-trash3"></i> Xóa tất cả</button>' +
+                    '</div>' +
+                    itemsHtml +
+                '</div>' +
+                '<div style="margin-top:12px"><a href="/products" style="color:var(--primary);font-size:0.875rem;font-weight:600;text-decoration:none"><i class="bi bi-arrow-left"></i> Tiếp tục mua sắm</a></div>' +
+            '</div>' +
+
+            '<div>' +
+                '<div class="summary-card">' +
+                    '<div class="summary-title">Tóm tắt đơn hàng</div>' +
+                    '<div id="shippingNote"></div>' +
+                    '<div class="summary-row">' +
+                        '<span class="label">Đã chọn (<span id="selectedCount">0</span> sp)</span>' +
+                        '<span class="value" id="selectedSubtotal">0đ</span>' +
+                    '</div>' +
+                    '<div class="summary-row">' +
+                        '<span class="label">Phí vận chuyển</span>' +
+                        '<span class="value" id="shippingFee">30.000đ</span>' +
+                    '</div>' +
+                    '<div class="summary-divider"></div>' +
+                    '<div class="summary-total">' +
+                        '<span class="label">Tổng cộng</span>' +
+                        '<span class="value" id="grandTotal">0đ</span>' +
+                    '</div>' +
+                    '<a href="/checkout" class="btn-checkout" id="btnCheckout"><i class="bi bi-credit-card"></i> Tiến hành thanh toán</a>' +
+                    '<a href="/products" class="btn-continue"><i class="bi bi-arrow-left"></i> Tiếp tục mua sắm</a>' +
+                '</div>' +
+            '</div>';
+
+            document.getElementById('checkAll').addEventListener('change', function() {
+                document.querySelectorAll('.item-check').forEach(cb => cb.checked = this.checked);
+                recalculate();
+            });
+            document.querySelectorAll('.item-check').forEach(cb => {
+                cb.addEventListener('change', recalculate);
+            });
+            recalculate();
+        }
+
+        function recalculate() {
+            let subtotal = 0;
+            let count = 0;
+            const selectedIds = [];
+
+            document.querySelectorAll('.item-check').forEach(cb => {
+                if (cb.checked) {
+                    const price = parseInt(cb.dataset.price);
+                    const qty = parseInt(document.getElementById('qty-' + cb.dataset.id)?.value || cb.dataset.qty);
+                    subtotal += price * qty;
+                    count += qty;
+                    selectedIds.push(cb.dataset.id);
+                    document.getElementById('subtotal-' + cb.dataset.id).textContent = formatPrice(price * qty) + 'đ';
+                }
+            });
+
+            const shippingFee = subtotal >= 500000 ? 0 : (subtotal > 0 ? 30000 : 0);
+            const grandTotal = subtotal + shippingFee;
+
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('selectedSubtotal').textContent = formatPrice(subtotal) + 'đ';
+            document.getElementById('shippingFee').textContent = (shippingFee === 0 && subtotal > 0) ? 'Miễn phí' : formatPrice(shippingFee) + 'đ';
+            document.getElementById('grandTotal').textContent = formatPrice(grandTotal) + 'đ';
+
+            const noteEl = document.getElementById('shippingNote');
+            if (subtotal === 0) {
+                noteEl.innerHTML = '';
+            } else if (shippingFee === 0) {
+                noteEl.innerHTML = '<div class="shipping-note"><i class="bi bi-truck"></i> Bạn được miễn phí vận chuyển!</div>';
+            } else {
+                const remain = 500000 - subtotal;
+                noteEl.innerHTML = '<div class="shipping-note" style="background:#FFF7ED;border-color:#FED7AA;color:#C2410C"><i class="bi bi-info-circle"></i> Mua thêm ' + formatPrice(remain) + ' để được miễn phí ship!</div>';
+            }
+
+            const checkedCount = document.querySelectorAll('.item-check:checked').length;
+            const checkAll = document.getElementById('checkAll');
+            checkAll.checked = checkedCount === document.querySelectorAll('.item-check').length;
+            checkAll.indeterminate = checkedCount > 0 && checkedCount < document.querySelectorAll('.item-check').length;
+
+            const btn = document.getElementById('btnCheckout');
+            if (count > 0) {
+                btn.href = '/checkout?items=' + selectedIds.join(',');
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            } else {
+                btn.href = '#';
+                btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
+            }
+        }
+
+        async function changeQty(cartId, delta, maxStock) {
+            const input = document.getElementById('qty-' + cartId);
+            let val = parseInt(input.value) + delta;
+            val = Math.max(1, Math.min(maxStock, val));
+            input.value = val;
+            await fetch('/api/cart/' + cartId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantity: val })
+            });
+            recalculate();
+        }
+
+        async function updateQty(cartId) {
+            const input = document.getElementById('qty-' + cartId);
+            const val = Math.max(1, parseInt(input.value));
+            await fetch('/api/cart/' + cartId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantity: val })
+            });
+            recalculate();
+        }
+
+        async function removeItem(cartId) {
+            if (!confirm('Xóa sản phẩm này?')) return;
+            await fetch('/api/cart/' + cartId, { method: 'DELETE' });
+            document.getElementById('item-' + cartId).remove();
+            recalculate();
+            if (document.querySelectorAll('.cart-item').length === 0) {
+                document.getElementById('cartContent').innerHTML = '<div class="cart-card" style="grid-column:1/-1"><div class="empty-cart"><div class="empty-cart-icon">🛒</div><h3>Giỏ hàng trống!</h3><p>Bạn chưa có sản phẩm nào trong giỏ hàng.</p><a href="/products" class="btn-shop"><i class="bi bi-bag"></i> Mua sắm ngay</a></div></div>';
+            }
+        }
+
+        async function clearCart() {
+            if (!confirm('Xóa tất cả sản phẩm trong giỏ hàng?')) return;
+            await fetch('/api/cart/clear', { method: 'DELETE' });
+            document.getElementById('cartContent').innerHTML = '<div class="cart-card" style="grid-column:1/-1"><div class="empty-cart"><div class="empty-cart-icon">🛒</div><h3>Giỏ hàng trống!</h3><p>Bạn chưa có sản phẩm nào trong giỏ hàng.</p><a href="/products" class="btn-shop"><i class="bi bi-bag"></i> Mua sắm ngay</a></div></div>';
+        }
+    </script>
+    <script src="/js/chatbox.js"></script>
+    <div id="aiChatboxRoot"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/components/ai-chatbox.html')
+                .then(r => r.text())
+                .then(h => {
+                    var root = document.getElementById('aiChatboxRoot');
+                    if (root) { root.innerHTML = h; if (window.initChatbox) initChatbox(); }
+                });
+        });
+    </script>
+</body>
+</html>

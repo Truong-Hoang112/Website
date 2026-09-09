@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý liên hệ - Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <a href="/admin">
+                    <div class="sidebar-logo-icon"><i class="fas fa-store"></i></div>
+                    <div>
+                        <div class="sidebar-logo-text">AnhTraiStore</div>
+                        <div class="sidebar-logo-sub">Admin Panel</div>
+                    </div>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section"><div class="nav-section-title">Tổng quan</div>
+                    <a href="/admin" class="nav-item"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                </div>
+                <div class="nav-section"><div class="nav-section-title">Quản lý</div>
+                    <a href="/admin/products" class="nav-item"><i class="fas fa-box"></i> Sản phẩm</a>
+                    <a href="/admin/orders" class="nav-item"><i class="fas fa-shopping-bag"></i> Đơn hàng</a>
+                    <a href="/admin/users" class="nav-item"><i class="fas fa-users"></i> Khách hàng</a>
+                    <a href="/admin/reviews" class="nav-item"><i class="fas fa-star"></i> Đánh giá</a>
+                    <a href="/admin/contacts" class="nav-item active"><i class="fas fa-envelope"></i> Liên hệ</a>
+                </div>
+                <div class="nav-section"><div class="nav-section-title">Hệ thống</div>
+                    <a href="/" class="nav-item" target="_blank"><i class="fas fa-external-link-alt"></i> Xem cửa hàng</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user" id="adminUser">
+                    <div class="sidebar-avatar">A</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">Admin</div>
+                        <div class="sidebar-user-role">Quản trị viên</div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="top-header-left">
+                    <h1 class="top-header-title">Quản lý liên hệ</h1>
+                </div>
+                <div class="top-header-right">
+                    <span class="header-date" id="currentDate"></span>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="card">
+                    <div class="card-body" style="padding: 0;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Người gửi</th>
+                                    <th>Email</th>
+                                    <th>Chủ đề</th>
+                                    <th>Nội dung</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày gửi</th>
+                                    <th style="width: 120px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contactsBody">
+                                <tr><td colspan="7" style="text-align: center; padding: 48px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--gray-400);"></i></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Contact Detail Modal -->
+    <div class="modal-overlay" id="contactModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fas fa-envelope"></i> Chi tiết liên hệ</h2>
+                <button class="modal-close" onclick="closeContactModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="contactDetail"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeContactModal()">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function adminLogout() {
+            if (!confirm('Đăng xuất?')) return;
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+            try {
+                const userRes = await fetch('/api/auth/me', { credentials: 'include' });
+                const userData = await userRes.json();
+                if (userData.user) {
+                    document.getElementById('adminUser').innerHTML = `<div class="sidebar-avatar">${userData.user.full_name?.charAt(0) || 'A'}</div><div class="sidebar-user-info"><div class="sidebar-user-name">${userData.user.full_name || 'Admin'}</div><div class="sidebar-user-role">Quản trị viên</div></div>`;
+                }
+            } catch (e) {}
+
+            loadContacts();
+        });
+
+        async function loadContacts() {
+            try {
+                const res = await fetch('/admin/contacts/list', { credentials: 'include' });
+                const data = await res.json();
+                const contacts = data.contacts || [];
+                const tbody = document.getElementById('contactsBody');
+
+                if (contacts.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-envelope"></i><h3>Chưa có liên hệ nào</h3></div></td></tr>`;
+                    return;
+                }
+
+                let html = '';
+                contacts.forEach(c => {
+                    const isRead = c.is_read == 1;
+                    html += `<tr>
+                        <td><strong>${c.name || 'N/A'}</strong></td>
+                        <td>${c.email || '-'}</td>
+                        <td>${c.subject || '-'}</td>
+                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${c.message || '-'}</td>
+                        <td><span class="badge ${isRead ? 'badge-success' : 'badge-warning'}">${isRead ? 'Đã đọc' : 'Chưa đọc'}</span></td>
+                        <td>${c.created_at ? new Date(c.created_at).toLocaleDateString('vi-VN') : '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="viewContact(${c.id})"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteContact(${c.id})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+            } catch (e) {
+                document.getElementById('contactsBody').innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Lỗi tải dữ liệu</h3></div></td></tr>`;
+            }
+        }
+
+        async function viewContact(id) {
+            try {
+                const res = await fetch(`/admin/contacts/${id}`, { credentials: 'include' });
+                const data = await res.json();
+                if (data.contact) {
+                    document.getElementById('contactDetail').innerHTML = `
+                        <p><strong>Người gửi:</strong> ${data.contact.name || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${data.contact.email || '-'}</p>
+                        <p><strong>Chủ đề:</strong> ${data.contact.subject || '-'}</p>
+                        <p><strong>Ngày gửi:</strong> ${data.contact.created_at ? new Date(data.contact.created_at).toLocaleString('vi-VN') : '-'}</p>
+                        <div style="margin-top: 16px; padding: 16px; background: var(--gray-50); border-radius: 8px;">
+                            <strong>Nội dung:</strong>
+                            <p style="margin-top: 8px;">${data.contact.message || '-'}</p>
+                        </div>
+                    `;
+                    document.getElementById('contactModal').classList.add('show');
+                    
+                    // Mark as read
+                    if (data.contact.is_read != 1) {
+                        await fetch(`/admin/contacts/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                            credentials: 'include',
+                            body: JSON.stringify({ is_read: 1 })
+                        });
+                        loadContacts();
+                    }
+                }
+            } catch (e) {
+                alert('Lỗi tải thông tin liên hệ!');
+            }
+        }
+
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.remove('show');
+        }
+
+        async function deleteContact(id) {
+            if (!confirm('Xóa liên hệ này?')) return;
+            try {
+                const res = await fetch(`/admin/contacts/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadContacts();
+                }
+            } catch (e) {
+                alert('Lỗi khi xóa!');
+            }
+        }
+
+        document.getElementById('contactModal').addEventListener('click', function(e) {
+            if (e.target === this) closeContactModal();
+        });
+    </script>
+</body>
+</html>

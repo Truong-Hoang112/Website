@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liên hệ - AnhTraiStore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome-6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, var(--dark) 0%, var(--slate-800) 100%);
+            padding: 60px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 70% 0%, rgba(79, 70, 229, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .page-header p {
+            color: rgba(255,255,255,0.7);
+            font-size: 1rem;
+            position: relative;
+        }
+        
+        .content-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+        
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+        
+        .info-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-2xl);
+            padding: 32px;
+        }
+        .info-card h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .info-card h2 i { color: var(--primary); }
+        
+        .contact-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--slate-100);
+        }
+        .contact-item:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .contact-item-icon {
+            width: 52px;
+            height: 52px;
+            background: var(--primary-bg);
+            color: var(--primary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+        .contact-item h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+        .contact-item p {
+            color: var(--slate-500);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+        
+        .social-section {
+            margin-top: 28px;
+            padding-top: 28px;
+            border-top: 1px solid var(--slate-200);
+        }
+        .social-section h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 16px;
+        }
+        .social-links {
+            display: flex;
+            gap: 12px;
+        }
+        .social-link {
+            width: 48px;
+            height: 48px;
+            background: var(--slate-100);
+            color: var(--slate-600);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            transition: all var(--transition-base);
+        }
+        .social-link:hover {
+            background: var(--primary);
+            color: #fff;
+            transform: translateY(-3px);
+        }
+        
+        .form-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-2xl);
+            padding: 32px;
+        }
+        .form-card h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .form-card h2 i { color: var(--primary); }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 6px;
+            color: var(--dark);
+        }
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all var(--transition-base);
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-bg);
+        }
+        textarea.form-control { resize: vertical; min-height: 120px; }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+        }
+        .btn-submit:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45);
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .map-section {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-2xl);
+            overflow: hidden;
+        }
+        .map-section h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 20px;
+            padding: 24px 24px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .map-section h2 i { color: var(--primary); }
+        .map-container {
+            padding: 0 24px 24px;
+        }
+        .map-container iframe {
+            width: 100%;
+            height: 350px;
+            border: none;
+            border-radius: var(--radius-xl);
+        }
+        
+        .success-msg {
+            padding: 16px 20px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: var(--radius-lg);
+            color: var(--success);
+            font-weight: 600;
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .error-msg {
+            padding: 16px 20px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--radius-lg);
+            color: var(--danger);
+            font-weight: 600;
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        @media (max-width: 900px) {
+            .contact-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .page-header { padding: 40px 0; }
+            .page-header h1 { font-size: 1.5rem; }
+            .form-row { grid-template-columns: 1fr; }
+            .map-container iframe { height: 250px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-inner">
+            <span class="topbar-item"><i class="bi bi-shield-check"></i> Hàng chính hãng 100%</span>
+            <span class="topbar-item"><i class="bi bi-truck"></i> Miễn phí ship đơn từ 500K</span>
+            <span class="topbar-item"><i class="bi bi-arrow-repeat"></i> Đổi trả trong 30 ngày</span>
+            <span class="topbar-item"><i class="bi bi-telephone"></i> Hotline: 1800 2097</span>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">Anh<span>Trai</span>Store</a>
+            <div class="search-wrap">
+                <button class="search-btn"><i class="bi bi-search"></i></button>
+                <input type="text" id="searchInput" placeholder="Bạn muốn tìm gì hôm nay?" autocomplete="off">
+                <div id="searchSuggest" class="search-suggest"></div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/products" class="nav-link"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a></li>
+                <li><a href="/products?sort=discount" class="nav-link"><i class="bi bi-tag"></i> Khuyến mãi</a></li>
+                <li><a href="/policy" class="nav-link"><i class="bi bi-file-text"></i> Chính sách</a></li>
+                <li><a href="/contact" class="nav-link active"><i class="bi bi-headset"></i> Liên hệ</a></li>
+            </ul>
+            <a href="/cart" class="cart-link">
+                <i class="bi bi-bag"></i> Giỏ hàng
+                <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+            </a>
+            <div id="userArea"></div>
+            <button class="hamburger-nav" onclick="openMobileMenu()"><i class="bi bi-list"></i></button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <span class="navbar-brand">Anh<span>Trai</span>Store</span>
+            <button class="mobile-menu-close" onclick="closeMobileMenu()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="mobile-search">
+            <input type="text" id="mobileSearchInput" placeholder="Tìm sản phẩm...">
+        </div>
+        <nav class="mobile-nav">
+            <a href="/products" class="mobile-nav-item"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a>
+            <a href="/products?sort=discount" class="mobile-nav-item"><i class="bi bi-tag"></i> Khuyến mãi</a>
+            <a href="/policy" class="mobile-nav-item"><i class="bi bi-file-text"></i> Chính sách</a>
+            <a href="/contact" class="mobile-nav-item active"><i class="bi bi-headset"></i> Liên hệ</a>
+            <div class="mobile-nav-divider"></div>
+            <a href="/cart" class="mobile-nav-item"><i class="bi bi-bag"></i> Giỏ hàng</a>
+            <div id="mobileUserArea"></div>
+        </nav>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1><i class="bi bi-headset"></i> Liên hệ</h1>
+            <p>Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7</p>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-wrap">
+        <div class="contact-grid">
+            <!-- Info -->
+            <div class="info-card">
+                <h2><i class="bi bi-info-circle"></i> Thông tin liên hệ</h2>
+                
+                <div class="contact-item">
+                    <div class="contact-item-icon"><i class="bi bi-geo-alt"></i></div>
+                    <div>
+                        <h4>Địa chỉ cửa hàng</h4>
+                        <p>123 Nguyễn Huệ, Quận 1<br>TP. Hồ Chí Minh, Việt Nam</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-item-icon"><i class="bi bi-telephone"></i></div>
+                    <div>
+                        <h4>Hotline</h4>
+                        <p>1800 2097 (Miễn phí)<br>8:00 - 21:00 (T2 - CN)</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-item-icon"><i class="bi bi-envelope"></i></div>
+                    <div>
+                        <h4>Email</h4>
+                        <p>anhtraisstore@gmail.com<br>Hotline: 0909 123 456</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-item-icon"><i class="bi bi-clock"></i></div>
+                    <div>
+                        <h4>Giờ làm việc</h4>
+                        <p>Thứ 2 - Thứ 6: 8:00 - 21:00<br>Thứ 7 - CN: 9:00 - 20:00</p>
+                    </div>
+                </div>
+
+                <div class="social-section">
+                    <h4>Kết nối với chúng tôi</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-youtube"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-tiktok"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <div class="form-card">
+                <h2><i class="bi bi-send"></i> Gửi tin nhắn cho chúng tôi</h2>
+                
+                <form id="contactForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Họ và tên *</label>
+                            <input type="text" class="form-control" name="full_name" placeholder="Nguyễn Văn A" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại</label>
+                            <input type="tel" class="form-control" name="phone" placeholder="0901 234 567">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" class="form-control" name="email" placeholder="email@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tiêu đề</label>
+                        <input type="text" class="form-control" name="subject" placeholder="Nhập tiêu đề...">
+                    </div>
+                    <div class="form-group">
+                        <label>Nội dung *</label>
+                        <textarea class="form-control" name="message" rows="5" placeholder="Nhập nội dung tin nhắn..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <i class="bi bi-send"></i> Gửi tin nhắn
+                    </button>
+                    <div id="formMessage"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Map -->
+        <div class="map-section">
+            <h2><i class="bi bi-map"></i> Vị trí cửa hàng</h2>
+            <div class="map-container">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4245!2d106.7009!3d10.7769!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f3a9d8d1bb3%3A0x9c0d04be4a7e6f08!2sNguy%E1%BB%85n%20Hu%E1%BB%87%2C%20B%E1%BA%BFn%20Ngh%C3%A9%2C%20Qu%E1%BA%ADn%201%2C%20TP.HCM!5e0!3m2!1svi!2svn!4v1234567890" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px;">
+                <div>
+                    <div class="footer-brand">AnhTrai<span>Store</span></div>
+                    <p class="footer-desc">Chuỗi cửa hàng điện thoại & phụ kiện chính hãng uy tín toàn quốc.</p>
+                </div>
+                <div>
+                    <div class="footer-heading">Sản phẩm</div>
+                    <ul class="footer-links">
+                        <li><a href="/products">Tất cả sản phẩm</a></li>
+                        <li><a href="/products?sort=discount">Khuyến mãi</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-heading">Hỗ trợ</div>
+                    <ul class="footer-links">
+                        <li><a href="/policy">Chính sách</a></li>
+                        <li><a href="/contact">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-heading">Liên hệ</div>
+                    <div class="footer-contact-item"><i class="bi bi-telephone"></i><span>1800 2097</span></div>
+                    <div class="footer-contact-item"><i class="bi bi-envelope"></i><span>anhtraisstore@gmail.com</span></div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>&copy; 2026 AnhTraiStore. Tất cả quyền được bảo lưu.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initApp();
+
+            document.getElementById('contactForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const formData = new FormData(form);
+                const submitBtn = document.getElementById('submitBtn');
+                const msgEl = document.getElementById('formMessage');
+                
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Đang gửi...';
+                msgEl.innerHTML = '';
+
+                try {
+                    const response = await fetch('/api/contact', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            full_name: formData.get('name'),
+                            email: formData.get('email'),
+                            phone: formData.get('phone'),
+                            message: formData.get('message')
+                        })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        msgEl.innerHTML = '<div class="success-msg"><i class="bi bi-check-circle-fill"></i> Gửi tin nhắn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm nhất.</div>';
+                        form.reset();
+                    } else {
+                        msgEl.innerHTML = '<div class="error-msg"><i class="bi bi-exclamation-circle-fill"></i> ' + (data.error || 'Có lỗi xảy ra. Vui lòng thử lại!') + '</div>';
+                    }
+                } catch (error) {
+                    msgEl.innerHTML = '<div class="error-msg"><i class="bi bi-exclamation-circle-fill"></i> Có lỗi xảy ra. Vui lòng thử lại!</div>';
+                }
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-send"></i> Gửi tin nhắn';
+            });
+        });
+    </script>
+    <script src="/js/chatbox.js"></script>
+    <div id="aiChatboxRoot"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/components/ai-chatbox.html')
+                .then(r => r.text())
+                .then(h => {
+                    var root = document.getElementById('aiChatboxRoot');
+                    if (root) { root.innerHTML = h; if (window.initChatbox) initChatbox(); }
+                });
+        });
+    </script>
+    <style>.spin { animation: spin 1s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+</body>
+</html>

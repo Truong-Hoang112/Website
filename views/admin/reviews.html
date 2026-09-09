@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đánh giá - Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <a href="/admin">
+                    <div class="sidebar-logo-icon"><i class="fas fa-store"></i></div>
+                    <div>
+                        <div class="sidebar-logo-text">AnhTraiStore</div>
+                        <div class="sidebar-logo-sub">Admin Panel</div>
+                    </div>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section"><div class="nav-section-title">Tổng quan</div>
+                    <a href="/admin" class="nav-item"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                </div>
+                <div class="nav-section"><div class="nav-section-title">Quản lý</div>
+                    <a href="/admin/products" class="nav-item"><i class="fas fa-box"></i> Sản phẩm</a>
+                    <a href="/admin/orders" class="nav-item"><i class="fas fa-shopping-bag"></i> Đơn hàng</a>
+                    <a href="/admin/users" class="nav-item"><i class="fas fa-users"></i> Khách hàng</a>
+                    <a href="/admin/reviews" class="nav-item active"><i class="fas fa-star"></i> Đánh giá</a>
+                    <a href="/admin/contacts" class="nav-item"><i class="fas fa-envelope"></i> Liên hệ</a>
+                </div>
+                <div class="nav-section"><div class="nav-section-title">Hệ thống</div>
+                    <a href="/" class="nav-item" target="_blank"><i class="fas fa-external-link-alt"></i> Xem cửa hàng</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user" id="adminUser">
+                    <div class="sidebar-avatar">A</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">Admin</div>
+                        <div class="sidebar-user-role">Quản trị viên</div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="top-header-left">
+                    <h1 class="top-header-title">Quản lý đánh giá</h1>
+                </div>
+                <div class="top-header-right">
+                    <span class="header-date" id="currentDate"></span>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="card">
+                    <div class="card-body" style="padding: 0;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Khách hàng</th>
+                                    <th>Đánh giá</th>
+                                    <th>Nội dung</th>
+                                    <th>Ngày</th>
+                                    <th style="width: 80px;">Xóa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reviewsBody">
+                                <tr><td colspan="6" style="text-align: center; padding: 48px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--gray-400);"></i></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function adminLogout() {
+            if (!confirm('Đăng xuất?')) return;
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+            try {
+                const userRes = await fetch('/api/auth/me', { credentials: 'include' });
+                const userData = await userRes.json();
+                if (userData.user) {
+                    document.getElementById('adminUser').innerHTML = `<div class="sidebar-avatar">${userData.user.full_name?.charAt(0) || 'A'}</div><div class="sidebar-user-info"><div class="sidebar-user-name">${userData.user.full_name || 'Admin'}</div><div class="sidebar-user-role">Quản trị viên</div></div>`;
+                }
+            } catch (e) {}
+
+            loadReviews();
+        });
+
+        async function loadReviews() {
+            try {
+                const res = await fetch('/admin/reviews/list', { credentials: 'include' });
+                const data = await res.json();
+                const reviews = data.reviews || [];
+                const tbody = document.getElementById('reviewsBody');
+
+                if (reviews.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-star"></i><h3>Chưa có đánh giá nào</h3></div></td></tr>`;
+                    return;
+                }
+
+                let html = '';
+                reviews.forEach(r => {
+                    const stars = '★'.repeat(r.rating || 5) + '☆'.repeat(5 - (r.rating || 5));
+                    html += `<tr>
+                        <td><strong>${r.product_name || 'N/A'}</strong></td>
+                        <td>${r.user_name || 'Khách'}</td>
+                        <td><span style="color: #F59E0B;">${stars}</span></td>
+                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.comment || '-'}</td>
+                        <td>${r.created_at ? new Date(r.created_at).toLocaleDateString('vi-VN') : '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="deleteReview(${r.id})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+            } catch (e) {
+                document.getElementById('reviewsBody').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Lỗi tải dữ liệu</h3></div></td></tr>`;
+            }
+        }
+
+        async function deleteReview(id) {
+            if (!confirm('Xóa đánh giá này?')) return;
+            try {
+                const res = await fetch(`/admin/reviews/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadReviews();
+                } else {
+                    alert(data.error || 'Lỗi khi xóa!');
+                }
+            } catch (e) {
+                alert('Lỗi khi xóa đánh giá!');
+            }
+        }
+    </script>
+</body>
+</html>
