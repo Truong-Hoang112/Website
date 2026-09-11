@@ -9,7 +9,7 @@ npm install
 npm start
 ```
 
-Server chạy tại: `http://localhost:3000`
+Server chạy tại: `[http://localhost:3000](https://anhtraisstore.com/)`
 
 ## 📋 Tài khoản demo
 
