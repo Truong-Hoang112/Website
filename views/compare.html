@@ -87,19 +87,29 @@
             gap: 12px;
             flex-wrap: wrap;
         }
-        .btn-outline-danger {
+        .btn-outline-danger, .btn-primary-outline {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            padding: 10px 20px;
-            border: 2px solid var(--danger);
-            color: var(--danger);
+            padding: 10px 24px;
+            min-width: 180px;
+            height: 44px;
+            border: 2px solid;
             border-radius: var(--radius-md);
             font-size: 0.875rem;
             font-weight: 700;
             cursor: pointer;
             background: transparent;
             transition: all 0.2s;
+            white-space: nowrap;
+            box-sizing: border-box;
+            text-decoration: none;
+            line-height: 1;
+        }
+        .btn-outline-danger {
+            border-color: var(--danger);
+            color: var(--danger);
         }
         .btn-outline-danger:hover {
             background: var(--danger);
@@ -108,19 +118,8 @@
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
         .btn-primary-outline {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border: 2px solid var(--primary);
+            border-color: var(--primary);
             color: var(--primary);
-            border-radius: var(--radius-md);
-            font-size: 0.875rem;
-            font-weight: 700;
-            cursor: pointer;
-            background: transparent;
-            transition: all 0.2s;
-            text-decoration: none;
         }
         .btn-primary-outline:hover {
             background: var(--primary);
@@ -134,45 +133,105 @@
             background: var(--white);
             border-radius: var(--radius-xl);
             border: 1px solid var(--slate-200);
-            overflow: hidden;
+            overflow-x: auto;
+            min-width: 100%;
         }
         .compare-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px;
+            min-width: 820px;
+            table-layout: fixed;
         }
         .compare-table th, .compare-table td {
-            padding: 16px 20px;
-            text-align: left;
+            padding: 12px;
+            text-align: center;
             vertical-align: top;
             border-bottom: 1px solid var(--gray-100);
         }
-        .compare-table th {
+        .compare-table th:first-child {
+            text-align: left;
             background: var(--gray-50);
             font-weight: 700;
             color: var(--slate-700);
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            width: 140px;
             min-width: 140px;
-            width: 160px;
+            position: sticky;
+            left: 0;
+            z-index: 10;
         }
-        .compare-table .product-col { min-width: 240px; width: 280px; }
+        .compare-table .product-col { 
+            min-width: 260px;
+            max-width: 260px;
+            width: 260px;
+            vertical-align: top;
+            padding: 8px;
+            height: 420px;
+            text-align: center;
+        }
+        .compare-table .product-col * {
+            text-align: center !important;
+        }
+        .product-col-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            box-sizing: border-box;
+            align-items: center;
+        }
+        .product-gallery-area {
+            width: 100%;
+            max-width: 240px;
+            height: 240px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .product-info-scroll {
+            flex: 1;
+            width: 100%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 0;
+        }
         .compare-product-img {
-            width: 160px;
-            height: 160px;
+            width: 240px !important;
+            max-width: 240px !important;
+            height: 240px !important;
+            max-height: 240px !important;
+            aspect-ratio: 1 / 1;
             background: linear-gradient(135deg, var(--slate-100) 0%, var(--slate-50) 100%);
             border-radius: var(--radius-lg);
-            margin-bottom: 12px;
+            margin: 0 auto 12px;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .compare-product-img img { width: 100%; height: 100%; object-fit: cover; }
+        .compare-product-img img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .compare-product-img img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
         .compare-product-name {
             font-weight: 700;
             font-size: 0.9rem;
             color: var(--dark);
             margin-bottom: 4px;
             line-height: 1.4;
+            min-height: 40px;
         }
         .compare-product-name a {
             color: inherit;
@@ -186,27 +245,61 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 8px;
+            min-height: 14px;
+        }
+        .compare-product-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--dark);
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+        .compare-product-name a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .compare-product-name a:hover { color: var(--primary); }
+        .compare-action-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 12px;
+            justify-content: center;
+        }
+        .compare-product-price, .compare-product-old {
+            text-align: center;
+        }
+        .compare-product-brand, .compare-product-name {
+            text-align: center;
         }
         .compare-product-price {
             font-size: 1.1rem;
             font-weight: 800;
             color: var(--danger);
             margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .discount-badge {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 700;
         }
         .compare-product-old {
             font-size: 0.8rem;
             color: var(--slate-400);
             text-decoration: line-through;
         }
-        .compare-action-btns {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
         .btn-compare-cart {
-            flex: 1;
-            min-width: 100px;
+            flex: 0 0 auto;
+            width: auto;
+            min-width: 140px;
             padding: 10px 14px;
             background: var(--primary);
             color: #fff;
@@ -223,6 +316,7 @@
         }
         .btn-compare-cart:hover { background: var(--primary-dark); }
         .btn-compare-remove {
+            flex: 0 0 auto;
             width: 40px;
             height: 40px;
             background: var(--slate-100);
@@ -298,7 +392,7 @@
         /* ===== TOAST ===== */
         .toast {
             position: fixed;
-            bottom: 30px;
+            top: 30px;
             right: 30px;
             padding: 14px 22px;
             border-radius: var(--radius-md);
@@ -308,13 +402,93 @@
             align-items: center;
             gap: 10px;
             z-index: 99999;
-            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideInTop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
         .toast.success { background: linear-gradient(135deg, var(--success), #059669); color: #fff; }
         .toast.error { background: linear-gradient(135deg, var(--danger), #dc2626); color: #fff; }
         .toast.info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(120%); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInTop { from { opacity: 0; transform: translateY(-120%); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== CONFIRM MODAL ===== */
+        .confirm-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .confirm-modal-overlay.show { opacity: 1; }
+        .confirm-modal {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            padding: 28px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        }
+        .confirm-modal-overlay.show .confirm-modal { transform: scale(1); }
+        .confirm-modal-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+        .confirm-modal-icon.danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: #fff;
+        }
+        .confirm-modal h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--slate-800);
+        }
+        .confirm-modal p {
+            color: var(--slate-500);
+            font-size: 0.875rem;
+            margin-bottom: 24px;
+        }
+        .confirm-modal-btns {
+            display: flex;
+            gap: 12px;
+        }
+        .confirm-modal-btns button {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        .confirm-cancel {
+            background: var(--slate-100);
+            color: var(--slate-600);
+        }
+        .confirm-cancel:hover {
+            background: var(--slate-200);
+        }
+        .confirm-ok {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: #fff;
+        }
+        .confirm-ok:hover {
+            box-shadow: 0 4px 15px rgba(239,68,68,0.4);
+            transform: translateY(-1px);
+        }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
@@ -328,7 +502,13 @@
         /* ===== COMPARE GALLERY CAROUSEL ===== */
         .compare-gallery-wrap {
             position: relative;
-            width: 100%;
+            width: 240px;
+            height: 240px;
+        }
+        .compare-gallery-wrap .compare-main-img {
+            width: 240px;
+            height: 240px;
+            object-fit: contain;
         }
         .compare-gallery {
             display: flex;
@@ -338,6 +518,7 @@
             scrollbar-width: thin;
             scrollbar-color: var(--slate-300) transparent;
             padding-bottom: 4px;
+            width: 240px;
         }
         .compare-gallery::-webkit-scrollbar {
             height: 4px;
@@ -368,11 +549,14 @@
             box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
         }
         .compare-main-img {
-            width: 100%;
-            height: 200px;
+            width: 240px !important;
+            height: 240px !important;
+            max-width: 240px !important;
+            max-height: 240px !important;
             object-fit: contain;
             border-radius: var(--radius-md);
-            margin-bottom: 8px;
+            margin: 0 auto 8px;
+            display: block;
         }
     </style>
 </head>
@@ -788,16 +972,20 @@
                 }
                 
                 html += `<td class="product-col">
-                    ${galleryHtml}
-                    <div class="compare-product-brand">${p.brand_name || ''}</div>
-                    <div class="compare-product-name"><a href="/product/${p.id}">${p.name}</a></div>
-                    <div class="compare-action-btns">
-                        <button class="btn-compare-cart" onclick="addToCart(${p.id})">
-                            <i class="bi bi-bag-plus"></i> Thêm vào giỏ
-                        </button>
-                        <button class="btn-compare-remove" onclick="removeFromCompare(${p.id})" title="Xóa">
-                            <i class="bi bi-x"></i>
-                        </button>
+                    <div class="product-col-inner">
+                        <div class="product-gallery-area">${galleryHtml}</div>
+                        <div class="product-info-scroll">
+                            <div class="compare-product-brand">${p.brand_name || ''}</div>
+                            <div class="compare-product-name"><a href="/product/${p.id}">${p.name}</a></div>
+                            <div class="compare-action-btns">
+                                <button class="btn-compare-cart" onclick="addToCart(${p.id})">
+                                    <i class="bi bi-bag-plus"></i> Thêm vào giỏ
+                                </button>
+                                <button class="btn-compare-remove" onclick="removeFromCompare(${p.id})" title="Xóa">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </td>`;
             });
@@ -819,9 +1007,8 @@
             compareProducts.forEach(p => {
                 const isBest = parseFloat(p.price) === minPrice;
                 html += `<td class="${isBest ? 'highlight-low' : ''}">
-                    <div class="compare-product-price">${formatPrice(p.price)}đ</div>
+                    <div class="compare-product-price">${formatPrice(p.price)}đ ${p.discount_percent > 0 ? `<span class="discount-badge">-${Math.round(p.discount_percent)}%</span>` : ''}</div>
                     ${p.old_price ? `<div class="compare-product-old">${formatPrice(p.old_price)}đ</div>` : ''}
-                    ${p.discount_percent > 0 ? `<div style="color:var(--danger);font-size:0.75rem;font-weight:700;margin-top:4px">Giảm ${Math.round(p.discount_percent)}%</div>` : ''}
                 </td>`;
             });
             html += '</tr>';
@@ -905,10 +1092,39 @@
         }
 
         function clearCompareAndReload() {
-            if (!confirm('Xóa toàn bộ sản phẩm so sánh?')) return;
+            showConfirmModal('Xóa toàn bộ?', 'Tất cả sản phẩm so sánh sẽ bị xóa.', 'executeClearCompare()');
+        }
+
+        function executeClearCompare() {
             clearCompare();
             loadCompare();
             showToast('Đã xóa toàn bộ!', 'success');
+        }
+
+        function showConfirmModal(title, message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-modal-overlay';
+            overlay.innerHTML = `
+                <div class="confirm-modal">
+                    <div class="confirm-modal-icon danger"><i class="bi bi-trash3"></i></div>
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    <div class="confirm-modal-btns">
+                        <button class="confirm-cancel" onclick="closeConfirmModal()">Hủy</button>
+                        <button class="confirm-ok" onclick="closeConfirmModal(); ${onConfirm}">Xóa</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            setTimeout(() => overlay.classList.add('show'), 10);
+        }
+
+        function closeConfirmModal() {
+            const overlay = document.querySelector('.confirm-modal-overlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+                setTimeout(() => overlay.remove(), 300);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {

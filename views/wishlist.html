@@ -93,19 +93,29 @@
             gap: 12px;
             flex-wrap: wrap;
         }
-        .btn-outline-danger {
+        .btn-outline-danger, .btn-primary-outline {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            padding: 10px 20px;
-            border: 2px solid var(--danger);
-            color: var(--danger);
+            padding: 10px 24px;
+            min-width: 180px;
+            height: 44px;
+            border: 2px solid;
             border-radius: var(--radius-md);
             font-size: 0.875rem;
             font-weight: 700;
             cursor: pointer;
             background: transparent;
             transition: all 0.2s;
+            white-space: nowrap;
+            box-sizing: border-box;
+            text-decoration: none;
+            line-height: 1;
+        }
+        .btn-outline-danger {
+            border-color: var(--danger);
+            color: var(--danger);
         }
         .btn-outline-danger:hover {
             background: var(--danger);
@@ -114,19 +124,8 @@
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
         .btn-primary-outline {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border: 2px solid var(--primary);
+            border-color: var(--primary);
             color: var(--primary);
-            border-radius: var(--radius-md);
-            font-size: 0.875rem;
-            font-weight: 700;
-            cursor: pointer;
-            background: transparent;
-            transition: all 0.2s;
-            text-decoration: none;
         }
         .btn-primary-outline:hover {
             background: var(--primary);
@@ -340,7 +339,7 @@
         /* ===== TOAST ===== */
         .toast {
             position: fixed;
-            bottom: 30px;
+            top: 30px;
             right: 30px;
             padding: 14px 22px;
             border-radius: var(--radius-md);
@@ -350,13 +349,93 @@
             align-items: center;
             gap: 10px;
             z-index: 99999;
-            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideInTop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
         .toast.success { background: linear-gradient(135deg, var(--success), #059669); color: #fff; }
         .toast.error { background: linear-gradient(135deg, var(--danger), #dc2626); color: #fff; }
         .toast.info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(120%); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInTop { from { opacity: 0; transform: translateY(-120%); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== CONFIRM MODAL ===== */
+        .confirm-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .confirm-modal-overlay.show { opacity: 1; }
+        .confirm-modal {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            padding: 28px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        }
+        .confirm-modal-overlay.show .confirm-modal { transform: scale(1); }
+        .confirm-modal-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+        .confirm-modal-icon.danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: #fff;
+        }
+        .confirm-modal h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--slate-800);
+        }
+        .confirm-modal p {
+            color: var(--slate-500);
+            font-size: 0.875rem;
+            margin-bottom: 24px;
+        }
+        .confirm-modal-btns {
+            display: flex;
+            gap: 12px;
+        }
+        .confirm-modal-btns button {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        .confirm-cancel {
+            background: var(--slate-100);
+            color: var(--slate-600);
+        }
+        .confirm-cancel:hover {
+            background: var(--slate-200);
+        }
+        .confirm-ok {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: #fff;
+        }
+        .confirm-ok:hover {
+            box-shadow: 0 4px 15px rgba(239,68,68,0.4);
+            transform: translateY(-1px);
+        }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1024px) { .wishlist-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -792,8 +871,37 @@
             }
         }
 
+        function showConfirmModal(title, message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-modal-overlay';
+            overlay.innerHTML = `
+                <div class="confirm-modal">
+                    <div class="confirm-modal-icon danger"><i class="bi bi-trash3"></i></div>
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    <div class="confirm-modal-btns">
+                        <button class="confirm-cancel" onclick="closeConfirmModal()">Hủy</button>
+                        <button class="confirm-ok" onclick="closeConfirmModal(); ${onConfirm}">Xóa</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            setTimeout(() => overlay.classList.add('show'), 10);
+        }
+
+        function closeConfirmModal() {
+            const overlay = document.querySelector('.confirm-modal-overlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+                setTimeout(() => overlay.remove(), 300);
+            }
+        }
+
         async function clearWishlist() {
-            if (!confirm('Xóa TẤT CẢ sản phẩm khỏi danh sách yêu thích?')) return;
+            showConfirmModal('Xóa toàn bộ?', 'Tất cả sản phẩm yêu thích sẽ bị xóa.', 'executeClearWishlist()');
+        }
+
+        async function executeClearWishlist() {
             try {
                 const response = await fetch('/api/wishlist', {
                     method: 'DELETE',

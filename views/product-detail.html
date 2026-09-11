@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/style.css?v=5">
+    <link rel="stylesheet" href="/css/style.css?v=6">
     <link rel="stylesheet" href="/css/chatbox.css">
     <style>
         .breadcrumb-bar {
@@ -42,20 +42,21 @@
         .detail-img-section {}
         .detail-img-main {
             width: 100%;
-            aspect-ratio: 1;
             background: linear-gradient(135deg, var(--slate-100) 0%, var(--slate-50) 100%);
             border-radius: var(--radius-2xl);
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             position: relative;
         }
         .detail-img-main img {
             width: 100%;
-            height: 100%;
+            height: auto;
+            max-height: 500px;
             object-fit: contain;
+            display: block;
         }
         .detail-badge {
             position: absolute;
@@ -73,33 +74,51 @@
             gap: 12px;
             flex-wrap: nowrap;
             overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            scrollbar-width: thin;
-            scrollbar-color: var(--slate-300) transparent;
-            padding-bottom: 4px;
+            scroll-behavior: smooth;
+            padding: 4px 0 8px;
+            cursor: grab;
+        }
+        .detail-img-thumbs:active {
+            cursor: grabbing;
         }
         .detail-img-thumbs::-webkit-scrollbar {
-            height: 4px;
+            height: 6px;
         }
         .detail-img-thumbs::-webkit-scrollbar-track {
             background: transparent;
+            border-radius: 3px;
         }
         .detail-img-thumbs::-webkit-scrollbar-thumb {
-            background: var(--slate-300);
-            border-radius: 4px;
+            background: var(--slate-200);
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .detail-img-thumbs:hover::-webkit-scrollbar-thumb {
+            opacity: 1;
+        }
+        .detail-img-thumbs::-webkit-scrollbar-thumb:hover {
+            background: var(--slate-400);
+        }
+        .thumbs-counter {
+            font-size: 0.75rem;
+            color: var(--slate-500);
+            margin-bottom: 8px;
         }
         .thumb-item {
-            width: 80px;
-            height: 80px;
-            border-radius: var(--radius-lg);
+            width: calc((100% - 36px) / 4);
+            aspect-ratio: 1;
+            max-width: 90px;
+            border-radius: var(--radius-md);
             overflow: hidden;
             cursor: pointer;
-            border: 3px solid transparent;
+            border: 2px solid transparent;
             transition: all var(--transition-base);
             background: var(--slate-100);
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
         .thumb-item:hover { border-color: var(--slate-300); }
         .thumb-item.active { border-color: var(--primary); }
@@ -837,9 +856,10 @@
     </div>
 
     <div class="detail-wrap">
-        <div class="detail-main">
+            <div class="detail-main">
             <div class="detail-img-section">
                 <div class="detail-img-main" id="mainImg"></div>
+                <div class="thumbs-counter" id="thumbsCounter">9 ảnh</div>
                 <div class="detail-img-thumbs" id="thumbsContainer"></div>
             </div>
 
@@ -1274,6 +1294,11 @@
                     '<img src="' + imgUrl + '" alt=""></div>';
             });
             document.getElementById('thumbsContainer').innerHTML = thumbsHtml;
+            document.getElementById('thumbsContainer').addEventListener('mouseenter', stopThumbAutoScroll);
+            
+            // Update thumbs counter
+            const total = allImages.length;
+            document.getElementById('thumbsCounter').textContent = total + ' ảnh';
 
             // Info
             document.getElementById('productBrand').textContent = product.brand_name || '';
@@ -1368,6 +1393,71 @@
             const mainImg = document.getElementById('mainImgEl');
             if (mainImg) {
                 mainImg.src = src;
+            }
+            
+            // Auto-scroll when viewing last images
+            const container = document.getElementById('thumbsContainer');
+            if (!container) return;
+            
+            const items = container.children;
+            let clickedIndex = -1;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i] === el) {
+                    clickedIndex = i;
+                    break;
+                }
+            }
+            
+            // Nếu click vào ảnh trong nửa cuối → bắt đầu auto-scroll
+            if (clickedIndex >= items.length / 2) {
+                startThumbAutoScroll();
+            } else {
+                stopThumbAutoScroll();
+            }
+        }
+
+        // Auto-scroll thumbnails when viewing last images
+        let thumbAutoScroll;
+        function startThumbAutoScroll() {
+            const container = document.getElementById('thumbsContainer');
+            if (!container || container.children.length <= 4) return;
+            stopThumbAutoScroll();
+            
+            thumbAutoScroll = setInterval(() => {
+                const items = container.children;
+                if (!items.length) return;
+                
+                // Tìm ảnh đang active
+                let activeIdx = 0;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].classList.contains('active')) {
+                        activeIdx = i;
+                        break;
+                    }
+                }
+                
+                // Nếu đang ở ảnh cuối → cuộn về đầu
+                if (activeIdx >= items.length - 1) {
+                    container.scrollTo({ left: 0, behavior: 'smooth' });
+                    // Click vào ảnh đầu
+                    items[0]?.click();
+                } else {
+                    // Cuộn đến ảnh tiếp theo
+                    const nextIdx = activeIdx + 1;
+                    container.scrollTo({ 
+                        left: nextIdx * (items[0].offsetWidth + 12), 
+                        behavior: 'smooth' 
+                    });
+                    // Update active class
+                    items[nextIdx]?.click();
+                }
+            }, 2000);
+        }
+        
+        function stopThumbAutoScroll() {
+            if (thumbAutoScroll) {
+                clearInterval(thumbAutoScroll);
+                thumbAutoScroll = null;
             }
         }
 
