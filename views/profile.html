@@ -3,292 +3,419 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tài khoản - AnhTraiStore</title>
+    <title>Cài đặt tài khoản - AnhTraiStore</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=2">
+    <link rel="stylesheet" href="/css/chatbox.css">
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-bg: #eef2ff;
-            --success: #10b981;
-            --success-bg: #ecfdf5;
-            --warning: #f59e0b;
-            --warning-bg: #fffbeb;
-            --danger: #ef4444;
-            --danger-bg: #fef2f2;
-            --dark: #1e293b;
-            --gray-600: #64748b;
-            --gray-500: #64748b;
-            --gray-400: #94a3b8;
-            --gray-300: #cbd5e1;
-            --gray-200: #e2e8f0;
-            --gray-100: #f1f5f9;
-            --white: #ffffff;
-            --radius-xl: 16px;
-            --radius-2xl: 24px;
-            --shadow-lg: 0 10px 40px -10px rgba(0,0,0,0.15);
-            --shadow-xl: 0 20px 50px -12px rgba(0,0,0,0.2);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; margin: 0; }
-
-        /* Page Header */
+        /* ===== PAGE HEADER ===== */
         .page-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, #3730a3 100%);
-            color: white;
-            padding: 60px 24px;
-            text-align: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 48px 0;
             position: relative;
             overflow: hidden;
         }
         .page-header::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-            animation: pulse 15s ease infinite;
+            inset: 0;
+            background: radial-gradient(ellipse at 100% 0%, rgba(226,27,27,0.15) 0%, transparent 50%);
         }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        .page-header-content { position: relative; z-index: 1; }
-        .page-header-icon { font-size: 4rem; margin-bottom: 16px; display: block; }
-        .page-header h1 { font-size: 2.25rem; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.02em; }
-        .page-header p { opacity: 0.9; margin: 0; font-size: 1.05rem; }
-
-        /* Container */
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-        .profile-container { max-width: 1100px; margin: -40px auto 40px; padding: 0 24px; position: relative; z-index: 2; }
-
-        /* Profile Grid */
-        .profile-grid {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 24px;
-        }
-
-        /* Sidebar Card */
-        .profile-sidebar {
-            background: var(--white);
-            border-radius: var(--radius-2xl);
-            box-shadow: var(--shadow-lg);
-            overflow: hidden;
-            height: fit-content;
-        }
-        .profile-user-card {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 32px 24px;
-            text-align: center;
+        .page-header-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
             position: relative;
+            z-index: 1;
         }
-        .profile-user-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        .page-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 16px;
         }
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.2);
+        .page-breadcrumb a { color: rgba(255,255,255,0.6); font-weight: 500; }
+        .page-breadcrumb a:hover { color: #fff; }
+        .page-breadcrumb i { font-size: 0.6rem; }
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .page-title-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(226,27,27,0.15);
+            border-radius: var(--radius-lg);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 16px;
-            font-size: 3rem;
-            position: relative;
-            z-index: 1;
+            font-size: 1.5rem;
+            color: #ff4444;
         }
-        .profile-user-name {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-            position: relative;
-            z-index: 1;
+        .page-title h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.02em;
         }
-        .profile-user-role {
+        .page-title p {
             font-size: 0.875rem;
-            opacity: 0.9;
-            padding: 4px 16px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50px;
-            display: inline-block;
-            position: relative;
-            z-index: 1;
+            color: rgba(255,255,255,0.6);
+            margin-top: 4px;
         }
 
-        /* Sidebar Menu */
+        /* ===== PROFILE LAYOUT ===== */
+        .profile-layout {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        /* ===== SIDEBAR CARD ===== */
+        .profile-card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 24px;
+        }
+        .profile-card-cover {
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            position: relative;
+        }
+        .profile-card-cover::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(to top, rgba(0,0,0,0.08), transparent);
+        }
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: -40px auto 12px;
+            border: 4px solid var(--white);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            font-size: 2.2rem;
+            color: #fff;
+            position: relative;
+            z-index: 1;
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-card-info {
+            text-align: center;
+            padding: 0 20px 20px;
+        }
+        .profile-card-name {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+        .profile-card-email {
+            font-size: 0.8rem;
+            color: var(--slate-500);
+            margin-bottom: 8px;
+        }
+        .profile-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--primary-bg);
+            color: var(--primary);
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* Profile Menu */
         .profile-menu {
-            padding: 16px 0;
+            border-top: 1px solid var(--slate-100);
+            padding: 12px 0;
         }
         .profile-menu-item {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 16px 24px;
-            color: var(--dark);
+            gap: 12px;
+            padding: 13px 20px;
+            color: var(--slate-600);
             text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
             border-left: 3px solid transparent;
         }
         .profile-menu-item:hover {
-            background: var(--gray-100);
-            border-left-color: var(--primary);
+            background: var(--slate-50);
             color: var(--primary);
+            border-left-color: var(--primary);
         }
-        .profile-menu-item i { font-size: 1.2rem; width: 24px; text-align: center; }
         .profile-menu-item.active {
             background: var(--primary-bg);
-            border-left-color: var(--primary);
             color: var(--primary);
+            border-left-color: var(--primary);
         }
+        .profile-menu-item i { font-size: 1.1rem; width: 22px; text-align: center; }
+        .profile-menu-divider { height: 1px; background: var(--slate-100); margin: 8px 20px; }
         .profile-menu-item.logout { color: var(--danger); }
         .profile-menu-item.logout:hover { background: var(--danger-bg); border-left-color: var(--danger); }
 
-        /* Main Card */
+        /* ===== MAIN CONTENT ===== */
         .profile-main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ===== SECTION CARD ===== */
+        .section-card {
             background: var(--white);
-            border-radius: var(--radius-2xl);
-            box-shadow: var(--shadow-lg);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
             overflow: hidden;
         }
-        .profile-section-header {
-            padding: 24px 28px;
-            border-bottom: 1px solid var(--gray-200);
+        .section-header {
             display: flex;
             align-items: center;
             gap: 14px;
+            padding: 22px 26px;
+            border-bottom: 1px solid var(--slate-100);
+            background: linear-gradient(135deg, #fafbff 0%, var(--white) 100%);
         }
-        .profile-section-header i { color: var(--primary); font-size: 1.5rem; }
-        .profile-section-title { font-size: 1.2rem; font-weight: 700; color: var(--dark); margin: 0; }
+        .section-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--primary-bg);
+            color: var(--primary);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--dark);
+        }
+        .section-body { padding: 26px; }
 
-        /* Form */
-        .profile-form {
-            padding: 28px;
+        /* ===== ALERTS ===== */
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .alert.success { background: var(--success-bg); color: #065f46; }
+        .alert.error { background: var(--danger-bg); color: #991b1b; }
+        .alert.info { background: var(--info-bg); color: #0e7490; }
+
+        /* ===== FORM ===== */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
         }
         .form-group {
-            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
-        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group.full { grid-column: span 2; }
         .form-label {
-            display: block;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 8px;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--slate-600);
         }
         .form-label span { color: var(--danger); }
-        .form-input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--gray-200);
-            border-radius: var(--radius-xl);
-            font-size: 1rem;
+        .form-input, .form-select {
+            padding: 13px 15px;
+            border: 2px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
             font-family: inherit;
-            transition: var(--transition);
+            transition: all 0.2s ease;
             background: var(--white);
+            color: var(--dark);
         }
-        .form-input:focus {
+        .form-input:focus, .form-select:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 4px rgba(226,27,27,0.1);
         }
         .form-input:disabled {
-            background: var(--gray-100);
-            color: var(--gray-500);
+            background: var(--slate-50);
+            color: var(--slate-400);
+            cursor: not-allowed;
         }
-        .form-input::placeholder { color: var(--gray-400); }
-        select.form-input { cursor: pointer; }
-        select.form-input:disabled { cursor: not-allowed; }
-
-        /* Address Grid */
-        .address-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .address-grid .form-group:nth-child(4) { grid-column: 1 / -1; }
-
-        /* Save Button */
-        .btn-save {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            border: none;
-            padding: 16px 36px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1rem;
+        .form-select {
             cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: var(--transition);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237070a0' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: calc(100% - 14px) center;
+            padding-right: 40px;
         }
-        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5); }
-        .form-actions { display: flex; justify-content: flex-end; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--gray-200); }
 
-        /* Admin Button */
-        .btn-admin {
+        /* ===== AVATAR UPLOAD ===== */
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 20px;
+            background: var(--slate-50);
+            border-radius: var(--radius-lg);
+            border: 2px dashed var(--slate-200);
+        }
+        .avatar-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 14px 28px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            margin: 16px 24px;
-            transition: var(--transition);
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 3px solid var(--white);
+            box-shadow: var(--shadow-md);
         }
-        .btn-admin:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5); }
-
-        /* Success Message */
-        .alert {
-            padding: 16px 20px;
-            border-radius: var(--radius-xl);
-            margin-bottom: 20px;
-            display: flex;
+        .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-preview i { font-size: 2.8rem; color: #fff; }
+        .avatar-content { flex: 1; }
+        .avatar-title { font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+        .avatar-desc { font-size: 0.8rem; color: var(--slate-500); margin-bottom: 16px; }
+        .avatar-desc i { color: var(--primary); }
+        .avatar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-choose {
+            padding: 10px 20px;
+            background: var(--gradient-primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
             align-items: center;
-            gap: 12px;
-            font-weight: 500;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(226,27,27,0.3);
         }
-        .alert-success { background: var(--success-bg); color: #047857; border: 1px solid #a7f3d0; }
-        .alert-error { background: var(--danger-bg); color: #b91c1c; border: 1px solid #fecaca; }
-        .alert i { font-size: 1.2rem; }
+        .btn-choose:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(226,27,27,0.4); }
+        .btn-delete {
+            padding: 10px 20px;
+            background: var(--white);
+            color: var(--danger);
+            border: 2px solid var(--danger);
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-delete:hover { background: var(--danger-bg); }
+        .avatar-alert { margin-top: 12px; }
+        .avatar-alert div {
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .avatar-alert .success { background: var(--success-bg); color: #065f46; }
+        .avatar-alert .error { background: var(--danger-bg); color: #b91c1c; }
+        .avatar-alert .info { background: var(--info-bg); color: #0e7490; }
 
-        /* Responsive */
+        /* ===== PASSWORD ===== */
+        .password-wrap { position: relative; }
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--slate-400);
+            font-size: 1rem;
+            padding: 4px;
+        }
+        .password-toggle:hover { color: var(--primary); }
+        .strength-bar { height: 4px; background: var(--slate-200); border-radius: 2px; overflow: hidden; margin-top: 10px; }
+        .strength-fill { height: 100%; border-radius: 2px; transition: all 0.3s ease; width: 0%; }
+        .strength-text { font-size: 0.75rem; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+        .strength-text.weak { color: var(--danger); }
+        .strength-text.medium { color: var(--warning); }
+        .strength-text.strong { color: var(--success); }
+        .match-msg { font-size: 0.75rem; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+        .match-msg.ok { color: var(--success); }
+        .match-msg.no { color: var(--danger); }
+
+        /* ===== BUTTONS ===== */
+        .btn-submit {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 28px;
+            background: var(--gradient-primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 14px rgba(226,27,27,0.35);
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(226,27,27,0.45); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .form-actions { margin-top: 28px; display: flex; align-items: center; gap: 14px; }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
-            .profile-grid { grid-template-columns: 1fr; }
-            .profile-sidebar { order: -1; }
-            .profile-user-card { padding: 24px; }
+            .profile-layout { grid-template-columns: 1fr; }
+            .profile-card { position: static; }
         }
         @media (max-width: 640px) {
+            .page-header { padding: 32px 0; }
+            .page-title h1 { font-size: 1.35rem; }
+            .page-title-icon { width: 44px; height: 44px; font-size: 1.2rem; }
             .form-grid { grid-template-columns: 1fr; }
-            .form-group.full-width { grid-column: 1; }
-            .address-grid { grid-template-columns: 1fr; }
-            .address-grid .form-group:nth-child(4) { grid-column: 1; }
-            .page-header h1 { font-size: 1.75rem; }
+            .form-group.full { grid-column: span 1; }
+            .avatar-section { flex-direction: column; text-align: center; }
+            .avatar-actions { justify-content: center; }
         }
     </style>
 </head>
@@ -306,64 +433,116 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="navbar-inner">
-            <a href="/" class="navbar-brand">AnhTraiStore</a>
+            <a href="/" class="navbar-brand">AnhTrai<span>Store</span></a>
             <div class="search-wrap">
-                <input type="text" id="searchInput" placeholder="Bạn muốn tìm gì hôm nay?" autocomplete="off">
-                <button class="search-btn" onclick="goSearch()"><i class="bi bi-search"></i></button>
-                <div id="searchSuggest" class="search-suggest"></div>
+                <input type="text" placeholder="Tìm kiếm sản phẩm..." id="searchInput" autocomplete="off">
+                <button class="search-btn"><i class="bi bi-search"></i></button>
+                <div id="searchResults" class="search-results"></div>
             </div>
-            <ul class="nav-links">
-                <li><a href="/products" class="nav-link"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a></li>
-                <li><a href="/products?sort=discount" class="nav-link"><i class="bi bi-tag"></i> Khuyến mãi</a></li>
-                <li><a href="/policy" class="nav-link"><i class="bi bi-file-text"></i> Chính sách</a></li>
-                <li><a href="/contact" class="nav-link"><i class="bi bi-headset"></i> Liên hệ</a></li>
-            </ul>
-            <a href="/cart" class="cart-link"><i class="bi bi-bag"></i> Giỏ hàng <span class="cart-badge" id="cartBadge" style="display:none">0</span></a>
-            <div id="userArea"></div>
+            <div class="navbar-actions">
+                <a href="/wishlist" class="navbar-action" title="Yêu thích">
+                    <i class="bi bi-heart"></i>
+                    <span id="wishlistBadge" class="action-badge" style="display:none">0</span>
+                </a>
+                <a href="/cart" class="navbar-action" title="Giỏ hàng">
+                    <i class="bi bi-bag"></i>
+                    <span id="cartBadge" class="action-badge" style="display:none">0</span>
+                </a>
+                <div id="userMenu"></div>
+            </div>
+            <button class="hamburger-nav" onclick="openMobileMenu()"><i class="bi bi-list"></i></button>
         </div>
     </nav>
+    
+    <!-- Mobile Menu Overlay -->
+    <div class="hamburger-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+    <div class="hamburger-nav" id="mobileMenu">
+        <button class="hamburger-close" onclick="closeMobileMenu()"><i class="bi bi-x-lg"></i></button>
+        <div class="mobile-menu-header">
+            <span class="navbar-brand">Anh<span>Trai</span>Store</span>
+        </div>
+        <nav class="mobile-nav">
+            <a href="/" class="mobile-nav-item"><i class="bi bi-house"></i> Trang chủ</a>
+            <a href="/products" class="mobile-nav-item"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a>
+            <a href="/promotions" class="mobile-nav-item"><i class="bi bi-tag"></i> Khuyến mãi</a>
+            <a href="/policy" class="mobile-nav-item"><i class="bi bi-file-text"></i> Chính sách</a>
+            <a href="/contact" class="mobile-nav-item"><i class="bi bi-headset"></i> Liên hệ</a>
+            <div class="mobile-nav-divider"></div>
+            <a href="/cart" class="mobile-nav-item"><i class="bi bi-bag"></i> Giỏ hàng</a>
+            <div id="mobileUserArea"></div>
+        </nav>
+    </div>
 
     <!-- Page Header -->
     <div class="page-header">
-        <div class="page-header-content">
-            <span class="page-header-icon">👤</span>
-            <h1>Tài khoản của tôi</h1>
-            <p>Quản lý thông tin cá nhân và đơn hàng</p>
+        <div class="page-header-inner">
+            <div class="page-breadcrumb">
+                <a href="/"><i class="bi bi-house"></i> Trang chủ</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Cài đặt tài khoản</span>
+            </div>
+            <div class="page-title">
+                <div class="page-title-icon">
+                    <i class="bi bi-gear-fill"></i>
+                </div>
+                <div>
+                    <h1>Cài đặt tài khoản</h1>
+                    <p>Quản lý thông tin cá nhân và bảo mật tài khoản</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="profile-container">
-        <div class="profile-grid">
-            <!-- Sidebar -->
-            <div class="profile-sidebar">
-                <div class="profile-user-card">
-                    <div class="profile-avatar"><i class="bi bi-person-fill"></i></div>
-                    <div class="profile-user-name" id="profileUserName">Đang tải...</div>
-                    <div class="profile-user-role" id="profileUserRole">Khách hàng</div>
+    <!-- Profile Layout -->
+    <div class="profile-layout">
+        <!-- Sidebar -->
+        <div class="profile-card">
+            <div class="profile-card-cover"></div>
+            <div class="profile-avatar" id="profileAvatar">
+                <i class="bi bi-person-fill"></i>
+            </div>
+            <div class="profile-card-info">
+                <div class="profile-card-name" id="profileCardName">Đang tải...</div>
+                <div class="profile-card-email" id="profileCardEmail"></div>
+                <div class="profile-badge" id="profileBadge">
+                    <i class="bi bi-person"></i>
+                    <span>Khách hàng</span>
                 </div>
-                <div class="profile-menu">
-                    <a href="/profile" class="profile-menu-item active">
-                        <i class="bi bi-person"></i> Thông tin cá nhân
-                    </a>
-                    <a href="/orders" class="profile-menu-item">
-                        <i class="bi bi-bag-check"></i> Đơn hàng của tôi
-                    </a>
-                    <a href="javascript:void(0)" class="profile-menu-item logout" onclick="logout()">
-                        <i class="bi bi-box-arrow-right"></i> Đăng xuất
-                    </a>
-                </div>
-                <div id="adminBtnContainer"></div>
             </div>
 
-            <!-- Main Content -->
-            <div class="profile-main">
-                <div class="profile-section-header">
-                    <i class="bi bi-pencil-square"></i>
-                    <h2 class="profile-section-title">Cập nhật thông tin</h2>
+            <div class="profile-menu">
+                <a href="/orders" class="profile-menu-item">
+                    <i class="bi bi-bag-check"></i> Đơn hàng của tôi
+                </a>
+                <a href="/wishlist" class="profile-menu-item">
+                    <i class="bi bi-heart"></i> Yêu thích
+                </a>
+                <div class="profile-menu-divider"></div>
+                <a href="/profile" class="profile-menu-item active">
+                    <i class="bi bi-person-circle"></i> Cài đặt tài khoản
+                </a>
+                <div class="profile-menu-divider"></div>
+                <a href="javascript:void(0)" class="profile-menu-item logout" onclick="logout()">
+                    <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                </a>
+            </div>
+            <div id="adminBtnContainer"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="profile-main">
+
+            <!-- Thông tin cá nhân -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <h2 class="section-title">Thông tin cá nhân</h2>
                 </div>
-                <div class="profile-form">
+                <div class="section-body">
                     <div id="alertContainer"></div>
-                    
+
                     <form id="profileForm">
                         <div class="form-grid">
                             <div class="form-group">
@@ -380,7 +559,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Giới tính</label>
-                                <select class="form-input" name="gender" id="gender">
+                                <select class="form-select" name="gender" id="gender">
                                     <option value="">Chọn giới tính</option>
                                     <option value="male">Nam</option>
                                     <option value="female">Nữ</option>
@@ -391,58 +570,225 @@
                                 <label class="form-label">Email</label>
                                 <input type="email" class="form-input" id="email" disabled placeholder="Email của bạn">
                             </div>
-                        </div>
-
-                        <div class="profile-section-header" style="margin: 0 -28px 20px; padding: 20px 28px; border-top: 1px solid var(--gray-200); border-bottom: 1px solid var(--gray-200);">
-                            <i class="bi bi-house"></i>
-                            <h2 class="profile-section-title">Địa chỉ giao hàng</h2>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Số nhà, tên đường</label>
-                            <input type="text" class="form-input" name="street" id="street" placeholder="Ví dụ: 123 Nguyễn Trãi, Phường Bến Nghé">
-                        </div>
-
-                        <div class="address-grid">
-                            <div class="form-group">
-                                <label class="form-label">Tỉnh/Thành phố <span>*</span></label>
-                                <select class="form-input" name="province" id="province" required>
-                                    <option value="">-- Chọn Tỉnh/Thành phố --</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Quận/Huyện <span>*</span></label>
-                                <select class="form-input" name="district" id="district" required disabled>
-                                    <option value="">-- Chọn Quận/Huyện --</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Phường/Xã <span>*</span></label>
-                                <select class="form-input" name="ward" id="ward" required disabled>
-                                    <option value="">-- Chọn Phường/Xã --</option>
-                                </select>
+                            <div class="form-group full">
+                                <label class="form-label">Địa chỉ giao hàng</label>
+                                <input type="text" class="form-input" id="address" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố">
                             </div>
                         </div>
-
-                        <input type="hidden" name="address" id="address">
-
                         <div class="form-actions">
-                            <button type="submit" class="btn-save">
-                                <i class="bi bi-check-circle"></i> Lưu thay đổi
+                            <button type="submit" class="btn-submit">
+                                <i class="bi bi-check-circle"></i> Lưu thông tin
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
+
+            <!-- Ảnh đại diện -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="bi bi-image"></i>
+                    </div>
+                    <h2 class="section-title">Ảnh đại diện</h2>
+                </div>
+                <div class="section-body">
+                    <div class="avatar-section">
+                        <div class="avatar-preview" id="avatarPreview">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="avatar-content">
+                            <div class="avatar-title">Thay đổi ảnh đại diện</div>
+                            <div class="avatar-desc">
+                                <i class="bi bi-info-circle"></i>
+                                Chấp nhận file JPG, PNG, GIF, WEBP. Kích thước tối đa 2MB.
+                            </div>
+                            <div id="avatarAlert"></div>
+                            <div class="avatar-actions">
+                                <label for="avatarInput" class="btn-choose">
+                                    <i class="bi bi-cloud-upload"></i> Chọn ảnh
+                                </label>
+                                <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+                                <button type="button" class="btn-delete" id="btnRemoveAvatar" onclick="removeAvatar()" style="display:none">
+                                    <i class="bi bi-trash"></i> Xóa ảnh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Đổi mật khẩu -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <h2 class="section-title">Đổi mật khẩu</h2>
+                </div>
+                <div class="section-body">
+                    <div id="passwordAlertContainer"></div>
+
+                    <form id="passwordForm">
+                        <div class="form-grid">
+                            <div class="form-group full">
+                                <label class="form-label">Mật khẩu hiện tại <span>*</span></label>
+                                <div class="password-wrap">
+                                    <input type="password" class="form-input" name="old_password" id="oldPassword" required placeholder="Nhập mật khẩu hiện tại" style="padding-right:48px">
+                                    <button type="button" class="password-toggle" onclick="togglePw('oldPassword', 'oldEye')">
+                                        <i class="bi bi-eye" id="oldEye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Mật khẩu mới <span>*</span></label>
+                                <div class="password-wrap">
+                                    <input type="password" class="form-input" name="new_password" id="newPassword" required minlength="6" placeholder="Ít nhất 6 ký tự" style="padding-right:48px" oninput="checkStrength(this.value)">
+                                    <button type="button" class="password-toggle" onclick="togglePw('newPassword', 'newEye')">
+                                        <i class="bi bi-eye" id="newEye"></i>
+                                    </button>
+                                </div>
+                                <div class="strength-bar"><div class="strength-fill" id="pwStrengthFill"></div></div>
+                                <div class="strength-text" id="pwStrengthText"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Xác nhận mật khẩu mới <span>*</span></label>
+                                <div class="password-wrap">
+                                    <input type="password" class="form-input" name="confirm_password" id="confirmPassword" required minlength="6" placeholder="Nhập lại mật khẩu mới" style="padding-right:48px" oninput="checkMatch()">
+                                    <button type="button" class="password-toggle" onclick="togglePw('confirmPassword', 'confirmEye')">
+                                        <i class="bi bi-eye" id="confirmEye"></i>
+                                    </button>
+                                </div>
+                                <div class="match-msg" id="matchMsg"></div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit" id="changePwBtn">
+                                <i class="bi bi-shield-check"></i> Đổi mật khẩu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <script src="/js/vietnam-address.js"></script>
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-brand">AnhTrai<span>Store</span></div>
+                    <p class="footer-desc">Chuỗi cửa hàng điện thoại & phụ kiện chính hãng uy tín toàn quốc.</p>
+                </div>
+                <div>
+                    <div class="footer-heading">Sản phẩm</div>
+                    <a href="/products" class="footer-link">Tất cả sản phẩm</a>
+                    <a href="/products?brand=apple" class="footer-link">iPhone</a>
+                    <a href="/products?brand=samsung" class="footer-link">Samsung</a>
+                </div>
+                <div>
+                    <div class="footer-heading">Hỗ trợ</div>
+                    <a href="/contact" class="footer-link">Liên hệ</a>
+                    <a href="/policy" class="footer-link">Chính sách</a>
+                </div>
+                <div>
+                    <div class="footer-heading">Tài khoản</div>
+                    <a href="/login" class="footer-link">Đăng nhập</a>
+                    <a href="/register" class="footer-link">Đăng ký</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 AnhTraiStore. Tất cả quyền được bảo lưu.</p>
+                <span>Made with ❤️ by Trương Xuân Hoàng</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/js/app.js"></script>
     <script>
+        // ===== ALERTS =====
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const icon = type === 'success' ? 'check-circle-fill' : type === 'error' ? 'exclamation-circle-fill' : 'info-circle-fill';
+            container.innerHTML = `<div class="alert ${type}"><i class="bi bi-${icon}"></i>${message}</div>`;
+            if (type === 'success') setTimeout(() => container.innerHTML = '', 3000);
+        }
+
+        function showPasswordAlert(message, type) {
+            const container = document.getElementById('passwordAlertContainer');
+            const icon = type === 'success' ? 'check-circle-fill' : type === 'error' ? 'exclamation-circle-fill' : 'info-circle-fill';
+            container.innerHTML = `<div class="alert ${type}"><i class="bi bi-${icon}"></i>${message}</div>`;
+            if (type === 'success') setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        function showAvatarAlert(message, type) {
+            const el = document.getElementById('avatarAlert');
+            el.innerHTML = `<div class="${type}"><i class="bi bi-${type === 'success' ? 'check-circle-fill' : type === 'error' ? 'exclamation-circle-fill' : 'info-circle-fill'}"></i> ${message}</div>`;
+            if (type === 'success') setTimeout(() => el.innerHTML = '', 3000);
+        }
+
+        // ===== PASSWORD =====
+        function togglePw(inputId, eyeId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(eyeId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+
+        function checkStrength(pw) {
+            const fill = document.getElementById('pwStrengthFill');
+            const text = document.getElementById('pwStrengthText');
+            if (!pw) { fill.style.width = '0%'; text.innerHTML = ''; return; }
+
+            let score = 0;
+            if (pw.length >= 6) score++;
+            if (pw.length >= 10) score++;
+            if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+            if (/\d/.test(pw)) score++;
+            if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+            const levels = [
+                { cls: 'weak', color: '#ef4444', text: 'Yếu', w: '20%' },
+                { cls: 'weak', color: '#f97316', text: 'Yếu', w: '40%' },
+                { cls: 'medium', color: '#f59e0b', text: 'Trung bình', w: '60%' },
+                { cls: 'strong', color: '#10b981', text: 'Mạnh', w: '80%' },
+                { cls: 'strong', color: '#059669', text: 'Rất mạnh', w: '100%' }
+            ];
+
+            const lv = levels[Math.min(score, 4)];
+            fill.style.width = lv.w;
+            fill.style.background = lv.color;
+            text.className = 'strength-text ' + lv.cls;
+            text.innerHTML = `<i class="bi bi-shield-${score < 3 ? 'exclamation' : 'check'}"></i> Độ mạnh: ${lv.text}`;
+        }
+
+        function checkMatch() {
+            const np = document.getElementById('newPassword').value;
+            const cp = document.getElementById('confirmPassword').value;
+            const el = document.getElementById('matchMsg');
+            if (!cp) { el.innerHTML = ''; return; }
+            if (np === cp) {
+                el.className = 'match-msg ok';
+                el.innerHTML = '<i class="bi bi-check-circle-fill"></i> Mật khẩu khớp';
+                document.getElementById('confirmPassword').style.borderColor = '#10b981';
+            } else {
+                el.className = 'match-msg no';
+                el.innerHTML = '<i class="bi bi-x-circle-fill"></i> Mật khẩu không khớp';
+                document.getElementById('confirmPassword').style.borderColor = '#ef4444';
+            }
+        }
+
+        // ===== INIT =====
         document.addEventListener('DOMContentLoaded', async () => {
             await initApp();
-            initAddressDropdowns();
 
             const userRes = await fetch('/api/auth/me');
             const userData = await userRes.json();
@@ -453,194 +799,206 @@
             }
 
             const user = userData.user;
-            
+
             // Update sidebar
-            document.getElementById('profileUserName').textContent = user.full_name || user.email;
-            document.getElementById('profileUserRole').textContent = user.role === 'admin' ? 'Quản trị viên' : 'Khách hàng';
+            document.getElementById('profileCardName').textContent = user.full_name || user.email;
+            document.getElementById('profileCardEmail').textContent = user.email || '';
+            if (user.role === 'admin') {
+                document.getElementById('profileBadge').innerHTML = '<i class="bi bi-shield-fill"></i><span>Quản trị viên</span>';
+            }
+            if (user.avatar) {
+                document.getElementById('profileAvatar').innerHTML = `<img src="${user.avatar}" alt="Avatar">`;
+            }
 
             // Fill form
             document.getElementById('fullName').value = user.full_name || '';
             document.getElementById('phone').value = user.phone || '';
-            document.getElementById('email').value = user.email;
             document.getElementById('birthdate').value = user.birthdate || '';
             document.getElementById('gender').value = user.gender || '';
+            document.getElementById('email').value = user.email || '';
+            document.getElementById('address').value = user.address || '';
 
-            // Parse and fill saved address
-            if (user.address) {
-                parseAndFillAddress(user.address);
-            }
-
-            // Admin button
-            if (user.role === 'admin') {
-                document.getElementById('adminBtnContainer').innerHTML = `
-                    <a href="/admin" class="btn-admin">
-                        <i class="bi bi-speedometer2"></i> Trang quản trị
-                    </a>`;
-            }
-
-            // Form submit
-            document.getElementById('profileForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-
-                try {
-                    const res = await fetch('/api/auth/profile', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            full_name: formData.get('full_name'),
-                            phone: formData.get('phone'),
-                            birthdate: formData.get('birthdate'),
-                            gender: formData.get('gender'),
-                            address: document.getElementById('address').value
-                        })
-                    });
-
-                    const result = await res.json();
-                    if (result.success) {
-                        showAlert('Cập nhật thông tin thành công!', 'success');
-                        document.getElementById('profileUserName').textContent = formData.get('full_name');
-                    } else {
-                        showAlert(result.error || 'Có lỗi xảy ra!', 'error');
-                    }
-                } catch (error) {
-                    showAlert('Đã xảy ra lỗi khi cập nhật!', 'error');
-                }
-            });
+            loadAvatarFromServer();
         });
 
-        function showAlert(message, type) {
-            const container = document.getElementById('alertContainer');
-            container.innerHTML = `
-                <div class="alert alert-${type}">
-                    <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-                    ${message}
-                </div>`;
-            if (type === 'success') {
-                setTimeout(() => container.innerHTML = '', 3000);
+        // ===== PROFILE FORM =====
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            try {
+                const res = await fetch('/api/auth/update-profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        full_name: formData.get('full_name'),
+                        phone: formData.get('phone'),
+                        birthdate: formData.get('birthdate'),
+                        gender: formData.get('gender'),
+                        address: document.getElementById('address').value
+                    })
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    showAlert('Cập nhật thông tin thành công!', 'success');
+                    document.getElementById('profileCardName').textContent = formData.get('full_name') || result.user?.full_name || formData.get('full_name');
+                } else {
+                    showAlert(result.error || 'Có lỗi xảy ra!', 'error');
+                }
+            } catch (error) {
+                showAlert('Đã xảy ra lỗi khi cập nhật!', 'error');
+            }
+        });
+
+        // ===== PASSWORD FORM =====
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const oldPw = document.getElementById('oldPassword').value;
+            const newPw = document.getElementById('newPassword').value;
+            const confirmPw = document.getElementById('confirmPassword').value;
+            const btn = document.getElementById('changePwBtn');
+
+            if (newPw.length < 6) { showPasswordAlert('Mật khẩu mới phải có ít nhất 6 ký tự!', 'error'); return; }
+            if (newPw !== confirmPw) { showPasswordAlert('Mật khẩu xác nhận không khớp!', 'error'); return; }
+            if (oldPw === newPw) { showPasswordAlert('Mật khẩu mới phải khác mật khẩu cũ!', 'error'); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Đang xử lý...';
+
+            try {
+                const res = await fetch('/api/auth/change-password', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ old_password: oldPw, new_password: newPw })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showPasswordAlert('Đổi mật khẩu thành công! Bạn sẽ được đăng xuất sau 2 giây.', 'success');
+                    document.getElementById('passwordForm').reset();
+                    document.getElementById('pwStrengthFill').style.width = '0%';
+                    document.getElementById('pwStrengthText').innerHTML = '';
+                    document.getElementById('matchMsg').innerHTML = '';
+                    setTimeout(async () => {
+                        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    showPasswordAlert(data.error || 'Có lỗi xảy ra!', 'error');
+                }
+            } catch (error) {
+                showPasswordAlert('Đã xảy ra lỗi kết nối!', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-shield-check"></i> Đổi mật khẩu';
+            }
+        });
+
+        // ===== AVATAR =====
+        async function uploadAvatar(input) {
+            if (!input.files || input.files.length === 0) return;
+            const file = input.files[0];
+
+            if (file.size > 2 * 1024 * 1024) {
+                showAvatarAlert('File quá lớn! Tối đa 2MB.', 'error');
+                input.value = '';
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                showAvatarAlert('Chỉ chấp nhận file ảnh!', 'error');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('avatarPreview').innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                document.getElementById('profileAvatar').innerHTML = `<img src="${e.target.result}" alt="Avatar">`;
+            };
+            reader.readAsDataURL(file);
+
+            showAvatarAlert('Đang tải lên...', 'info');
+
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            try {
+                const res = await fetch('/api/auth/upload-avatar', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showAvatarAlert('Cập nhật avatar thành công!', 'success');
+                    document.getElementById('btnRemoveAvatar').style.display = 'inline-flex';
+                } else {
+                    showAvatarAlert(data.error || 'Có lỗi!', 'error');
+                    loadAvatarFromServer();
+                }
+            } catch (error) {
+                showAvatarAlert('Lỗi kết nối!', 'error');
+                loadAvatarFromServer();
+            } finally {
+                input.value = '';
             }
         }
 
-        function initAddressDropdowns() {
-            const provinceSelect = document.getElementById('province');
-            const districtSelect = document.getElementById('district');
-            const wardSelect = document.getElementById('ward');
+        async function removeAvatar() {
+            if (!confirm('Xóa ảnh đại diện?')) return;
 
-            // Populate provinces
-            const provinces = getProvinces();
-            provinces.forEach(province => {
-                const option = document.createElement('option');
-                option.value = province;
-                option.textContent = province;
-                provinceSelect.appendChild(option);
-            });
-
-            // Province change -> update districts
-            provinceSelect.addEventListener('change', function() {
-                districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
-                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-                districtSelect.disabled = !this.value;
-                wardSelect.disabled = true;
-
-                if (this.value) {
-                    const districts = getDistricts(this.value);
-                    districts.forEach(district => {
-                        const option = document.createElement('option');
-                        option.value = district;
-                        option.textContent = district;
-                        districtSelect.appendChild(option);
-                    });
+            try {
+                const res = await fetch('/api/auth/avatar', { method: 'DELETE', credentials: 'include' });
+                const data = await res.json();
+                if (data.success) {
+                    showAvatarAlert('Đã xóa avatar!', 'success');
+                    document.getElementById('avatarPreview').innerHTML = '<i class="bi bi-person-fill"></i>';
+                    document.getElementById('profileAvatar').innerHTML = '<i class="bi bi-person-fill"></i>';
+                    document.getElementById('btnRemoveAvatar').style.display = 'none';
+                } else {
+                    showAvatarAlert(data.error || 'Có lỗi!', 'error');
                 }
-                updateFullAddress();
-            });
-
-            // District change -> update wards
-            districtSelect.addEventListener('change', function() {
-                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-                wardSelect.disabled = !this.value;
-
-                if (this.value) {
-                    const wards = getWards(provinceSelect.value, this.value);
-                    wards.forEach(ward => {
-                        const option = document.createElement('option');
-                        option.value = ward;
-                        option.textContent = ward;
-                        wardSelect.appendChild(option);
-                    });
-                }
-                updateFullAddress();
-            });
-
-            // Ward change -> update full address
-            wardSelect.addEventListener('change', updateFullAddress);
-            document.getElementById('street').addEventListener('input', updateFullAddress);
+            } catch (error) {
+                showAvatarAlert('Lỗi kết nối!', 'error');
+            }
         }
 
-        function updateFullAddress() {
-            const street = document.getElementById('street').value;
-            const ward = document.getElementById('ward').value;
-            const district = document.getElementById('district').value;
-            const province = document.getElementById('province').value;
-
-            const parts = [street, ward, district, province].filter(p => p.trim());
-            document.getElementById('address').value = parts.join(', ');
-        }
-
-        function parseAndFillAddress(address) {
-            const parts = address.split(',').map(p => p.trim());
-            const provinceSelect = document.getElementById('province');
-            const districtSelect = document.getElementById('district');
-            const wardSelect = document.getElementById('ward');
-
-            if (parts.length >= 3) {
-                for (let i = parts.length - 1; i >= 0; i--) {
-                    const province = parts.slice(i).join(', ');
-                    if (VIETNAM_ADDRESS[province]) {
-                        provinceSelect.value = province;
-                        provinceSelect.dispatchEvent(new Event('change'));
-
-                        const districts = getDistricts(province);
-                        const districtPart = parts[i - 1] || '';
-                        const district = districts.find(d => districtPart.includes(d) || d.includes(districtPart));
-                        if (district && parts[i - 1]) {
-                            setTimeout(() => {
-                                districtSelect.value = district;
-                                districtSelect.dispatchEvent(new Event('change'));
-
-                                const wards = getWards(province, district);
-                                const wardPart = parts[i - 2] || '';
-                                const ward = wards.find(w => wardPart.includes(w) || w.includes(wardPart));
-                                if (ward && parts[i - 2]) {
-                                    setTimeout(() => {
-                                        wardSelect.value = ward;
-                                        wardSelect.dispatchEvent(new Event('change'));
-                                    }, 100);
-                                }
-                            }, 100);
-                        }
-
-                        if (i >= 2) {
-                            const street = parts.slice(0, i - 1).join(', ');
-                            document.getElementById('street').value = street;
-                        }
-                        break;
+        function loadAvatarFromServer() {
+            fetch('/api/auth/me', { credentials: 'include' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.user && data.user.avatar) {
+                        document.getElementById('avatarPreview').innerHTML = `<img src="${data.user.avatar}" alt="Avatar">`;
+                        document.getElementById('profileAvatar').innerHTML = `<img src="${data.user.avatar}" alt="Avatar">`;
+                        document.getElementById('btnRemoveAvatar').style.display = 'inline-flex';
+                    } else {
+                        document.getElementById('avatarPreview').innerHTML = '<i class="bi bi-person-fill"></i>';
+                        document.getElementById('btnRemoveAvatar').style.display = 'none';
                     }
-                }
-            }
-
-            if (!document.getElementById('address').value) {
-                document.getElementById('street').value = address;
-                updateFullAddress();
-            }
+                });
         }
     </script>
+    <script src="/socket.io/socket.io.js"></script>
     <div id="aiChatboxRoot"></div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            fetch('/components/ai-chatbox.html').then(r => r.text()).then(h => {
-                var root = document.getElementById('aiChatboxRoot');
-                if (root) root.innerHTML = h;
-            });
+            fetch('/components/ai-chatbox.html')
+                .then(r => r.text())
+                .then(h => {
+                    var root = document.getElementById('aiChatboxRoot');
+                    if (root) {
+                        root.innerHTML = h;
+                        var scripts = root.querySelectorAll('script');
+                        scripts.forEach(function(oldScript) {
+                            var newScript = document.createElement('script');
+                            newScript.textContent = oldScript.textContent;
+                            oldScript.parentNode.replaceChild(newScript, oldScript);
+                        });
+                    }
+                });
         });
     </script>
 </body>

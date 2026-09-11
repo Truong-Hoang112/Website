@@ -1,14 +1,24 @@
-// Phone Store - Main JavaScript Application
-
 // Format price to VND
 function formatPrice(price) {
     return new Intl.NumberFormat('vi-VN').format(price);
+}
+
+// Toast Notification
+function showToast(message, type = 'success') {
+    const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', info: 'bi-info-circle-fill', warning: 'bi-exclamation-circle-fill' };
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    toast.innerHTML = `<i class="bi ${icons[type]}"></i><span>${message}</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.animation = 'toastSlideOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
 // Initialize app
 async function initApp() {
     await loadUserInfo();
     await loadCartBadge();
+    await loadWishlistBadge();
+    updateCompareBadge();
     setupSearch();
 }
 
@@ -21,13 +31,17 @@ async function loadUserInfo() {
         const userArea = document.getElementById('userArea');
         const mobileUserArea = document.getElementById('mobileUserArea');
 
-        if (data.user) {
-            const roleLabel = data.user.role === 'admin' ? 'Quản trị viên' : 'Khách hàng';
-            const adminLink = data.user.role === 'admin'
-                ? '<a href="/admin" class="user-dropdown-item"><i class="bi bi-speedometer2"></i> Trang quản trị</a>'
-                : '';
+            if (data.user) {
+                const roleLabel = data.user.role === 'admin' ? 'Quản trị viên' : 'Khách hàng';
+                const adminLink = data.user.role === 'admin'
+                    ? '<a href="/admin" class="user-dropdown-item"><i class="bi bi-speedometer2"></i> Trang quản trị</a>'
+                    : '';
 
-            const userHtml = `
+                const avatarHtml = data.user.avatar
+                    ? '<div class="user-avatar"><img src="' + data.user.avatar + '" alt="Avatar"></div>'
+                    : '<div class="user-avatar"><i class="bi bi-person-fill"></i></div>';
+
+                const userHtml = `
                 <div class="user-dropdown">
                     <button class="btn-login user-dropdown-btn">
                         <i class="bi bi-person-circle"></i>
@@ -36,7 +50,7 @@ async function loadUserInfo() {
                     </button>
                     <div class="user-dropdown-menu">
                         <div class="user-dropdown-header">
-                            <div class="user-avatar"><i class="bi bi-person-fill"></i></div>
+                            ${avatarHtml}
                             <div>
                                 <div class="user-name">${data.user.full_name}</div>
                                 <div class="user-role">${roleLabel}</div>
@@ -45,15 +59,20 @@ async function loadUserInfo() {
                         <div class="user-dropdown-divider"></div>
                         ${adminLink}
                         <a href="/orders" class="user-dropdown-item"><i class="bi bi-bag-check"></i> Đơn hàng của tôi</a>
+                        <a href="/wishlist" class="user-dropdown-item"><i class="bi bi-heart"></i> Yêu thích</a>
                         <a href="/profile" class="user-dropdown-item"><i class="bi bi-gear"></i> Cài đặt tài khoản</a>
                         <div class="user-dropdown-divider"></div>
                         <a href="javascript:void(0)" class="user-dropdown-item user-dropdown-logout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
                     </div>
                 </div>`;
 
-            const mobileUserHtml = `
+                const mobileAvatarHtml = data.user.avatar
+                    ? '<div class="user-avatar"><img src="' + data.user.avatar + '" alt="Avatar"></div>'
+                    : '<div class="user-avatar"><i class="bi bi-person-fill"></i></div>';
+
+                const mobileUserHtml = `
                 <div class="mobile-nav-user">
-                    <div class="user-avatar"><i class="bi bi-person-fill"></i></div>
+                    ${mobileAvatarHtml}
                     <div>
                         <div style="font-weight:700;font-size:0.875rem">${data.user.full_name}</div>
                         <div style="font-size:0.72rem;color:var(--gray)">${roleLabel}</div>
@@ -61,15 +80,20 @@ async function loadUserInfo() {
                 </div>
                 ${data.user.role === 'admin' ? '<a href="/admin" class="mobile-nav-item"><i class="bi bi-speedometer2"></i> Trang quản trị</a>' : ''}
                 <a href="/orders" class="mobile-nav-item"><i class="bi bi-bag-check"></i> Đơn hàng của tôi</a>
+                <a href="/wishlist" class="mobile-nav-item"><i class="bi bi-heart"></i> Yêu thích</a>
                 <a href="/profile" class="mobile-nav-item"><i class="bi bi-gear"></i> Cài đặt tài khoản</a>
                 <a href="javascript:void(0)" class="mobile-nav-item" style="color:#EF4444" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>`;
 
             if (userArea) userArea.innerHTML = userHtml;
             if (mobileUserArea) mobileUserArea.innerHTML = mobileUserHtml;
 
+            // Set global currentUser for other pages
+            window.currentUser = data.user;
+
             // Setup dropdown
             setupUserDropdown();
         } else {
+            window.currentUser = null;
             const guestHtml = '<a href="/login" class="btn-login"><i class="bi bi-person"></i> Đăng nhập</a>';
             const mobileGuestHtml = '<a href="/login" class="mobile-nav-item" style="color:var(--primary);font-weight:700"><i class="bi bi-person"></i> Đăng nhập</a>';
 
@@ -91,7 +115,7 @@ async function loadCartBadge() {
         if (badge) {
             if (data.count > 0) {
                 badge.textContent = data.count;
-                badge.style.display = 'inline';
+                badge.style.display = 'inline-flex';
             } else {
                 badge.style.display = 'none';
             }
@@ -101,32 +125,169 @@ async function loadCartBadge() {
     }
 }
 
+// Load wishlist badge (số sản phẩm yêu thích)
+async function loadWishlistBadge() {
+    try {
+        const response = await fetch('/api/wishlist/count', { credentials: 'include' });
+        const data = await response.json();
+
+        const badge = document.getElementById('wishlistBadge');
+        if (badge) {
+            if (data.count > 0) {
+                badge.textContent = data.count;
+                badge.style.display = 'inline-flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading wishlist count:', error);
+    }
+}
+
+// ============ COMPARE (So sánh sản phẩm - LocalStorage) ============
+const COMPARE_KEY = 'compare_products';
+const MAX_COMPARE = 4;
+
+function getCompareList() {
+    try {
+        const data = localStorage.getItem(COMPARE_KEY);
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveCompareList(list) {
+    localStorage.setItem(COMPARE_KEY, JSON.stringify(list));
+    updateCompareBadge();
+}
+
+function isInCompare(productId) {
+    return getCompareList().includes(productId);
+}
+
+// Thêm/xóa sản phẩm khỏi danh sách so sánh
+function toggleCompare(productId, btn) {
+    let list = getCompareList();
+    const idx = list.indexOf(productId);
+    if (idx >= 0) {
+        list.splice(idx, 1);
+        if (btn) {
+            btn.classList.remove('active');
+            btn.innerHTML = '<i class="bi bi-bar-chart"></i>';
+        }
+        showToast('Đã xóa khỏi so sánh', 'info');
+    } else {
+        if (list.length >= MAX_COMPARE) {
+            showToast(`Chỉ có thể so sánh tối đa ${MAX_COMPARE} sản phẩm!`, 'error');
+            return false;
+        }
+        list.push(productId);
+        if (btn) {
+            btn.classList.add('active');
+            btn.innerHTML = '<i class="bi bi-bar-chart-fill"></i>';
+        }
+        showToast('Đã thêm vào so sánh!', 'success');
+    }
+    saveCompareList(list);
+    return true;
+}
+
+function clearCompare() {
+    localStorage.removeItem(COMPARE_KEY);
+    updateCompareBadge();
+}
+
+function updateCompareBadge() {
+    const count = getCompareList().length;
+    const badge = document.getElementById('compareBadge');
+    if (badge) {
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'inline-flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
 // Add to cart
-async function addToCart(productId, quantity = 1) {
+async function addToCart(productId, quantity = 1, variantId = null) {
     try {
         const response = await fetch('/api/cart/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ product_id: productId, qty: quantity })
+            credentials: 'include',
+            body: JSON.stringify({ product_id: productId, qty: quantity, variant_id: variantId })
         });
 
         const data = await response.json();
 
         if (data.error) {
             if (data.error.includes('đăng nhập')) {
-                if (confirm('Bạn cần đăng nhập để thêm vào giỏ hàng. Đăng nhập ngay?')) {
+                // Gọi modal đăng nhập nếu có
+                if (typeof showLoginModal === 'function') {
+                    showLoginModal();
+                } else if (confirm('Bạn cần đăng nhập để thêm vào giỏ hàng. Đăng nhập ngay?')) {
                     window.location.href = '/login';
                 }
             } else {
-                alert(data.error);
+                showToast(data.error, 'error');
             }
         } else {
-            alert('Đã thêm vào giỏ hàng!');
+            const variantText = variantId ? ' (đã chọn phiên bản)' : '';
+            showToast('Đã thêm vào giỏ hàng!' + variantText, 'success');
             loadCartBadge();
         }
     } catch (error) {
         console.error('Error adding to cart:', error);
-        alert('Đã xảy ra lỗi khi thêm vào giỏ hàng!');
+        showToast('Đã xảy ra lỗi khi thêm vào giỏ hàng!', 'error');
+    }
+}
+
+// Toggle wishlist (thêm/xóa yêu thích)
+async function toggleWishlist(productId, btn) {
+    try {
+        const response = await fetch('/api/wishlist/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ product_id: productId })
+        });
+
+        const data = await response.json();
+
+        if (data.need_login || (data.error && data.error.includes('đăng nhập'))) {
+            if (typeof showLoginModal === 'function') {
+                showLoginModal();
+            } else if (confirm('Bạn cần đăng nhập để thêm vào yêu thích. Đăng nhập ngay?')) {
+                window.location.href = '/login';
+            }
+            return;
+        }
+
+        if (data.success) {
+            // Cập nhật UI nếu có nút
+            if (btn) {
+                const icon = btn.querySelector('i');
+                if (data.action === 'added') {
+                    icon.className = 'bi bi-heart-fill';
+                    btn.classList.add('active');
+                } else {
+                    icon.className = 'bi bi-heart';
+                    btn.classList.remove('active');
+                }
+            }
+            // Hiện toast đẹp
+            showToast(data.message || 'Thành công!', data.action === 'added' ? 'success' : 'info');
+            loadWishlistBadge();
+        } else {
+            alert(data.error || 'Có lỗi xảy ra!');
+        }
+    } catch (error) {
+        console.error('Toggle wishlist error:', error);
+        alert('Lỗi kết nối!');
     }
 }
 
@@ -157,9 +318,12 @@ function setupSearch() {
 
                     let html = '';
                     data.forEach(item => {
+                        const imgSrc = item.thumbnail && item.thumbnail.startsWith('http') 
+                            ? item.thumbnail 
+                            : `/assets/images/products/${item.thumbnail || ''}`;
                         html += `
                             <a href="/product/${item.id}" class="suggest-item">
-                                <img src="/assets/images/products/${item.thumbnail || ''}" onerror="this.style.display='none'" class="suggest-img">
+                                <img src="${imgSrc}" onerror="this.style.display='none'" class="suggest-img">
                                 <div class="suggest-info">
                                     <div class="suggest-name">${item.name}</div>
                                     <div class="suggest-price">${formatPrice(item.price)}đ</div>
@@ -192,15 +356,57 @@ function setupSearch() {
     }
 }
 
+// Generic Confirm Dialog
+function showConfirm(title, message, onConfirm) {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = `
+        <div class="confirm-dialog">
+            <div class="confirm-icon"><i class="bi bi-question-circle-fill"></i></div>
+            <div class="confirm-title">${title}</div>
+            <div class="confirm-message">${message}</div>
+            <div class="confirm-actions">
+                <button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button>
+                <button class="confirm-btn confirm">Xác nhận</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('.confirm-btn.confirm').onclick = async () => {
+        overlay.remove();
+        if (onConfirm) await onConfirm();
+    };
+    overlay.querySelector('.confirm-btn.cancel').onclick = () => overlay.remove();
+}
+
 // Logout
+function showConfirmLogout() {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = `
+        <div class="confirm-dialog">
+            <div class="confirm-icon"><i class="bi bi-box-arrow-right"></i></div>
+            <div class="confirm-title">Đăng xuất?</div>
+            <div class="confirm-message">Bạn có chắc muốn đăng xuất khỏi tài khoản này?</div>
+            <div class="confirm-actions">
+                <button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button>
+                <button class="confirm-btn confirm">Đăng xuất</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('.confirm-btn.confirm').onclick = async () => {
+        overlay.remove();
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
+        } catch (error) {
+            window.location.href = '/login';
+        }
+    };
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+}
+
 async function logout() {
-    if (!confirm('Đăng xuất?')) return;
-    try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/login';
-    } catch (error) {
-        window.location.href = '/login';
-    }
+    showConfirmLogout();
 }
 
 // User dropdown
@@ -222,14 +428,18 @@ function setupUserDropdown() {
 
 // Mobile menu
 function openMobileMenu() {
-    document.getElementById('mobileMenu').classList.add('open');
-    document.getElementById('mobileOverlay').classList.add('open');
+    var menu = document.getElementById('mobileMenu');
+    var overlay = document.getElementById('mobileOverlay');
+    if (menu) menu.classList.add('active');
+    if (overlay) overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
 function closeMobileMenu() {
-    document.getElementById('mobileMenu').classList.remove('open');
-    document.getElementById('mobileOverlay').classList.remove('open');
+    var menu = document.getElementById('mobileMenu');
+    var overlay = document.getElementById('mobileOverlay');
+    if (menu) menu.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
     document.body.style.overflow = '';
 }
 
@@ -273,7 +483,13 @@ function debounce(func, wait) {
 window.initApp = initApp;
 window.loadUserInfo = loadUserInfo;
 window.loadCartBadge = loadCartBadge;
+window.loadWishlistBadge = loadWishlistBadge;
 window.addToCart = addToCart;
+window.toggleWishlist = toggleWishlist;
+window.toggleCompare = toggleCompare;
+window.getCompareList = getCompareList;
+window.clearCompare = clearCompare;
+window.updateCompareBadge = updateCompareBadge;
 window.formatPrice = formatPrice;
 window.goSearch = goSearch;
 window.goMobileSearch = goMobileSearch;

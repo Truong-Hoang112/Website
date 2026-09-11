@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>So sánh sản phẩm - AnhTraiStore</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css?v=5">
+    <link rel="stylesheet" href="/css/chatbox.css">
+    <style>
+        body { background: #f8f9fb; }
+
+        /* ===== BREADCRUMB ===== */
+        .breadcrumb-bar {
+            background: var(--white);
+            padding: 16px 0;
+            border-bottom: 1px solid var(--slate-200);
+        }
+        .breadcrumb-bar .container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+        }
+        .breadcrumb-bar a { color: var(--slate-500); transition: color var(--transition-fast); }
+        .breadcrumb-bar a:hover { color: var(--primary); }
+        .breadcrumb-bar i { font-size: 0.6rem; color: var(--slate-400); }
+        .breadcrumb-bar span { color: var(--dark); font-weight: 600; }
+
+        /* ===== PAGE LAYOUT ===== */
+        .compare-page {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+        .compare-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .compare-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .compare-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.2));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        .compare-title h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+        .compare-title p { font-size: 0.875rem; color: var(--slate-500); }
+        .compare-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary-bg);
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+
+        /* ===== ACTION BAR ===== */
+        .compare-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-outline-danger {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .btn-outline-danger:hover {
+            background: var(--danger);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        .btn-primary-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-primary-outline:hover {
+            background: var(--primary);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        /* ===== COMPARE TABLE ===== */
+        .compare-table-wrap {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--slate-200);
+            overflow: hidden;
+        }
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        .compare-table th, .compare-table td {
+            padding: 16px 20px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .compare-table th {
+            background: var(--gray-50);
+            font-weight: 700;
+            color: var(--slate-700);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 140px;
+            width: 160px;
+        }
+        .compare-table .product-col { min-width: 240px; width: 280px; }
+        .compare-product-img {
+            width: 160px;
+            height: 160px;
+            background: linear-gradient(135deg, var(--slate-100) 0%, var(--slate-50) 100%);
+            border-radius: var(--radius-lg);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .compare-product-img img { width: 100%; height: 100%; object-fit: cover; }
+        .compare-product-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--dark);
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+        .compare-product-name a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .compare-product-name a:hover { color: var(--primary); }
+        .compare-product-brand {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .compare-product-price {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--danger);
+            margin-bottom: 4px;
+        }
+        .compare-product-old {
+            font-size: 0.8rem;
+            color: var(--slate-400);
+            text-decoration: line-through;
+        }
+        .compare-action-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-compare-cart {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 14px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+        .btn-compare-cart:hover { background: var(--primary-dark); }
+        .btn-compare-remove {
+            width: 40px;
+            height: 40px;
+            background: var(--slate-100);
+            border: none;
+            border-radius: var(--radius-md);
+            color: var(--danger);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-compare-remove:hover { background: var(--danger-bg); transform: scale(1.05); }
+        .highlight-best { background: rgba(16, 185, 129, 0.1); font-weight: 700; color: var(--success); }
+        .highlight-low { color: var(--danger); font-weight: 700; }
+
+        /* ===== EMPTY STATE ===== */
+        .compare-empty {
+            text-align: center;
+            padding: 80px 24px;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            border: 2px dashed var(--slate-200);
+        }
+        .compare-empty-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--slate-50), var(--slate-100));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .compare-empty-icon i { font-size: 3rem; color: var(--slate-300); }
+        .compare-empty h3 { font-size: 1.35rem; font-weight: 800; color: var(--dark); margin-bottom: 10px; }
+        .compare-empty p { color: var(--slate-500); margin-bottom: 28px; max-width: 400px; margin-left: auto; margin-right: auto; }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            border-radius: var(--radius-lg);
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+            text-decoration: none;
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(37, 99, 235, 0.45); }
+
+        /* ===== LOADING ===== */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--slate-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-state p { margin-top: 16px; color: var(--slate-500); font-size: 0.875rem; }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 22px;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 99999;
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .toast.success { background: linear-gradient(135deg, var(--success), #059669); color: #fff; }
+        .toast.error { background: linear-gradient(135deg, var(--danger), #dc2626); color: #fff; }
+        .toast.info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(120%); } to { opacity: 1; transform: translateX(0); } }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .compare-page { padding: 20px 16px 40px; }
+            .compare-title h1 { font-size: 1.25rem; }
+            .compare-header { flex-direction: column; align-items: flex-start; }
+            .compare-table-wrap { overflow-x: auto; }
+            .compare-product-img { width: 120px; height: 120px; }
+        }
+
+        /* ===== COMPARE GALLERY CAROUSEL ===== */
+        .compare-gallery-wrap {
+            position: relative;
+            width: 100%;
+        }
+        .compare-gallery {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: thin;
+            scrollbar-color: var(--slate-300) transparent;
+            padding-bottom: 4px;
+        }
+        .compare-gallery::-webkit-scrollbar {
+            height: 4px;
+        }
+        .compare-gallery::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .compare-gallery::-webkit-scrollbar-thumb {
+            background: var(--slate-300);
+            border-radius: 4px;
+        }
+        .compare-gallery-img {
+            flex: 0 0 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            scroll-snap-align: start;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .compare-gallery-img:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+        .compare-gallery-img.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        }
+        .compare-main-img {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            border-radius: var(--radius-md);
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-inner">
+            <span class="topbar-item"><i class="bi bi-shield-check"></i> Hàng chính hãng 100%</span>
+            <span class="topbar-item"><i class="bi bi-truck"></i> Miễn phí ship đơn từ 500K</span>
+            <span class="topbar-item"><i class="bi bi-arrow-repeat"></i> Đổi trả trong 30 ngày</span>
+            <span class="topbar-item"><i class="bi bi-telephone"></i> Hotline: 1800 2097</span>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">Anh<span>Trai</span>Store</a>
+            <div class="search-wrap">
+                <button class="search-btn"><i class="bi bi-search"></i></button>
+                <input type="text" id="searchInput" placeholder="Bạn muốn tìm gì hôm nay?" autocomplete="off">
+                <div id="searchSuggest" class="search-suggest"></div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/products" class="nav-link"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a></li>
+                <li><a href="/promotions" class="nav-link"><i class="bi bi-tag"></i> Khuyến mãi</a></li>
+                <li><a href="/policy" class="nav-link"><i class="bi bi-file-text"></i> Chính sách</a></li>
+                <li><a href="/contact" class="nav-link"><i class="bi bi-headset"></i> Liên hệ</a></li>
+            </ul>
+            <a href="/wishlist" class="wishlist-link"><i class="bi bi-heart"></i><span class="wishlist-badge" id="wishlistBadge">0</span></a> <a href="/compare" class="compare-link active"><i class="bi bi-bar-chart"></i><span class="compare-badge" id="compareBadge">0</span></a> <a href="/cart" class="cart-link">
+                <i class="bi bi-bag"></i>
+                <span>Giỏ hàng</span>
+                <span class="cart-badge" id="cartBadge">0</span>
+            </a>
+            <div id="userArea"></div>
+            <button class="hamburger-nav" onclick="openMobileMenu()"><i class="bi bi-list"></i></button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <span class="navbar-brand">Anh<span>Trai</span>Store</span>
+            <button class="mobile-menu-close" onclick="closeMobileMenu()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="mobile-search">
+            <input type="text" id="mobileSearchInput" placeholder="Tìm sản phẩm...">
+        </div>
+        <nav class="mobile-nav">
+            <a href="/" class="mobile-nav-item"><i class="bi bi-house"></i> Trang chủ</a>
+            <a href="/products" class="mobile-nav-item"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a>
+            <a href="/promotions" class="mobile-nav-item"><i class="bi bi-tag"></i> Khuyến mãi</a>
+            <a href="/policy" class="mobile-nav-item"><i class="bi bi-file-text"></i> Chính sách</a>
+            <a href="/contact" class="mobile-nav-item"><i class="bi bi-headset"></i> Liên hệ</a>
+            <div class="mobile-nav-divider"></div>
+            <a href="/compare" class="mobile-nav-item active"><i class="bi bi-bar-chart"></i> So sánh</a>
+            <a href="/wishlist" class="mobile-nav-item"><i class="bi bi-heart"></i> Yêu thích</a>
+            <a href="/cart" class="mobile-nav-item"><i class="bi bi-bag"></i> Giỏ hàng</a>
+            <div id="mobileUserArea"></div>
+        </nav>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+        <div class="container">
+            <a href="/">Trang chủ</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>So sánh sản phẩm</span>
+        </div>
+    </div>
+
+    <!-- Page -->
+    <div class="compare-page">
+        <div class="compare-header">
+            <div class="compare-title-wrap">
+                <div class="compare-icon">
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                </div>
+                <div class="compare-title">
+                    <h1>So sánh sản phẩm</h1>
+                    <p>So sánh thông số và giá cả giữa các sản phẩm</p>
+                </div>
+            </div>
+            <div class="compare-actions">
+                <div class="compare-count-badge" id="compareCountBadge" style="display:none">
+                    <i class="bi bi-collection"></i>
+                    <span id="countNum">0</span> sản phẩm
+                </div>
+                <a href="/products" class="btn-primary-outline">
+                    <i class="bi bi-bag"></i> Thêm sản phẩm
+                </a>
+                <button class="btn-outline-danger" id="clearBtn" onclick="clearCompareAndReload()" style="display:none">
+                    <i class="bi bi-trash3"></i> Xóa tất cả
+                </button>
+            </div>
+        </div>
+
+        <div id="compareContent">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Đang tải...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="login-modal-overlay" style="display: none;">
+        <div class="login-modal">
+            <button class="login-modal-close" onclick="closeLoginModal()"><i class="bi bi-x-lg"></i></button>
+            <div class="login-modal-header">
+                <div class="login-modal-icon"><i class="bi bi-bag-heart"></i></div>
+                <h3>Đăng nhập để tiếp tục</h3>
+                <p>Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng và sử dụng các tính năng khác</p>
+            </div>
+            <div class="login-modal-actions">
+                <a href="/login" class="btn-login-modal"><i class="bi bi-box-arrow-in-right"></i> Đăng nhập ngay</a>
+                <button class="btn-register-modal" onclick="closeLoginModal()"><i class="bi bi-x"></i> Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .login-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .login-modal {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .login-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--slate-100);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: var(--slate-500);
+            transition: all 0.2s;
+        }
+        .login-modal-close:hover { background: var(--slate-200); color: var(--dark); }
+        .login-modal-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, #ff6b6b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 2.5rem;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(226,27,27,0.35);
+        }
+        .login-modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 12px;
+        }
+        .login-modal-header p {
+            font-size: 0.95rem;
+            color: var(--slate-500);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        .login-modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn-login-modal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #fff;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(226,27,27,0.35);
+        }
+        .btn-login-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(226,27,27,0.45);
+        }
+        .btn-register-modal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 24px;
+            background: var(--slate-100);
+            color: var(--slate-600);
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-register-modal:hover { background: var(--slate-200); }
+    </style>
+    <script>
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        document.getElementById('loginModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeLoginModal();
+        });
+    </script>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px;">
+                <div>
+                    <div class="footer-brand">AnhTrai<span>Store</span></div>
+                    <p class="footer-desc">Chuỗi cửa hàng điện thoại & phụ kiện chính hãng uy tín toàn quốc.</p>
+                    <div class="footer-badges">
+                        <span class="footer-badge"><i class="bi bi-shield-check"></i> Chính hãng</span>
+                        <span class="footer-badge"><i class="bi bi-award"></i> Bảo hành</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="footer-heading">Sản phẩm</div>
+                    <ul class="footer-links">
+                        <li><a href="/products?category=apple">iPhone</a></li>
+                        <li><a href="/products?category=samsung">Samsung</a></li>
+                        <li><a href="/products?category=xiaomi">Xiaomi</a></li>
+                        <li><a href="/products">Tất cả sản phẩm</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-heading">Chính sách</div>
+                    <ul class="footer-links">
+                        <li><a href="/policy">Đổi trả hàng</a></li>
+                        <li><a href="/policy#warranty">Bảo hành</a></li>
+                        <li><a href="/policy#shipping">Vận chuyển</a></li>
+                        <li><a href="/contact">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-heading">Liên hệ</div>
+                    <div class="footer-contact-item"><i class="bi bi-geo-alt"></i><span>123 Nguyễn Huệ, Q.1, TP.HCM</span></div>
+                    <div class="footer-contact-item"><i class="bi bi-telephone"></i><span>1800 2097</span></div>
+                    <div class="footer-contact-item"><i class="bi bi-envelope"></i><span>anhtraisstore@gmail.com</span></div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>&copy; 2026 AnhTraiStore. Tất cả quyền được bảo lưu.</span>
+                <span>Made with ❤️ by Trương Xuân Hoàng</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+        let compareProducts = [];
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN').format(price);
+        }
+
+        function getThumbUrl(thumb) {
+            if (!thumb) return '/images/no-image.svg';
+            if (thumb.startsWith('http')) return thumb;
+            return '/assets/images/products/' + thumb;
+        }
+
+        function switchGalleryImg(thumb) {
+            const productId = thumb.dataset.product;
+            const mainImg = document.querySelector('.compare-main-img[data-product="' + productId + '"]');
+            if (mainImg) mainImg.src = thumb.src;
+            document.querySelectorAll('.compare-gallery-img[data-product="' + productId + '"]').forEach(el => el.classList.remove('active'));
+            thumb.classList.add('active');
+        }
+
+        function showToast(message, type = 'success') {
+            const old = document.querySelector('.toast');
+            if (old) old.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            const icons = { success: 'check-circle-fill', error: 'exclamation-circle-fill', info: 'info-circle-fill' };
+            toast.innerHTML = '<i class="bi bi-' + icons[type] + '"></i> ' + message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(120%)';
+                setTimeout(() => toast.remove(), 400);
+            }, 2500);
+        }
+
+        async function loadCompare() {
+            const ids = getCompareList();
+            const count = ids.length;
+            
+            document.getElementById('countNum').textContent = count;
+            document.getElementById('compareCountBadge').style.display = count > 0 ? 'inline-flex' : 'none';
+            document.getElementById('clearBtn').style.display = count > 0 ? 'inline-flex' : 'none';
+
+            if (ids.length === 0) {
+                renderEmpty();
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/products/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids })
+                });
+                const data = await response.json();
+                compareProducts = data.products || [];
+                renderCompare();
+            } catch (error) {
+                console.error('Load compare error:', error);
+                document.getElementById('compareContent').innerHTML = renderEmptyError();
+            }
+        }
+
+        function renderEmpty() {
+            document.getElementById('compareContent').innerHTML = `
+                <div class="compare-empty">
+                    <div class="compare-empty-icon"><i class="bi bi-bar-chart"></i></div>
+                    <h3>Chưa có sản phẩm nào để so sánh</h3>
+                    <p>Hãy thêm ít nhất 2 sản phẩm vào danh sách so sánh từ trang sản phẩm!</p>
+                    <a href="/products" class="btn-primary">
+                        <i class="bi bi-bag"></i> Khám phá sản phẩm
+                    </a>
+                </div>`;
+        }
+
+        function renderEmptyError() {
+            return `
+                <div class="compare-empty">
+                    <div class="compare-empty-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                    <h3>Có lỗi xảy ra</h3>
+                    <p>Vui lòng thử tải lại trang!</p>
+                    <a href="/compare" class="btn-primary">
+                        <i class="bi bi-arrow-repeat"></i> Tải lại
+                    </a>
+                </div>`;
+        }
+
+        function renderCompare() {
+            if (compareProducts.length === 0) {
+                document.getElementById('compareContent').innerHTML = renderEmpty();
+                return;
+            }
+
+            // Tìm các giá trị tốt nhất
+            const prices = compareProducts.map(p => parseFloat(p.price));
+            const minPrice = Math.min(...prices);
+
+            let html = '<div class="compare-table-wrap"><table class="compare-table"><tbody>';
+
+            // Hàng ảnh + tên
+            html += '<tr><th>Sản phẩm</th>';
+            compareProducts.forEach(p => {
+                const imgSrc = getThumbUrl(p.thumbnail);
+                const gallery = p.images || [];
+                const allImages = gallery.length > 0 ? gallery : [{ image_url: p.thumbnail }];
+                
+                let galleryHtml = '';
+                if (allImages.length > 1) {
+                    galleryHtml = `<div class="compare-gallery-wrap">
+                        <img src="${imgSrc}" alt="${p.name}" class="compare-main-img" onerror="this.src='/images/no-image.svg'" data-product="${p.id}" data-index="0">
+                        <div class="compare-gallery" id="gallery-${p.id}">
+                            ${allImages.map((img, idx) => `
+                                <img src="${getThumbUrl(img.image_url)}" 
+                                     class="compare-gallery-img ${idx === 0 ? 'active' : ''}" 
+                                     data-product="${p.id}"
+                                     data-index="${idx}"
+                                     onclick="switchGalleryImg(this)"
+                                     onerror="this.style.display='none'">
+                            `).join('')}
+                        </div>
+                    </div>`;
+                } else {
+                    galleryHtml = `<div class="compare-product-img"><img src="${imgSrc}" alt="${p.name}" onerror="this.src='/images/no-image.svg'"></div>`;
+                }
+                
+                html += `<td class="product-col">
+                    ${galleryHtml}
+                    <div class="compare-product-brand">${p.brand_name || ''}</div>
+                    <div class="compare-product-name"><a href="/product/${p.id}">${p.name}</a></div>
+                    <div class="compare-action-btns">
+                        <button class="btn-compare-cart" onclick="addToCart(${p.id})">
+                            <i class="bi bi-bag-plus"></i> Thêm vào giỏ
+                        </button>
+                        <button class="btn-compare-remove" onclick="removeFromCompare(${p.id})" title="Xóa">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </td>`;
+            });
+            html += '</tr>';
+
+            // Hàm switch ảnh gallery (nếu chưa có)
+            if (typeof switchGalleryImg !== 'function') {
+                window.switchGalleryImg = function(thumb) {
+                    const productId = thumb.dataset.product;
+                    const mainImg = document.querySelector('.compare-main-img[data-product="' + productId + '"]');
+                    if (mainImg) mainImg.src = thumb.src;
+                    document.querySelectorAll('.compare-gallery-img[data-product="' + productId + '"]').forEach(el => el.classList.remove('active'));
+                    thumb.classList.add('active');
+                };
+            }
+
+            // Hàng giá
+            html += '<tr><th><i class="bi bi-tag-fill"></i> Giá bán</th>';
+            compareProducts.forEach(p => {
+                const isBest = parseFloat(p.price) === minPrice;
+                html += `<td class="${isBest ? 'highlight-low' : ''}">
+                    <div class="compare-product-price">${formatPrice(p.price)}đ</div>
+                    ${p.old_price ? `<div class="compare-product-old">${formatPrice(p.old_price)}đ</div>` : ''}
+                    ${p.discount_percent > 0 ? `<div style="color:var(--danger);font-size:0.75rem;font-weight:700;margin-top:4px">Giảm ${Math.round(p.discount_percent)}%</div>` : ''}
+                </td>`;
+            });
+            html += '</tr>';
+
+            // Hãng
+            html += '<tr><th><i class="bi bi-building"></i> Hãng</th>';
+            compareProducts.forEach(p => html += `<td>${p.brand_name || '—'}</td>`);
+            html += '</tr>';
+
+            // Danh mục
+            html += '<tr><th><i class="bi bi-grid"></i> Danh mục</th>';
+            compareProducts.forEach(p => html += `<td>${p.category_name || '—'}</td>`);
+            html += '</tr>';
+
+            // RAM
+            html += '<tr><th><i class="bi bi-memory"></i> RAM</th>';
+            compareProducts.forEach(p => html += `<td>${p.ram || '—'}</td>`);
+            html += '</tr>';
+
+            // Bộ nhớ
+            html += '<tr><th><i class="bi bi-device-hdd"></i> Bộ nhớ trong</th>';
+            compareProducts.forEach(p => html += `<td>${p.storage || '—'}</td>`);
+            html += '</tr>';
+
+            // Màn hình
+            html += '<tr><th><i class="bi bi-display"></i> Màn hình</th>';
+            compareProducts.forEach(p => {
+                const screen = [p.screen_size, p.screen_resolution].filter(Boolean).join(' • ') || '—';
+                html += `<td>${screen}</td>`;
+            });
+            html += '</tr>';
+
+            // Chipset
+            html += '<tr><th><i class="bi bi-cpu"></i> Chipset</th>';
+            compareProducts.forEach(p => html += `<td>${p.chipset || '—'}</td>`);
+            html += '</tr>';
+
+            // CPU
+            html += '<tr><th><i class="bi bi-microchip"></i> CPU</th>';
+            compareProducts.forEach(p => html += `<td>${p.cpu || '—'}</td>`);
+            html += '</tr>';
+
+            // GPU
+            html += '<tr><th><i class="bi bi-gpu"></i> GPU</th>';
+            compareProducts.forEach(p => html += `<td>${p.gpu || '—'}</td>`);
+            html += '</tr>';
+
+            // Hệ điều hành
+            html += '<tr><th><i class="bi bi-android2"></i> Hệ điều hành</th>';
+            compareProducts.forEach(p => html += `<td>${p.os || '—'}</td>`);
+            html += '</tr>';
+
+            // Tồn kho
+            html += '<tr><th><i class="bi bi-box"></i> Tình trạng</th>';
+            compareProducts.forEach(p => {
+                const stock = p.stock > 0
+                    ? `<span style="color:var(--success)"><i class="bi bi-check-circle-fill"></i> Còn ${p.stock} chiếc</span>`
+                    : `<span style="color:var(--danger)"><i class="bi bi-x-circle-fill"></i> Hết hàng</span>`;
+                html += `<td>${stock}</td>`;
+            });
+            html += '</tr>';
+
+            // Mô tả đầy đủ
+            html += '<tr><th><i class="bi bi-info-circle"></i> Mô tả chi tiết</th>';
+            compareProducts.forEach(p => {
+                const desc = p.description || '—';
+                html += `<td style="font-size:0.82rem;color:var(--slate-600);line-height:1.6">${desc}</td>`;
+            });
+            html += '</tr>';
+
+            html += '</tbody></table></div>';
+            document.getElementById('compareContent').innerHTML = html;
+        }
+
+        function removeFromCompare(id) {
+            let list = getCompareList();
+            list = list.filter(x => x !== Number(id));
+            saveCompareList(list);
+            loadCompare();
+            showToast('Đã xóa khỏi so sánh!', 'info');
+        }
+
+        function clearCompareAndReload() {
+            if (!confirm('Xóa toàn bộ sản phẩm so sánh?')) return;
+            clearCompare();
+            loadCompare();
+            showToast('Đã xóa toàn bộ!', 'success');
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initApp();
+            loadCompare();
+        });
+    </script>
+    <div id="aiChatboxRoot"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/components/ai-chatbox.html')
+                .then(r => r.text())
+                .then(h => {
+                    var root = document.getElementById('aiChatboxRoot');
+                    if (root) {
+                        root.innerHTML = h;
+                        var scripts = root.querySelectorAll('script');
+                        scripts.forEach(function(oldScript) {
+                            var newScript = document.createElement('script');
+                            newScript.textContent = oldScript.textContent;
+                            oldScript.parentNode.replaceChild(newScript, oldScript);
+                        });
+                    }
+                });
+        });
+    </script>
+</body>
+</html>

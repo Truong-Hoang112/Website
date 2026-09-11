@@ -3,57 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đơn hàng - AnhTraiStore</title>
+    <title>Đơn hàng của tôi - AnhTraiStore</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=2">
+    <link rel="stylesheet" href="/css/chatbox.css">
     <style>
-        /* ===== RESET & BASE ===== */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-bg: #eef2ff;
-            --success: #10b981;
-            --success-bg: #ecfdf5;
-            --warning: #f59e0b;
-            --warning-bg: #fffbeb;
-            --danger: #ef4444;
-            --danger-bg: #fef2f2;
-            --info: #8b5cf6;
-            --info-bg: #f5f3ff;
-            --dark: #0f172a;
-            --slate-700: #334155;
-            --slate-600: #475569;
-            --slate-500: #64748b;
-            --slate-400: #94a3b8;
-            --slate-200: #e2e8f0;
-            --slate-100: #f1f5f9;
-            --white: #ffffff;
-            --radius-lg: 12px;
-            --radius-xl: 16px;
-            --radius-2xl: 24px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-            --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
-            --transition: all 0.25s ease;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f8fafc;
-            color: var(--dark);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-        
         /* ===== PAGE HEADER ===== */
         .page-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 48px 24px;
-            text-align: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 48px 0;
             position: relative;
             overflow: hidden;
         }
@@ -61,242 +23,419 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background: radial-gradient(ellipse at 100% 0%, rgba(99,102,241,0.15) 0%, transparent 50%);
         }
-        .page-header-content { position: relative; z-index: 1; }
-        .page-header-icon { font-size: 3rem; margin-bottom: 12px; }
-        .page-header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; }
-        .page-header p { opacity: 0.9; font-size: 1rem; }
-        
-        /* ===== MAIN CONTAINER ===== */
-        .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
-        
-        /* ===== STATS BAR ===== */
-        .stats-bar {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 32px;
-            overflow-x: auto;
-            padding-bottom: 8px;
+        .page-header-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
         }
-        .stat-item {
+        .page-breadcrumb {
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: var(--white);
-            padding: 16px 20px;
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-sm);
-            white-space: nowrap;
-            min-width: max-content;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 16px;
         }
-        .stat-icon {
-            width: 44px;
-            height: 44px;
+        .page-breadcrumb a { color: rgba(255,255,255,0.6); font-weight: 500; }
+        .page-breadcrumb a:hover { color: #fff; }
+        .page-breadcrumb i { font-size: 0.6rem; }
+        .page-title-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .page-title-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(99,102,241,0.15);
             border-radius: var(--radius-lg);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 1.5rem;
+            color: #818cf8;
         }
-        .stat-icon.total { background: var(--primary-bg); color: var(--primary); }
-        .stat-icon.pending { background: var(--warning-bg); color: var(--warning); }
-        .stat-icon.shipping { background: var(--info-bg); color: var(--info); }
-        .stat-icon.done { background: var(--success-bg); color: var(--success); }
-        .stat-number { font-size: 1.5rem; font-weight: 800; color: var(--dark); line-height: 1; }
-        .stat-label { font-size: 0.8rem; color: var(--slate-500); font-weight: 500; }
-        
+        .page-title h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.02em;
+        }
+        .page-title p {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 4px;
+        }
+        .page-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            color: #fff;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .page-count-badge span {
+            background: var(--primary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.8rem;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .page-main {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+
+        /* ===== FILTER TABS ===== */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 28px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: thin;
+        }
+        .filter-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--white);
+            border: 1px solid var(--slate-100);
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--slate-600);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .filter-tab:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .filter-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .filter-tab .count {
+            background: rgba(0,0,0,0.08);
+            color: var(--slate-600);
+            padding: 2px 8px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+        .filter-tab.active .count {
+            background: rgba(255,255,255,0.25);
+            color: #fff;
+        }
+
         /* ===== ORDER CARD ===== */
         .order-card {
             background: var(--white);
             border-radius: var(--radius-xl);
-            margin-bottom: 16px;
-            box-shadow: var(--shadow-sm);
             border: 1px solid var(--slate-100);
-            transition: var(--transition);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
             overflow: hidden;
         }
         .order-card:hover {
-            box-shadow: var(--shadow-md);
-            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: transparent;
         }
-        
-        /* Order Header */
-        .order-header {
+
+        .order-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 24px;
+            padding: 18px 24px;
+            background: var(--slate-50);
             border-bottom: 1px solid var(--slate-100);
             flex-wrap: wrap;
             gap: 12px;
         }
-        .order-meta {
+        .order-code {
             display: flex;
             align-items: center;
-            gap: 16px;
-        }
-        .order-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--primary-bg);
-            border-radius: var(--radius-lg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
-            font-size: 1.25rem;
-        }
-        .order-info h3 {
-            font-size: 1rem;
+            gap: 10px;
             font-weight: 700;
             color: var(--dark);
-            margin-bottom: 2px;
+            font-size: 0.95rem;
+        }
+        .order-code i {
+            color: var(--primary);
+            font-size: 1.1rem;
         }
         .order-date {
             font-size: 0.8rem;
             color: var(--slate-500);
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
-        
+
         /* Status Badge */
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
         }
-        .status-badge i { font-size: 0.875rem; }
-        .status-pending { background: var(--warning-bg); color: #b45309; }
-        .status-confirmed { background: var(--info-bg); color: #7c3aed; }
-        .status-shipping { background: var(--primary-bg); color: #4338ca; }
-        .status-delivered { background: var(--success-bg); color: #047857; }
-        .status-cancelled { background: var(--danger-bg); color: #b91c1c; }
-        
+        .status-badge i { font-size: 0.85rem; }
+        .status-pending { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+        .status-confirmed { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+        .status-shipping { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .status-delivered { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .status-cancelled { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
         /* Order Body */
-        .order-body { padding: 16px 24px; }
-        
-        /* Progress Bar */
-        .progress-track {
+        .order-card-body {
+            padding: 20px 24px;
+        }
+        .order-products {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .order-product-imgs {
             display: flex;
             align-items: center;
-            gap: 0;
         }
-        .progress-step {
-            display: flex;
-            align-items: center;
+        .order-product-img {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+            background: var(--slate-50);
+            border: 2px solid var(--white);
+            margin-left: -12px;
+            box-shadow: var(--shadow-sm);
         }
-        .progress-dot {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+        .order-product-img:first-child { margin-left: 0; }
+        .order-product-more {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
             background: var(--slate-100);
-            color: var(--slate-400);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 700;
-            position: relative;
-            z-index: 1;
-            transition: var(--transition);
+            margin-left: -12px;
+            font-weight: 800;
+            color: var(--slate-600);
+            font-size: 0.85rem;
+            border: 2px solid var(--white);
         }
-        .progress-step.completed .progress-dot { background: var(--success); color: white; }
-        .progress-step.active .progress-dot { background: var(--primary); color: white; box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
-        .progress-line {
-            width: 60px;
-            height: 3px;
-            background: var(--slate-100);
-            position: relative;
+        .order-info-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 4px;
         }
-        .progress-line::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 0;
-            background: var(--success);
-            transition: width 0.5s ease;
+        .order-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--slate-600);
         }
-        .progress-line.filled::after { width: 100%; }
-        
+        .order-info-item i {
+            color: var(--slate-400);
+            width: 16px;
+        }
+        .order-info-item strong { color: var(--dark); }
+
         /* Order Footer */
-        .order-footer {
+        .order-card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 16px 24px;
-            background: var(--slate-50);
             border-top: 1px solid var(--slate-100);
             flex-wrap: wrap;
             gap: 12px;
+            background: linear-gradient(135deg, #fafbfc 0%, #fff 100%);
         }
-        .order-total {
+        .order-total-wrap {
             display: flex;
             flex-direction: column;
+            gap: 2px;
         }
-        .order-total-label { font-size: 0.75rem; color: var(--slate-500); }
-        .order-total-value { font-size: 1.25rem; font-weight: 800; color: var(--danger); }
-        .order-action {
+        .order-total-label {
+            font-size: 0.75rem;
+            color: var(--slate-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .order-total-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        .order-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-order {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 20px;
-            background: var(--primary);
-            color: white;
-            border-radius: var(--radius-lg);
-            font-size: 0.875rem;
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
             font-weight: 600;
+            font-size: 0.85rem;
             text-decoration: none;
-            transition: var(--transition);
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: none;
         }
-        .order-action:hover { background: var(--primary-dark); color: white; transform: translateY(-1px); }
-        
+        .btn-order-detail {
+            background: var(--gradient-primary);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+        }
+        .btn-order-detail:hover {
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(99,102,241,0.4);
+        }
+        .btn-order-cancel {
+            background: var(--white);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        .btn-order-cancel:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-order-reorder {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-order-reorder:hover {
+            background: #059669;
+            color: #fff;
+        }
+
         /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
-            padding: 60px 24px;
+            padding: 80px 24px;
             background: var(--white);
             border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-sm);
+            border: 2px dashed var(--slate-200);
         }
-        .empty-icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
-        .empty-state h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; color: var(--dark); }
-        .empty-state p { color: var(--slate-500); margin-bottom: 24px; }
-        .btn-shop {
+        .empty-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--slate-50) 0%, var(--slate-100) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .empty-icon i { font-size: 3rem; color: var(--slate-300); }
+        .empty-state h3 { font-size: 1.35rem; font-weight: 800; color: var(--dark); margin-bottom: 10px; }
+        .empty-state p { color: var(--slate-500); margin-bottom: 28px; max-width: 400px; margin-left: auto; margin-right: auto; }
+        .btn-primary {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 14px 28px;
-            background: var(--primary);
-            color: white;
+            gap: 10px;
+            padding: 14px 32px;
+            background: var(--gradient-primary);
+            color: #fff;
             border-radius: var(--radius-lg);
-            font-weight: 600;
-            text-decoration: none;
-            transition: var(--transition);
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 14px rgba(99,102,241,0.35);
         }
-        .btn-shop:hover { background: var(--primary-dark); color: white; transform: translateY(-2px); }
-        
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(99,102,241,0.45); color: #fff; }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 22px;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 99999;
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-xl);
+        }
+        .toast.success { background: linear-gradient(135deg, var(--success), #059669); color: #fff; }
+        .toast.error { background: linear-gradient(135deg, var(--danger), #dc2626); color: #fff; }
+        .toast.info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(120%); } to { opacity: 1; transform: translateX(0); } }
+
         /* ===== LOADING ===== */
-        .loading { text-align: center; padding: 60px; background: var(--white); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); }
-        .loading i { font-size: 2.5rem; color: var(--primary); animation: spin 1s linear infinite; }
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--slate-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
+        .loading-state p { margin-top: 16px; color: var(--slate-500); font-size: 0.875rem; }
+
         /* ===== RESPONSIVE ===== */
-        @media (max-width: 640px) {
-            .page-header { padding: 32px 16px; }
-            .page-header h1 { font-size: 1.5rem; }
-            .container { padding: 24px 16px; }
-            .order-header { padding: 16px; }
-            .order-body { padding: 12px 16px; }
-            .order-footer { padding: 12px 16px; }
-            .progress-line { width: 30px; }
+        @media (max-width: 768px) {
+            .page-header { padding: 32px 0; }
+            .page-title h1 { font-size: 1.35rem; }
+            .page-title-icon { width: 44px; height: 44px; font-size: 1.2rem; }
+            .order-card-header { padding: 14px 16px; }
+            .order-card-body { padding: 16px; }
+            .order-card-footer { padding: 14px 16px; }
+            .order-products { flex-direction: column; }
+        }
+        @media (max-width: 480px) {
+            .page-title-wrap { flex-direction: column; align-items: flex-start; }
+            .order-card-footer { flex-direction: column; align-items: stretch; }
+            .order-actions { justify-content: stretch; }
+            .btn-order { flex: 1; justify-content: center; }
         }
     </style>
 </head>
@@ -314,37 +453,38 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="navbar-inner">
-            <a href="/" class="navbar-brand">Anh<span>Trai</span>Store</a>
+            <a href="/" class="navbar-brand">AnhTrai<span>Store</span></a>
             <div class="search-wrap">
+                <input type="text" placeholder="Tìm kiếm sản phẩm..." id="searchInput" autocomplete="off">
                 <button class="search-btn"><i class="bi bi-search"></i></button>
-                <input type="text" id="searchInput" placeholder="Bạn muốn tìm gì hôm nay?" autocomplete="off">
-                <div id="searchSuggest" class="search-suggest"></div>
+                <div id="searchResults" class="search-results"></div>
             </div>
-            <ul class="nav-links">
-                <li><a href="/products" class="nav-link"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a></li>
-                <li><a href="/products?sort=discount" class="nav-link"><i class="bi bi-tag"></i> Khuyến mãi</a></li>
-                <li><a href="/policy" class="nav-link"><i class="bi bi-file-text"></i> Chính sách</a></li>
-                <li><a href="/contact" class="nav-link"><i class="bi bi-headset"></i> Liên hệ</a></li>
-            </ul>
-            <a href="/cart" class="cart-link"><i class="bi bi-bag"></i> Giỏ hàng <span class="cart-badge" id="cartBadge" style="display:none">0</span></a>
-            <div id="userArea"></div>
+            <div class="navbar-actions">
+                <a href="/wishlist" class="navbar-action" title="Yêu thích">
+                    <i class="bi bi-heart"></i>
+                    <span id="wishlistBadge" class="action-badge" style="display:none">0</span>
+                </a>
+                <a href="/cart" class="navbar-action" title="Giỏ hàng">
+                    <i class="bi bi-bag"></i>
+                    <span id="cartBadge" class="action-badge" style="display:none">0</span>
+                </a>
+                <div id="userMenu"></div>
+            </div>
             <button class="hamburger-nav" onclick="openMobileMenu()"><i class="bi bi-list"></i></button>
         </div>
     </nav>
-
-    <!-- Mobile Menu -->
-    <div class="mobile-menu-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
-    <div class="mobile-menu" id="mobileMenu">
+    
+    <!-- Mobile Menu Overlay -->
+    <div class="hamburger-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+    <div class="hamburger-nav" id="mobileMenu">
+        <button class="hamburger-close" onclick="closeMobileMenu()"><i class="bi bi-x-lg"></i></button>
         <div class="mobile-menu-header">
             <span class="navbar-brand">Anh<span>Trai</span>Store</span>
-            <button class="mobile-menu-close" onclick="closeMobileMenu()"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="mobile-search">
-            <input type="text" id="mobileSearchInput" placeholder="Tìm sản phẩm...">
         </div>
         <nav class="mobile-nav">
+            <a href="/" class="mobile-nav-item"><i class="bi bi-house"></i> Trang chủ</a>
             <a href="/products" class="mobile-nav-item"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a>
-            <a href="/products?sort=discount" class="mobile-nav-item"><i class="bi bi-tag"></i> Khuyến mãi</a>
+            <a href="/promotions" class="mobile-nav-item"><i class="bi bi-tag"></i> Khuyến mãi</a>
             <a href="/policy" class="mobile-nav-item"><i class="bi bi-file-text"></i> Chính sách</a>
             <a href="/contact" class="mobile-nav-item"><i class="bi bi-headset"></i> Liên hệ</a>
             <div class="mobile-nav-divider"></div>
@@ -355,183 +495,375 @@
 
     <!-- Page Header -->
     <div class="page-header">
-        <div class="page-header-content">
-            <div class="page-header-icon"><i class="bi bi-receipt"></i></div>
-            <h1>Đơn hàng của tôi</h1>
-            <p>Theo dõi và quản lý đơn hàng dễ dàng</p>
+        <div class="page-header-inner">
+            <div class="page-breadcrumb">
+                <a href="/"><i class="bi bi-house"></i> Trang chủ</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Đơn hàng của tôi</span>
+            </div>
+            <div class="page-title-wrap">
+                <div class="page-title">
+                    <div class="page-title-icon">
+                        <i class="bi bi-receipt-cutoff"></i>
+                    </div>
+                    <div>
+                        <h1>Đơn hàng của tôi</h1>
+                        <p>Theo dõi và quản lý tất cả đơn hàng của bạn</p>
+                    </div>
+                </div>
+                <div class="page-count-badge">
+                    <i class="bi bi-collection"></i>
+                    Tổng <span id="totalBadge">0</span> đơn
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="container">
-        <!-- Stats Bar -->
-        <div class="stats-bar" id="statsBar">
-            <div class="stat-item">
-                <div class="stat-icon total"><i class="bi bi-list-ul"></i></div>
-                <div>
-                    <div class="stat-number" id="statTotal">0</div>
-                    <div class="stat-label">Tổng đơn</div>
-                </div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-icon pending"><i class="bi bi-clock"></i></div>
-                <div>
-                    <div class="stat-number" id="statPending">0</div>
-                    <div class="stat-label">Chờ xử lý</div>
-                </div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-icon shipping"><i class="bi bi-truck"></i></div>
-                <div>
-                    <div class="stat-number" id="statShipping">0</div>
-                    <div class="stat-label">Đang giao</div>
-                </div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-icon done"><i class="bi bi-check-circle"></i></div>
-                <div>
-                    <div class="stat-number" id="statDelivered">0</div>
-                    <div class="stat-label">Hoàn thành</div>
-                </div>
-            </div>
+    <!-- Main Content -->
+    <div class="page-main">
+        <!-- Filter Tabs -->
+        <div class="filter-tabs" id="filterTabs">
+            <button class="filter-tab active" data-status="all">
+                <i class="bi bi-grid"></i> Tất cả <span class="count" id="countAll">0</span>
+            </button>
+            <button class="filter-tab" data-status="pending">
+                <i class="bi bi-clock"></i> Chờ xác nhận <span class="count" id="countPending">0</span>
+            </button>
+            <button class="filter-tab" data-status="confirmed">
+                <i class="bi bi-check-circle"></i> Đã xác nhận <span class="count" id="countConfirmed">0</span>
+            </button>
+            <button class="filter-tab" data-status="shipping">
+                <i class="bi bi-truck"></i> Đang giao <span class="count" id="countShipping">0</span>
+            </button>
+            <button class="filter-tab" data-status="delivered">
+                <i class="bi bi-bag-check"></i> Hoàn thành <span class="count" id="countDelivered">0</span>
+            </button>
+            <button class="filter-tab" data-status="cancelled">
+                <i class="bi bi-x-circle"></i> Đã hủy <span class="count" id="countCancelled">0</span>
+            </button>
         </div>
 
         <!-- Orders List -->
-        <div id="ordersContent"></div>
+        <div id="ordersContent">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Đang tải đơn hàng...</p>
+            </div>
+        </div>
     </div>
 
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-brand">AnhTrai<span>Store</span></div>
+                    <p class="footer-desc">Chuỗi cửa hàng điện thoại & phụ kiện chính hãng uy tín toàn quốc.</p>
+                </div>
+                <div>
+                    <div class="footer-heading">Sản phẩm</div>
+                    <a href="/products" class="footer-link">Tất cả sản phẩm</a>
+                    <a href="/products?brand=apple" class="footer-link">iPhone</a>
+                    <a href="/products?brand=samsung" class="footer-link">Samsung</a>
+                    <a href="/products?brand=xiaomi" class="footer-link">Xiaomi</a>
+                </div>
+                <div>
+                    <div class="footer-heading">Hỗ trợ</div>
+                    <a href="/contact" class="footer-link">Liên hệ</a>
+                    <a href="/policy" class="footer-link">Chính sách</a>
+                    <a href="/orders" class="footer-link">Tra cứu đơn</a>
+                </div>
+                <div>
+                    <div class="footer-heading">Tài khoản</div>
+                    <a href="/login" class="footer-link">Đăng nhập</a>
+                    <a href="/register" class="footer-link">Đăng ký</a>
+                    <a href="/profile" class="footer-link">Tài khoản</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 AnhTraiStore. Tất cả quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/js/app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            await initApp();
-            await loadOrders();
-        });
+        let allOrders = [];
+        let currentFilter = 'all';
+
+        function formatPrice(price) {
+            if (!price) return '0';
+            return new Intl.NumberFormat('vi-VN').format(price);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function showToast(message, type = 'success') {
+            const old = document.querySelector('.toast');
+            if (old) old.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            const icons = { success: 'check-circle-fill', error: 'exclamation-circle-fill', info: 'info-circle-fill' };
+            toast.innerHTML = '<i class="bi bi-' + icons[type] + '"></i> ' + message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(120%)';
+                setTimeout(() => toast.remove(), 400);
+            }, 2500);
+        }
 
         async function loadOrders() {
             try {
-                document.getElementById('ordersContent').innerHTML = '<div class="loading"><i class="bi bi-arrow-repeat"></i></div>';
-
-                const response = await fetch('/api/orders');
+                const response = await fetch('/api/orders', { credentials: 'include' });
                 const data = await response.json();
-                const container = document.getElementById('ordersContent');
 
-                // Stats
-                let stats = { total: 0, pending: 0, shipping: 0, delivered: 0 };
-                if (data.orders) {
-                    stats.total = data.orders.length;
-                    data.orders.forEach(o => {
-                        if (o.status === 'pending') stats.pending++;
-                        if (o.status === 'shipping') stats.shipping++;
-                        if (o.status === 'delivered') stats.delivered++;
-                    });
-                }
-                document.getElementById('statTotal').textContent = stats.total;
-                document.getElementById('statPending').textContent = stats.pending;
-                document.getElementById('statShipping').textContent = stats.shipping;
-                document.getElementById('statDelivered').textContent = stats.delivered;
-
-                if (!data.orders || data.orders.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon"><i class="bi bi-bag-x"></i></div>
-                            <h3>Chưa có đơn hàng nào</h3>
-                            <p>Hãy bắt đầu mua sắm để có đơn hàng đầu tiên nhé!</p>
-                            <a href="/products" class="btn-shop"><i class="bi bi-bag"></i> Mua sắm ngay</a>
-                        </div>`;
+                if (data.error === 'Vui lòng đăng nhập!') {
+                    window.location.href = '/login';
                     return;
                 }
 
-                const statusConfig = {
-                    'pending': { label: 'Chờ xác nhận', icon: 'bi-clock', class: 'status-pending' },
-                    'confirmed': { label: 'Đã xác nhận', icon: 'bi-check-circle', class: 'status-confirmed' },
-                    'shipping': { label: 'Đang giao', icon: 'bi-truck', class: 'status-shipping' },
-                    'delivered': { label: 'Hoàn thành', icon: 'bi-check-circle-fill', class: 'status-delivered' },
-                    'cancelled': { label: 'Đã hủy', icon: 'bi-x-circle', class: 'status-cancelled' }
-                };
-
-                const timelineSteps = {
-                    'pending': 0,
-                    'confirmed': 1,
-                    'shipping': 2,
-                    'delivered': 3,
-                    'cancelled': -1
-                };
-
-                let html = '';
-                data.orders.forEach(order => {
-                    const status = statusConfig[order.status] || statusConfig.pending;
-                    const date = new Date(order.created_at).toLocaleDateString('vi-VN', { 
-                        day: '2-digit', month: '2-digit', year: 'numeric'
-                    });
-                    const currentStep = timelineSteps[order.status] ?? 0;
-                    
-                    html += `
-                    <a href="/order/${order.id}" class="order-card">
-                        <div class="order-header">
-                            <div class="order-meta">
-                                <div class="order-icon"><i class="bi bi-receipt"></i></div>
-                                <div class="order-info">
-                                    <h3>${order.payment_code}</h3>
-                                    <span class="order-date"><i class="bi bi-calendar3"></i> ${date}</span>
-                                </div>
-                            </div>
-                            <span class="status-badge ${status.class}">
-                                <i class="bi ${status.icon}"></i> ${status.label}
-                            </span>
-                        </div>
-                        <div class="order-body">
-                            ${order.status !== 'cancelled' ? `
-                            <div class="progress-track">
-                                <div class="progress-step ${currentStep >= 0 ? (currentStep > 0 ? 'completed' : 'active') : ''}">
-                                    <div class="progress-dot">${currentStep > 0 ? '<i class="bi bi-check"></i>' : '1'}</div>
-                                </div>
-                                <div class="progress-line ${currentStep >= 1 ? 'filled' : ''}"></div>
-                                <div class="progress-step ${currentStep >= 1 ? (currentStep > 1 ? 'completed' : 'active') : ''}">
-                                    <div class="progress-dot">${currentStep > 1 ? '<i class="bi bi-check"></i>' : '2'}</div>
-                                </div>
-                                <div class="progress-line ${currentStep >= 2 ? 'filled' : ''}"></div>
-                                <div class="progress-step ${currentStep >= 2 ? (currentStep > 2 ? 'completed' : 'active') : ''}">
-                                    <div class="progress-dot">${currentStep > 2 ? '<i class="bi bi-check"></i>' : '3'}</div>
-                                </div>
-                                <div class="progress-line ${currentStep >= 3 ? 'filled' : ''}"></div>
-                                <div class="progress-step ${currentStep >= 3 ? 'completed' : ''}">
-                                    <div class="progress-dot"><i class="bi bi-check"></i></div>
-                                </div>
-                            </div>
-                            ` : '<p style="color:var(--slate-500);font-size:0.875rem;text-align:center">Đơn hàng đã bị hủy</p>'}
-                        </div>
-                        <div class="order-footer">
-                            <div class="order-total">
-                                <span class="order-total-label">Tổng thanh toán</span>
-                                <span class="order-total-value">${formatPrice(order.total_price)}đ</span>
-                            </div>
-                            <span class="order-action">
-                                <i class="bi bi-eye"></i> Chi tiết
-                            </span>
-                        </div>
-                    </a>`;
-                });
-
-                container.innerHTML = html;
+                allOrders = data.orders || [];
+                updateCounts();
+                renderOrders();
             } catch (error) {
-                console.error('Error loading orders:', error);
-                document.getElementById('ordersContent').innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon"><i class="bi bi-exclamation-triangle"></i></div>
-                        <h3>Đã xảy ra lỗi</h3>
-                        <p>Không thể tải đơn hàng. Vui lòng thử lại!</p>
-                        <a href="javascript:location.reload()" class="btn-shop"><i class="bi bi-arrow-repeat"></i> Tải lại</a>
-                    </div>`;
+                console.error('Load orders error:', error);
+                document.getElementById('ordersContent').innerHTML = renderEmpty('Có lỗi xảy ra! Vui lòng thử lại.');
             }
         }
+
+        function updateCounts() {
+            const counts = {
+                all: allOrders.length,
+                pending: 0,
+                confirmed: 0,
+                shipping: 0,
+                delivered: 0,
+                cancelled: 0
+            };
+            allOrders.forEach(o => {
+                if (counts[o.status] !== undefined) counts[o.status]++;
+            });
+            document.getElementById('totalBadge').textContent = counts.all;
+            document.getElementById('countAll').textContent = counts.all;
+            document.getElementById('countPending').textContent = counts.pending;
+            document.getElementById('countConfirmed').textContent = counts.confirmed;
+            document.getElementById('countShipping').textContent = counts.shipping;
+            document.getElementById('countDelivered').textContent = counts.delivered;
+            document.getElementById('countCancelled').textContent = counts.cancelled;
+        }
+
+        function getStatusConfig(status) {
+            const configs = {
+                'pending': { label: 'Chờ xác nhận', icon: 'bi-clock', class: 'status-pending' },
+                'confirmed': { label: 'Đã xác nhận', icon: 'bi-check-circle', class: 'status-confirmed' },
+                'shipping': { label: 'Đang giao', icon: 'bi-truck', class: 'status-shipping' },
+                'delivered': { label: 'Hoàn thành', icon: 'bi-bag-check', class: 'status-delivered' },
+                'cancelled': { label: 'Đã hủy', icon: 'bi-x-circle', class: 'status-cancelled' }
+            };
+            return configs[status] || configs.pending;
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('ordersContent');
+            const filtered = currentFilter === 'all' ? allOrders : allOrders.filter(o => o.status === currentFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = renderEmpty(
+                    currentFilter === 'all'
+                        ? 'Bạn chưa có đơn hàng nào. Hãy bắt đầu mua sắm!'
+                        : 'Không có đơn hàng nào ở trạng thái này.'
+                );
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(order => {
+                const status = getStatusConfig(order.status);
+                const items = order.items || [];
+                // Ưu tiên total_items (tổng số lượng sản phẩm), fallback sang item_count (số dòng sản phẩm)
+                const itemCount = order.total_items || order.item_count || items.length;
+
+                // Hiển thị tối đa 3 hình sản phẩm
+                let productImgsHtml = '';
+                const showImgs = items.slice(0, 3);
+                showImgs.forEach(item => {
+                    const img = item.thumbnail
+                        ? (item.thumbnail.startsWith('http') ? item.thumbnail : '/uploads/products/' + item.thumbnail)
+                        : '/images/no-image.svg';
+                    productImgsHtml += `<img src="${img}" alt="${item.name || ''}" class="order-product-img" onerror="this.src='/images/no-image.svg'">`;
+                });
+                if (itemCount > 3) {
+                    productImgsHtml += `<div class="order-product-more">+${itemCount - 3}</div>`;
+                }
+
+                // Action buttons theo trạng thái
+                let actionsHtml = `<a href="/order/${order.id}" class="btn-order btn-order-detail">
+                    <i class="bi bi-eye"></i> Xem chi tiết
+                </a>`;
+                if (order.status === 'pending') {
+                    actionsHtml += `<button class="btn-order btn-order-cancel" onclick="cancelOrder(${order.id})">
+                        <i class="bi bi-x-circle"></i> Hủy đơn
+                    </button>`;
+                }
+                if (order.status === 'delivered') {
+                    actionsHtml += `<button class="btn-order btn-order-reorder" onclick="reorder(${order.id})">
+                        <i class="bi bi-arrow-repeat"></i> Mua lại
+                    </button>`;
+                }
+
+                html += `
+                <div class="order-card">
+                    <div class="order-card-header">
+                        <div class="order-code">
+                            <i class="bi bi-receipt"></i>
+                            <span>#${order.payment_code}</span>
+                        </div>
+                        <div class="order-date">
+                            <i class="bi bi-calendar3"></i> ${formatDate(order.created_at)}
+                        </div>
+                        <span class="status-badge ${status.class}">
+                            <i class="bi ${status.icon}"></i> ${status.label}
+                        </span>
+                    </div>
+                    <div class="order-card-body">
+                        <div class="order-products">
+                            <div class="order-product-imgs">
+                                ${productImgsHtml || '<div class="order-product-img" style="display:flex;align-items:center;justify-content:center;color:var(--slate-300);"><i class="bi bi-box"></i></div>'}
+                            </div>
+                            <div class="order-info-list">
+                                <div class="order-info-item">
+                                    <i class="bi bi-box-seam"></i>
+                                    <span><strong>${itemCount}</strong> sản phẩm</span>
+                                </div>
+                                <div class="order-info-item">
+                                    <i class="bi bi-person"></i>
+                                    <span>Người nhận: <strong>${order.shipping_name}</strong></span>
+                                </div>
+                                <div class="order-info-item">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span>${(order.shipping_address || '').substring(0, 60)}${(order.shipping_address || '').length > 60 ? '...' : ''}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-card-footer">
+                        <div class="order-total-wrap">
+                            <span class="order-total-label">Tổng thanh toán</span>
+                            <span class="order-total-value">${formatPrice(order.total_price)}đ</span>
+                        </div>
+                        <div class="order-actions">
+                            ${actionsHtml}
+                        </div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderEmpty(msg) {
+            return `
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-bag-x"></i>
+                    </div>
+                    <h3>Chưa có đơn hàng nào</h3>
+                    <p>${msg || 'Hãy bắt đầu mua sắm để có đơn hàng đầu tiên!'}</p>
+                    <a href="/products" class="btn-primary">
+                        <i class="bi bi-bag"></i> Khám phá sản phẩm
+                    </a>
+                </div>`;
+        }
+
+        async function cancelOrder(orderId) {
+            if (!confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
+            const reason = prompt('Lý do hủy (không bắt buộc):') || '';
+
+            try {
+                const response = await fetch(`/api/orders/${orderId}/cancel`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ reason })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Đơn hàng đã được hủy!', 'success');
+                    loadOrders();
+                } else {
+                    showToast(data.error || 'Không thể hủy đơn hàng!', 'error');
+                }
+            } catch (error) {
+                showToast('Lỗi kết nối!', 'error');
+            }
+        }
+
+        async function reorder(orderId) {
+            try {
+                const response = await fetch(`/api/orders/${orderId}`, { credentials: 'include' });
+                const data = await response.json();
+                if (data.items && data.items.length > 0) {
+                    let added = 0;
+                    for (const item of data.items) {
+                        const res = await fetch('/api/cart/add', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ product_id: item.product_id, qty: item.quantity })
+                        });
+                        const d = await res.json();
+                        if (d.success) added++;
+                    }
+                    if (added > 0) {
+                        showToast(`Đã thêm ${added} sản phẩm vào giỏ hàng!`, 'success');
+                        setTimeout(() => window.location.href = '/cart', 1200);
+                    } else {
+                        showToast('Không thể thêm vào giỏ hàng!', 'error');
+                    }
+                }
+            } catch (error) {
+                showToast('Lỗi kết nối!', 'error');
+            }
+        }
+
+        // Filter tabs
+        document.getElementById('filterTabs').addEventListener('click', (e) => {
+            const tab = e.target.closest('.filter-tab');
+            if (!tab) return;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentFilter = tab.dataset.status;
+            renderOrders();
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initApp();
+            loadOrders();
+        });
     </script>
-    <script src="/js/chatbox.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <div id="aiChatboxRoot"></div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            fetch('/components/ai-chatbox.html').then(r => r.text()).then(h => {
-                var root = document.getElementById('aiChatboxRoot');
-                if (root) root.innerHTML = h;
-            });
+            fetch('/components/ai-chatbox.html')
+                .then(r => r.text())
+                .then(h => {
+                    var root = document.getElementById('aiChatboxRoot');
+                    if (root) {
+                        root.innerHTML = h;
+                        var scripts = root.querySelectorAll('script');
+                        scripts.forEach(function(oldScript) {
+                            var newScript = document.createElement('script');
+                            newScript.textContent = oldScript.textContent;
+                            oldScript.parentNode.replaceChild(newScript, oldScript);
+                        });
+                    }
+                });
         });
     </script>
 </body>

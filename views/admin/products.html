@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý sản phẩm - Admin</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin.css?v=20260911">
 </head>
 <body>
     <div class="admin-wrapper">
@@ -55,6 +56,18 @@
                     <a href="/admin/contacts" class="nav-item">
                         <i class="fas fa-envelope"></i>
                         Liên hệ
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Marketing</div>
+                    <a href="/admin/banners" class="nav-item">
+                        <i class="fas fa-images"></i>
+                        Banners
+                    </a>
+                    <a href="/admin/promotions" class="nav-item">
+                        <i class="fas fa-bullhorn"></i>
+                        Khuyến mãi
                     </a>
                 </div>
 
@@ -136,9 +149,9 @@
         </main>
     </div>
 
-    <!-- Modal -->
+<!-- Modal -->
     <div class="modal-overlay" id="productModal">
-        <div class="modal">
+        <div class="modal modal-lg">
             <div class="modal-header">
                 <h2 class="modal-title" id="modalTitle">
                     <i class="fas fa-plus-circle"></i>
@@ -151,91 +164,160 @@
             <div class="modal-body">
                 <form id="productForm">
                     <input type="hidden" id="productId">
-                    
-                    <div class="form-group">
-                        <label class="form-label">Tên sản phẩm <span style="color: var(--danger);">*</span></label>
-                        <input type="text" class="form-control" id="name" required placeholder="VD: iPhone 15 Pro Max 256GB">
-                    </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Thương hiệu <span style="color: var(--danger);">*</span></label>
-                            <select class="form-control" id="brand_id" required>
-                                <option value="">-- Chọn thương hiệu --</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Danh mục <span style="color: var(--danger);">*</span></label>
-                            <select class="form-control" id="category_id" required>
-                                <option value="">-- Chọn danh mục --</option>
-                            </select>
-                        </div>
-                    </div>
+                    <!-- Section: Thông tin cơ bản -->
+                    <div class="product-form-section">
+                        <div class="section-title"><i class="fas fa-info-circle"></i> Thông tin cơ bản</div>
 
-                    <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Giá niêm yết (VNĐ) <span style="color: var(--danger);">*</span></label>
-                            <input type="text" class="form-control" id="price" required placeholder="32.990.000" oninput="formatPriceInput(this); calculateDiscount();">
+                            <label class="form-label">Tên sản phẩm <span style="color: var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="name" required placeholder="VD: iPhone 15 Pro Max 256GB">
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Giá bán (VNĐ) <span style="color: var(--danger);">*</span></label>
-                            <input type="text" class="form-control" id="sale_price" required placeholder="28.990.000" oninput="formatPriceInput(this); calculateDiscount();">
-                            <span id="priceError" style="color: var(--danger); font-size: 0.8rem; display: none; margin-top: 4px;"></span>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Thương hiệu <span style="color: var(--danger);">*</span></label>
+                                <select class="form-control" id="brand_id" required>
+                                    <option value="">-- Chọn thương hiệu --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Danh mục <span style="color: var(--danger);">*</span></label>
+                                <select class="form-control" id="category_id" required>
+                                    <option value="">-- Chọn danh mục --</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Tồn kho <span style="color: var(--danger);">*</span></label>
-                            <input type="number" class="form-control" id="stock" required placeholder="10" min="0">
+                    <!-- Section: Thông số kỹ thuật -->
+                    <div class="product-form-section">
+                        <div class="section-title"><i class="fas fa-microchip"></i> Thông số kỹ thuật <span style="font-weight: 400; font-size: 0.85rem; color: var(--gray-500);">— Chỉ áp dụng cho điện thoại / máy tính bảng</span></div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Hệ điều hành</label>
+                                <input type="text" class="form-control" id="os" placeholder="VD: Android 14, iOS 18">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Chipset</label>
+                                <input type="text" class="form-control" id="chipset" placeholder="VD: Snapdragon 8 Gen 3, Apple A18 Pro">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Giảm giá</label>
-                            <input type="text" class="form-control" id="discount_percent" readonly style="background: rgba(16, 185, 129, 0.1); color: var(--success); font-weight: 700; text-align: center;">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">CPU</label>
+                                <input type="text" class="form-control" id="cpu" placeholder="VD: 8 nhân, 3.2GHz">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">GPU</label>
+                                <input type="text" class="form-control" id="gpu" placeholder="VD: Adreno 750, Apple GPU 6 nhân">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Kích thước màn hình</label>
+                                <input type="text" class="form-control" id="screen_size" placeholder="VD: 6.7 inch">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Độ phân giải màn hình</label>
+                                <input type="text" class="form-control" id="screen_resolution" placeholder="VD: 1290 x 2796, Full HD+, 2K">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">RAM</label>
+                                <select class="form-control" id="ram">
+                                    <option value="">-- Chọn RAM --</option>
+                                    <option value="4GB">4 GB</option>
+                                    <option value="6GB">6 GB</option>
+                                    <option value="8GB">8 GB</option>
+                                    <option value="12GB">12 GB</option>
+                                    <option value="16GB">16 GB</option>
+                                    <option value="18GB">18 GB</option>
+                                    <option value="24GB">24 GB</option>
+                                    <option value="32GB">32 GB</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Bộ nhớ trong (ROM)</label>
+                                <select class="form-control" id="storage">
+                                    <option value="">-- Chọn ROM --</option>
+                                    <option value="64GB">64 GB</option>
+                                    <option value="128GB">128 GB</option>
+                                    <option value="256GB">256 GB</option>
+                                    <option value="512GB">512 GB</option>
+                                    <option value="1TB">1 TB</option>
+                                    <option value="2TB">2 TB</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">RAM</label>
-                            <select class="form-control" id="ram">
-                                <option value="4">4 GB</option>
-                                <option value="6">6 GB</option>
-                                <option value="8" selected>8 GB</option>
-                                <option value="12">12 GB</option>
-                                <option value="16">16 GB</option>
-                            </select>
+                    <!-- Section: Giá & Kho -->
+                    <div class="product-form-section">
+                        <div class="section-title"><i class="fas fa-tags"></i> Giá & Tồn kho</div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Giá niêm yết (VNĐ) <span style="color: var(--danger);">*</span></label>
+                                <input type="text" class="form-control" id="price" required placeholder="32.990.000" oninput="formatPriceInput(this); calculateDiscount();">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Giá bán (VNĐ) <span style="color: var(--danger);">*</span></label>
+                                <input type="text" class="form-control" id="sale_price" required placeholder="28.990.000" oninput="formatPriceInput(this); calculateDiscount();">
+                                <span id="priceError" style="color: var(--danger); font-size: 0.8rem; display: none; margin-top: 4px;"></span>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Bộ nhớ</label>
-                            <select class="form-control" id="rom">
-                                <option value="64">64 GB</option>
-                                <option value="128">128 GB</option>
-                                <option value="256" selected>256 GB</option>
-                                <option value="512">512 GB</option>
-                                <option value="1024">1 TB</option>
-                            </select>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Tồn kho <span style="color: var(--danger);">*</span></label>
+                                <input type="number" class="form-control" id="stock" required placeholder="10" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">% Giảm giá (tự tính)</label>
+                                <input type="text" class="form-control" id="discount_percent" readonly style="background: rgba(16, 185, 129, 0.1); color: var(--success); font-weight: 700; text-align: center;">
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Hình ảnh</label>
-                        <input type="url" class="form-control" id="thumbnail" placeholder="https://example.com/image.jpg">
-                        <span class="form-hint">Nhập URL hình ảnh sản phẩm</span>
+                    <!-- Section: Hình ảnh -->
+                    <div class="product-form-section">
+                        <div class="section-title"><i class="fas fa-images"></i> Hình ảnh sản phẩm</div>
+
+                        <div class="gallery-upload-area" id="galleryUploadArea">
+                            <input type="file" class="gallery-upload-input" id="galleryFiles" accept="image/*" multiple onchange="handleGalleryUpload(this)">
+                            <div class="gallery-upload-content">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p class="gallery-upload-text">Kéo thả hoặc bấm để chọn nhiều ảnh</p>
+                                <small style="color: var(--gray-500); display: block; margin-top: 4px;">JPG, PNG, WEBP • Tối đa 10 ảnh</small>
+                            </div>
+                        </div>
+                        <div id="galleryPreview" class="gallery-preview"></div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Mô tả</label>
-                        <textarea class="form-control" id="description" rows="3" placeholder="Mô tả chi tiết về sản phẩm..."></textarea>
+                    <!-- Section: Mô tả & Tùy chọn -->
+                    <div class="product-form-section">
+                        <div class="section-title"><i class="fas fa-align-left"></i> Mô tả & Tùy chọn</div>
+
+                        <div class="form-group">
+                            <label class="form-label">Mô tả sản phẩm</label>
+                            <textarea class="form-control" id="description" rows="3" placeholder="Mô tả chi tiết về sản phẩm..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="toggle">
+                                <input type="checkbox" id="is_featured">
+                                <span class="toggle-slider"></span>
+                                <span style="margin-left: 14px; font-weight: 600;">Hiển thị ở mục Sản phẩm nổi bật</span>
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="toggle">
-                            <input type="checkbox" id="is_featured">
-                            <span class="toggle-slider"></span>
-                            <span style="margin-left: 14px; font-weight: 600;">Sản phẩm nổi bật</span>
-                        </label>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -254,10 +336,19 @@
     <script>
         let editingId = null;
 
+        function showConfirm(title, message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        }
         async function adminLogout() {
-            if (!confirm('Đăng xuất?')) return;
-            await fetch('/api/auth/logout', { method: 'POST' });
-            window.location.href = '/login';
+            showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            });
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -281,12 +372,43 @@
                 }
             } catch (e) {}
 
+            // Load notifications badge
+            loadNotificationBadges();
+
             await Promise.all([
                 loadProducts(),
                 loadBrands(),
                 loadCategories()
             ]);
         });
+
+        async function loadNotificationBadges() {
+            try {
+                const res = await fetch('/admin/notifications', { credentials: 'include' });
+                if (!res.ok) return; // Chưa đăng nhập → bỏ qua
+                const ct = res.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) return; // Không phải JSON → bỏ qua
+                const data = await res.json();
+
+                // Nav badges
+                const total = data.total_alerts || 0;
+                const pendingOrders = data.counts?.pending_orders || 0;
+                const contacts = data.counts?.contacts || 0;
+                const lowStock = data.low_stock_products?.length || 0;
+
+                function setBadge(id, value) {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.textContent = value > 0 ? value : '';
+                    el.style.display = value > 0 ? 'inline-flex' : 'none';
+                }
+                setBadge('navBadgeOrders', pendingOrders);
+                setBadge('navBadgeContacts', contacts);
+                setBadge('navBadgeProducts', lowStock);
+            } catch (e) {
+                // Silent fail - không cần log
+            }
+        }
 
         async function loadBrands() {
             try {
@@ -367,7 +489,7 @@
                         <td>
                             <img src="${imgSrc}" class="product-img" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.style.display='none'">
                         </td>
-                        <td><strong>${p.name}</strong><br><span style="color: var(--gray-500); font-size: 0.8rem;">RAM: ${p.ram || '8GB'} | ROM: ${p.rom || '256GB'}</span></td>
+                        <td><strong>${p.name}</strong><br><span style="color: var(--gray-500); font-size: 0.8rem;">${p.ram ? 'RAM: ' + p.ram + 'GB' : ''}${p.ram && p.storage ? ' | ' : ''}${p.storage ? 'ROM: ' + p.storage + 'GB' : ''}</span></td>
                         <td>${p.brand_name || '-'}</td>
                         <td style="font-weight: 700; color: var(--primary);">${formatPrice(p.price)}đ</td>
                         <td>${p.stock}</td>
@@ -396,8 +518,10 @@
             document.getElementById('productForm').reset();
             document.getElementById('discount_percent').value = '0%';
             document.getElementById('priceError').style.display = 'none';
-            document.getElementById('ram').value = '8';
-            document.getElementById('rom').value = '256';
+
+            // Reset gallery
+            galleryImages = [];
+            renderGalleryPreview();
 
             if (id) {
                 loadProductData(id);
@@ -408,6 +532,16 @@
             const modal = document.getElementById('productModal');
             modal.classList.remove('show');
             editingId = null;
+        }
+
+        // Helper: an toàn khi set giá trị (tránh lỗi Cannot set properties of null)
+        function safeSetValue(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.value = value;
+        }
+        function safeSetChecked(id, checked) {
+            const el = document.getElementById(id);
+            if (el) el.checked = !!checked;
         }
 
         async function loadProductData(id) {
@@ -424,23 +558,139 @@
                 }
 
                 const p = data.product;
-                document.getElementById('productId').value = p.id;
-                document.getElementById('name').value = p.name;
-                document.getElementById('brand_id').value = p.brand_id;
-                document.getElementById('category_id').value = p.category_id;
-                document.getElementById('price').value = p.old_price ? parseInt(p.old_price).toLocaleString('vi-VN') : '';
-                document.getElementById('sale_price').value = parseInt(p.price).toLocaleString('vi-VN');
-                document.getElementById('stock').value = p.stock;
-                document.getElementById('ram').value = p.ram || '8';
-                document.getElementById('rom').value = p.rom || '256';
-                document.getElementById('thumbnail').value = p.thumbnail || '';
-                document.getElementById('description').value = p.description || '';
-                document.getElementById('is_featured').checked = p.is_featured == 1;
-                
+                safeSetValue('productId', p.id);
+                safeSetValue('name', p.name);
+                safeSetValue('brand_id', p.brand_id);
+                safeSetValue('category_id', p.category_id);
+                safeSetValue('price', p.old_price ? parseInt(p.old_price).toLocaleString('vi-VN') : '');
+                safeSetValue('sale_price', parseInt(p.price).toLocaleString('vi-VN'));
+                safeSetValue('stock', p.stock);
+                safeSetChecked('is_featured', p.is_featured == 1);
+                safeSetValue('description', p.description && p.description !== 'null' ? p.description : '');
+
+                // Load thông số kỹ thuật
+                safeSetValue('os', p.os && p.os !== 'null' ? p.os : '');
+                safeSetValue('chipset', p.chipset && p.chipset !== 'null' ? p.chipset : '');
+                safeSetValue('cpu', p.cpu && p.cpu !== 'null' ? p.cpu : '');
+                safeSetValue('gpu', p.gpu && p.gpu !== 'null' ? p.gpu : '');
+                safeSetValue('screen_size', p.screen_size && p.screen_size !== 'null' ? p.screen_size : '');
+                safeSetValue('screen_resolution', p.screen_resolution && p.screen_resolution !== 'null' ? p.screen_resolution : '');
+                safeSetValue('ram', p.ram && p.ram !== 'null' ? p.ram : '');
+                safeSetValue('storage', p.storage && p.storage !== 'null' ? p.storage : '');
+
                 calculateDiscount();
+
+                // Load gallery images
+                if (data.images && data.images.length > 0) {
+                    galleryImages = data.images.map((img, index) => ({
+                        id: img.id,
+                        url: '/assets/images/products/' + img.image_url,
+                        isPrimary: img.is_primary == 1 || index === 0,
+                        isNew: false
+                    }));
+                } else {
+                    galleryImages = [];
+                }
+                renderGalleryPreview();
             } catch (e) {
                 showAlert('Lỗi khi tải dữ liệu sản phẩm!', 'error');
+                console.error(e);
             }
+        }
+
+        // Gallery Images Management
+        let galleryImages = []; // Array of { url, isPrimary, isNew, id }
+
+        function handleGalleryUpload(input) {
+            if (input.files) {
+                Array.from(input.files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            addGalleryImage({
+                                url: e.target.result,
+                                isPrimary: galleryImages.length === 0,
+                                isNew: true,
+                                id: 'new_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+                input.value = '';
+            }
+        }
+
+        function addGalleryImage(imageData) {
+            galleryImages.push(imageData);
+            renderGalleryPreview();
+        }
+
+        function removeGalleryImage(id) {
+            galleryImages = galleryImages.filter(img => img.id !== id);
+            // If removed was primary, set first as primary
+            if (!galleryImages.some(img => img.isPrimary) && galleryImages.length > 0) {
+                galleryImages[0].isPrimary = true;
+            }
+            renderGalleryPreview();
+        }
+
+        function setPrimaryImage(id) {
+            galleryImages.forEach(img => img.isPrimary = (img.id === id));
+            renderGalleryPreview();
+        }
+
+        function renderGalleryPreview() {
+            const container = document.getElementById('galleryPreview');
+            if (galleryImages.length === 0) {
+                container.innerHTML = '<div class="gallery-empty"><i class="fas fa-image"></i> Chưa có ảnh nào. Bấm vào khung phía trên để thêm.</div>';
+                return;
+            }
+
+            const primaryIdx = galleryImages.findIndex(img => img.isPrimary);
+            const headerHtml = `
+                <div class="gallery-preview-header">
+                    <span><i class="fas fa-images"></i> <span class="badge-count">${galleryImages.length} ảnh</span></span>
+                    <span>${primaryIdx >= 0 ? '<span class="badge-primary"><i class="fas fa-star"></i> Ảnh chính: #' + (primaryIdx + 1) + '</span>' : '<em style="color: var(--gray-500);">Chưa chọn ảnh chính</em>'}</span>
+                </div>
+            `;
+
+            const imagesHtml = galleryImages.map((img, index) => `
+                <div class="gallery-item ${img.isPrimary ? 'primary' : ''}">
+                    <img src="${img.url}" alt="Ảnh ${index + 1}">
+                    ${img.isPrimary ? '<span class="gallery-badge-primary"><i class="fas fa-star"></i> Chính</span>' : ''}
+                    <div class="gallery-item-actions">
+                        ${!img.isPrimary ? `<button type="button" onclick="event.stopPropagation(); setPrimaryImage('${img.id}')" title="Đặt làm ảnh chính"><i class="fas fa-star"></i></button>` : ''}
+                        <button type="button" onclick="event.stopPropagation(); removeGalleryImage('${img.id}')" title="Xóa ảnh"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = headerHtml + imagesHtml;
+        }
+
+        // Product Variants Management
+        let productVariants = [];
+
+        // Drag & drop for image upload (galleryUploadArea)
+        const imageUploadArea = document.getElementById('galleryUploadArea');
+        const galleryInput = document.getElementById('galleryFiles');
+        if (imageUploadArea && galleryInput) {
+            imageUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                imageUploadArea.classList.add('dragover');
+            });
+            imageUploadArea.addEventListener('dragleave', () => {
+                imageUploadArea.classList.remove('dragover');
+            });
+            imageUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                imageUploadArea.classList.remove('dragover');
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    galleryInput.files = e.dataTransfer.files;
+                    handleGalleryUpload(galleryInput);
+                }
+            });
         }
 
         async function saveProduct() {
@@ -452,24 +702,59 @@
                 return;
             }
 
-            const formData = {
-                name: document.getElementById('name').value.trim(),
-                brand_id: document.getElementById('brand_id').value,
-                category_id: document.getElementById('category_id').value,
-                price: salePrice || 0,
-                old_price: price || 0,
-                discount_percent: price > 0 && salePrice > 0 ? Math.round((1 - salePrice / price) * 100) : 0,
-                stock: parseInt(document.getElementById('stock').value) || 0,
-                ram: document.getElementById('ram').value,
-                storage: document.getElementById('rom').value,
-                thumbnail: document.getElementById('thumbnail').value.trim() || null,
-                description: document.getElementById('description').value.trim() || null,
-                is_featured: document.getElementById('is_featured').checked
-            };
-
-            if (!formData.name) {
+            // Validate - skip if editing and field is empty (data not loaded yet)
+            const name = document.getElementById('name').value.trim();
+            if (!name) {
+                // If editing and name is empty, data might not be loaded yet - wait for it
+                if (editingId) {
+                    showAlert('Đang tải dữ liệu, vui lòng đợi...', 'error');
+                    return;
+                }
                 showAlert('Vui lòng nhập tên sản phẩm!', 'error');
                 return;
+            }
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('brand_id', document.getElementById('brand_id').value);
+            formData.append('category_id', document.getElementById('category_id').value);
+            formData.append('price', salePrice || 0);
+            formData.append('old_price', price || 0);
+            formData.append('discount_percent', price > 0 && salePrice > 0 ? Math.round((1 - salePrice / price) * 100) : 0);
+            formData.append('stock', parseInt(document.getElementById('stock').value) || 0);
+            formData.append('description', document.getElementById('description').value.trim() || null);
+            formData.append('is_featured', document.getElementById('is_featured').checked);
+
+            // Thông số kỹ thuật
+            formData.append('os', document.getElementById('os').value.trim() || null);
+            formData.append('chipset', document.getElementById('chipset').value.trim() || null);
+            formData.append('cpu', document.getElementById('cpu').value.trim() || null);
+            formData.append('gpu', document.getElementById('gpu').value.trim() || null);
+            formData.append('screen_size', document.getElementById('screen_size').value.trim() || null);
+            formData.append('screen_resolution', document.getElementById('screen_resolution').value.trim() || null);
+            formData.append('ram', document.getElementById('ram').value || null);
+            formData.append('storage', document.getElementById('storage').value || null);
+
+            // Add gallery images as files
+            const newGalleryImages = galleryImages.filter(img => img.isNew);
+            newGalleryImages.forEach((img, index) => {
+                // Convert base64 to blob and add to formData
+                const base64Data = img.url.split(',')[1];
+                if (base64Data) {
+                    const byteCharacters = atob(base64Data);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: 'image/jpeg' });
+                    formData.append('galleryFiles', blob, 'image_' + index + '.jpg');
+                }
+            });
+            // Send primary image index
+            const primaryIndex = galleryImages.findIndex(img => img.isPrimary);
+            if (primaryIndex >= 0) {
+                formData.append('primaryImageIndex', primaryIndex.toString());
             }
 
             try {
@@ -478,12 +763,8 @@
                 
                 const res = await fetch(url, {
                     method,
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
                     credentials: 'include',
-                    body: JSON.stringify(formData)
+                    body: formData
                 });
 
                 const data = await res.json();

@@ -4,10 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý đánh giá - Admin</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin.css">
+    <script>
+        function showToast(message, type = 'info') {
+            const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', info: 'bi-info-circle-fill' };
+            const toast = document.createElement('div');
+            toast.className = `custom-toast ${type}`;
+            toast.innerHTML = `<i class="bi ${icons[type]}"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'toastSlideOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+    </script>
 </head>
 <body>
     <div class="admin-wrapper">
@@ -31,6 +42,10 @@
                     <a href="/admin/users" class="nav-item"><i class="fas fa-users"></i> Khách hàng</a>
                     <a href="/admin/reviews" class="nav-item active"><i class="fas fa-star"></i> Đánh giá</a>
                     <a href="/admin/contacts" class="nav-item"><i class="fas fa-envelope"></i> Liên hệ</a>
+                </div>
+                <div class="nav-section"><div class="nav-section-title">Marketing</div>
+                    <a href="/admin/banners" class="nav-item"><i class="fas fa-images"></i> Banners</a>
+                    <a href="/admin/promotions" class="nav-item"><i class="fas fa-bullhorn"></i> Khuyến mãi</a>
                 </div>
                 <div class="nav-section"><div class="nav-section-title">Hệ thống</div>
                     <a href="/" class="nav-item" target="_blank"><i class="fas fa-external-link-alt"></i> Xem cửa hàng</a>
@@ -83,11 +98,21 @@
     </div>
 
     <script>
-        async function adminLogout() {
-            if (!confirm('Đăng xuất?')) return;
-            await fetch('/api/auth/logout', { method: 'POST' });
-            window.location.href = '/login';
+        function showConfirm(title, message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
         }
+        async function adminLogout() {
+            showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            });
+        }
+        
 
         document.addEventListener('DOMContentLoaded', async () => {
             const now = new Date();
@@ -101,8 +126,26 @@
                 }
             } catch (e) {}
 
+            loadNotificationBadges();
             loadReviews();
         });
+
+        async function loadNotificationBadges() {
+            try {
+                const res = await fetch('/admin/notifications', { credentials: 'include' });
+                const data = await res.json();
+                const pendingOrders = data.counts?.pending_orders || 0;
+                const contacts = data.counts?.contacts || 0;
+                const lowStock = data.low_stock_products?.length || 0;
+                
+                document.getElementById('navBadgeOrders').textContent = pendingOrders > 0 ? pendingOrders : '';
+                document.getElementById('navBadgeOrders').style.display = pendingOrders > 0 ? 'inline-flex' : 'none';
+                document.getElementById('navBadgeContacts').textContent = contacts > 0 ? contacts : '';
+                document.getElementById('navBadgeContacts').style.display = contacts > 0 ? 'inline-flex' : 'none';
+                document.getElementById('navBadgeProducts').textContent = lowStock > 0 ? lowStock : '';
+                document.getElementById('navBadgeProducts').style.display = lowStock > 0 ? 'inline-flex' : 'none';
+            } catch (e) {}
+        }
 
         async function loadReviews() {
             try {
@@ -148,10 +191,10 @@
                 if (data.success) {
                     loadReviews();
                 } else {
-                    alert(data.error || 'Lỗi khi xóa!');
+                    showToast(data.error || 'Lỗi khi xóa!', 'error');
                 }
             } catch (e) {
-                alert('Lỗi khi xóa đánh giá!');
+                showToast('Lỗi khi xóa đánh giá!', 'error');
             }
         }
     </script>

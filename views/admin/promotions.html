@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý khuyến mãi - Admin</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .coupon-row { display: grid; grid-template-columns: 140px 1fr 140px 110px; gap: 16px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--gray-200); transition: background 0.15s; }
+        .coupon-row:hover { background: var(--gray-50); }
+        .coupon-row:last-child { border-bottom: none; }
+        .coupon-code { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px dashed #f59e0b; border-radius: 8px; padding: 8px 12px; font-weight: 800; font-size: 0.85rem; color: #92400e; letter-spacing: 0.5px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; word-break: break-all; }
+        .coupon-info h3 { margin: 0 0 4px; font-size: 0.95rem; font-weight: 700; color: var(--gray-900); }
+        .coupon-info p { margin: 0; font-size: 0.8rem; color: var(--gray-600); }
+        .coupon-discount { font-size: 1.4rem; font-weight: 800; color: var(--danger); text-align: center; }
+        .coupon-actions { display: flex; gap: 6px; justify-content: flex-end; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 16px; border-left: 4px solid var(--primary); }
+        .stat-card.green { border-left-color: var(--success); }
+        .stat-card.orange { border-left-color: #f59e0b; }
+        .stat-icon { width: 48px; height: 48px; border-radius: 12px; background: rgba(99, 102, 241, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .stat-card.green .stat-icon { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .stat-card.orange .stat-icon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--gray-900); line-height: 1; }
+        .stat-label { font-size: 0.8rem; color: var(--gray-600); margin-top: 4px; }
+        .badge-status { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; }
+        .badge-status.active { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .badge-status.inactive { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .badge-status.expired { background: rgba(107, 114, 128, 0.15); color: var(--gray-600); }
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <a href="/admin">
+                    <div class="sidebar-logo-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div>
+                        <div class="sidebar-logo-text">AnhTraiStore</div>
+                        <div class="sidebar-logo-sub">Admin Panel</div>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Tổng quan</div>
+                    <a href="/admin" class="nav-item">
+                        <i class="fas fa-chart-pie"></i>
+                        Dashboard
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Quản lý</div>
+                    <a href="/admin/products" class="nav-item">
+                        <i class="fas fa-box"></i>
+                        Sản phẩm
+                    </a>
+                    <a href="/admin/orders" class="nav-item">
+                        <i class="fas fa-shopping-bag"></i>
+                        Đơn hàng
+                    </a>
+                    <a href="/admin/users" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        Khách hàng
+                    </a>
+                    <a href="/admin/reviews" class="nav-item">
+                        <i class="fas fa-star"></i>
+                        Đánh giá
+                    </a>
+                    <a href="/admin/contacts" class="nav-item">
+                        <i class="fas fa-envelope"></i>
+                        Liên hệ
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Marketing</div>
+                    <a href="/admin/banners" class="nav-item">
+                        <i class="fas fa-images"></i>
+                        Banners
+                    </a>
+                    <a href="/admin/promotions" class="nav-item active">
+                        <i class="fas fa-bullhorn"></i>
+                        Khuyến mãi
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Hệ thống</div>
+                    <a href="/" class="nav-item" target="_blank">
+                        <i class="fas fa-external-link-alt"></i>
+                        Xem cửa hàng
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-user" id="adminUser">
+                    <div class="sidebar-avatar">A</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">Admin</div>
+                        <div class="sidebar-user-role">Quản trị viên</div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="adminLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Đăng xuất
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="top-header-left">
+                    <h1 class="top-header-title">Quản lý khuyến mãi</h1>
+                </div>
+                <div class="top-header-right">
+                    <span class="header-date" id="currentDate"></span>
+                    <button class="btn btn-primary" onclick="openAddModal()">
+                        <i class="fas fa-plus"></i>
+                        Thêm mã mới
+                    </button>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div id="alertBox"></div>
+
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
+                        <div>
+                            <div class="stat-value" id="totalCoupons">0</div>
+                            <div class="stat-label">Tổng mã giảm giá</div>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div>
+                            <div class="stat-value" id="activeCoupons">0</div>
+                            <div class="stat-label">Đang hoạt động</div>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                        <div>
+                            <div class="stat-value" id="totalUsage">0</div>
+                            <div class="stat-label">Lượt đã sử dụng</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coupons List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-list"></i>
+                            Danh sách mã giảm giá
+                        </h2>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <div id="couponsList">
+                            <div style="text-align: center; padding: 48px; color: var(--gray-500);">
+                                <i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i>
+                                <p style="margin-top: 12px;">Đang tải...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="couponModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">
+                    <i class="fas fa-plus-circle"></i>
+                    Thêm mã giảm giá
+                </h2>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="couponForm">
+                    <input type="hidden" id="couponId">
+                    <div class="form-group">
+                        <label class="form-label">Mã giảm giá <span style="color: var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="code" required style="text-transform: uppercase;" placeholder="VD: SALE20">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mô tả <span style="color: var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="description" required placeholder="VD: Giảm 20% cho khách VIP">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Loại giảm <span style="color: var(--danger);">*</span></label>
+                            <select class="form-control" id="discount_type" required>
+                                <option value="percent">Phần trăm (%)</option>
+                                <option value="fixed">Số tiền (đ)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Giá trị <span style="color: var(--danger);">*</span></label>
+                            <input type="number" class="form-control" id="discount_value" required min="0" placeholder="10">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Đơn tối thiểu (đ)</label>
+                            <input type="number" class="form-control" id="min_order_value" min="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Giảm tối đa (đ)</label>
+                            <input type="number" class="form-control" id="max_discount" min="0" placeholder="Không giới hạn">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Giới hạn lượt dùng</label>
+                            <input type="number" class="form-control" id="usage_limit" min="0" placeholder="Không giới hạn">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ngày hết hạn</label>
+                            <input type="date" class="form-control" id="expires_at">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="is_active" checked>
+                            <span>Kích hoạt mã này</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('couponForm').requestSubmit()">
+                    <i class="fas fa-check"></i> Lưu mã giảm giá
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allCoupons = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateEl = document.getElementById('currentDate');
+            if (dateEl) dateEl.textContent = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            const form = document.getElementById('couponForm');
+            if (form) {
+                form.addEventListener('submit', saveCoupon);
+            }
+            loadCoupons();
+        });
+
+        function showAlert(message, type = 'success') {
+            const box = document.getElementById('alertBox');
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+            box.innerHTML = `<div class="alert alert-${type}"><i class="fas fa-${icon}"></i> ${message}</div>`;
+            setTimeout(() => { box.innerHTML = ''; }, 3500);
+        }
+
+        async function loadCoupons() {
+            try {
+                const res = await fetch('/admin/api/coupons', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                allCoupons = data.coupons || [];
+                renderCoupons();
+                updateStats();
+            } catch (e) {
+                console.error('Load coupons error:', e);
+                showAlert('Lỗi tải dữ liệu!', 'error');
+            }
+        }
+
+        function renderCoupons() {
+            const container = document.getElementById('couponsList');
+            if (allCoupons.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 48px; color: var(--gray-500);">
+                        <i class="fas fa-ticket-alt" style="font-size: 48px; opacity: 0.3;"></i>
+                        <p style="margin-top: 12px;">Chưa có mã giảm giá nào. Nhấn "Thêm mã mới" để tạo.</p>
+                    </div>`;
+                return;
+            }
+
+            const now = new Date();
+            container.innerHTML = allCoupons.map(c => {
+                const discountText = c.discount_type === 'percent' ? `${c.discount_value}%` : `${formatPrice(c.discount_value)}đ`;
+                const minText = c.min_order_value > 0 ? `Đơn tối thiểu: ${formatPrice(c.min_order_value)}đ` : 'Không yêu cầu đơn tối thiểu';
+                const maxText = c.max_discount ? `Giảm tối đa: ${formatPrice(c.max_discount)}đ` : 'Không giới hạn giảm tối đa';
+                const usageText = c.usage_limit ? `Đã dùng: ${c.used_count || 0}/${c.usage_limit}` : `Đã dùng: ${c.used_count || 0}`;
+                const expired = c.expires_at && new Date(c.expires_at) < now;
+                const expiryText = c.expires_at ? `Hết hạn: ${new Date(c.expires_at).toLocaleDateString('vi-VN')}` : 'Không thời hạn';
+
+                let statusClass = 'active';
+                let statusText = 'Hoạt động';
+                if (expired) { statusClass = 'expired'; statusText = 'Hết hạn'; }
+                else if (!c.is_active) { statusClass = 'inactive'; statusText = 'Tắt'; }
+
+                return `
+                    <div class="coupon-row">
+                        <div class="coupon-code">${c.code}</div>
+                        <div class="coupon-info">
+                            <h3>${c.description || '(Không có mô tả)'}</h3>
+                            <p><i class="fas fa-cart-arrow-down"></i> ${minText} &nbsp;·&nbsp; <i class="fas fa-arrow-down"></i> ${maxText}</p>
+                            <p><i class="fas fa-users"></i> ${usageText} &nbsp;·&nbsp; <i class="fas fa-calendar"></i> ${expiryText}</p>
+                        </div>
+                        <div>
+                            <div class="coupon-discount">${discountText}</div>
+                            <div style="text-align: center; margin-top: 4px;">
+                                <span class="badge-status ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                        <div class="coupon-actions">
+                            <button class="btn-icon edit" onclick="editCoupon(${c.id})" title="Sửa">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn-icon delete" onclick="deleteCoupon(${c.id})" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('totalCoupons').textContent = allCoupons.length;
+            document.getElementById('activeCoupons').textContent = allCoupons.filter(c => c.is_active).length;
+            document.getElementById('totalUsage').textContent = allCoupons.reduce((sum, c) => sum + (c.used_count || 0), 0);
+        }
+
+        function openAddModal() {
+            console.log('openAddModal called');
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Thêm mã giảm giá';
+            document.getElementById('couponForm').reset();
+            document.getElementById('couponId').value = '';
+            document.getElementById('is_active').checked = true;
+            document.getElementById('couponModal').classList.add('show');
+        }
+
+        function editCoupon(id) {
+            console.log('editCoupon called with id:', id);
+            const c = allCoupons.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Sửa mã giảm giá';
+            document.getElementById('couponId').value = c.id;
+            document.getElementById('code').value = c.code;
+            document.getElementById('description').value = c.description || '';
+            document.getElementById('discount_type').value = c.discount_type;
+            document.getElementById('discount_value').value = c.discount_value;
+            document.getElementById('min_order_value').value = c.min_order_value || 0;
+            document.getElementById('max_discount').value = c.max_discount || '';
+            document.getElementById('usage_limit').value = c.usage_limit || '';
+            document.getElementById('expires_at').value = c.expires_at ? String(c.expires_at).split('T')[0] : '';
+            document.getElementById('is_active').checked = c.is_active == 1 || c.is_active === true;
+            document.getElementById('couponModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('couponModal').classList.remove('show');
+        }
+
+        async function saveCoupon(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('saveCoupon called');
+            const id = document.getElementById('couponId').value;
+            const data = {
+                code: document.getElementById('code').value.trim().toUpperCase(),
+                description: document.getElementById('description').value.trim(),
+                discount_type: document.getElementById('discount_type').value,
+                discount_value: parseFloat(document.getElementById('discount_value').value),
+                min_order_value: parseFloat(document.getElementById('min_order_value').value) || 0,
+                max_discount: parseFloat(document.getElementById('max_discount').value) || null,
+                usage_limit: parseInt(document.getElementById('usage_limit').value) || null,
+                expires_at: document.getElementById('expires_at').value || null,
+                is_active: document.getElementById('is_active').checked ? 1 : 0
+            };
+            console.log('Saving:', data, 'id=', id);
+
+            try {
+                const url = id ? `/admin/api/coupons/${id}` : '/admin/api/coupons';
+                const method = id ? 'PUT' : 'POST';
+                console.log('Request:', method, url);
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+                console.log('Response status:', res.status);
+                const result = await res.json();
+                console.log('Result:', result);
+
+                if (result.success) {
+                    showAlert(id ? 'Cập nhật mã giảm giá thành công!' : 'Thêm mã giảm giá thành công!', 'success');
+                    closeModal();
+                    loadCoupons();
+                } else {
+                    showAlert(result.error || 'Có lỗi xảy ra!', 'error');
+                }
+            } catch (e) {
+                console.error('Save coupon error:', e);
+                showAlert('Lỗi kết nối!', 'error');
+            }
+        }
+
+        async function deleteCoupon(id) {
+            if (!confirm('Bạn có chắc muốn xóa mã giảm giá này?')) return;
+            try {
+                const res = await fetch(`/admin/api/coupons/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'include'
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showAlert('Đã xóa mã giảm giá!', 'success');
+                    loadCoupons();
+                } else {
+                    showAlert(result.error || 'Có lỗi xảy ra!', 'error');
+                }
+            } catch (e) {
+                showAlert('Lỗi kết nối!', 'error');
+            }
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN').format(price || 0);
+        }
+
+        function showConfirm(title, message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        }
+        function adminLogout() {
+            showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', () => {
+                fetch('/auth/logout', { method: 'POST', credentials: 'include' })
+                    .then(() => { window.location.href = '/login'; });
+            });
+        }
+    </script>
+</body>
+</html>

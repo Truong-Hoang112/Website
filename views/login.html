@@ -4,194 +4,648 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - AnhTraiStore</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=2">
     <style>
-        body { background: linear-gradient(135deg, var(--slate-100) 0%, var(--white) 100%); min-height: 100vh; }
-        .auth-container {
+        * { box-sizing: border-box; }
+        body { 
+            background: #f8f9fb; 
+            min-height: 100vh; 
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+        }
+        .auth-page {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 24px;
         }
-        .auth-card {
-            background: var(--white);
-            border-radius: var(--radius-2xl);
-            padding: 48px 40px;
+        .auth-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            max-width: 1120px;
             width: 100%;
-            max-width: 440px;
-            box-shadow: var(--shadow-xl);
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06);
         }
-        .auth-logo {
+
+        /* ============ LEFT PANEL ============ */
+        .auth-left {
+            padding: 48px 40px;
+            background: linear-gradient(160deg, #fff5f5 0%, #ffe8e8 50%, #ffd6d6 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(226, 27, 27, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .auth-left::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle, rgba(226, 27, 27, 0.05) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .left-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+        .brand-mark {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #e21b1b 0%, #ff4444 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(226, 27, 27, 0.3);
+        }
+        .brand-mark i {
+            color: #fff;
+            font-size: 1.4rem;
+        }
+        .brand-text {
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: #1a1a2e;
+            letter-spacing: -0.5px;
+        }
+        .brand-text span {
+            color: #e21b1b;
+        }
+
+        .hero-headline {
+            font-size: 1.85rem;
+            font-weight: 900;
+            color: #1a1a2e;
+            line-height: 1.2;
+            margin: 0 0 16px;
+            letter-spacing: -1px;
+        }
+        .hero-headline .highlight {
+            background: linear-gradient(135deg, #e21b1b 0%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+        }
+        .hero-sub {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+            margin: 0 0 32px;
+            font-weight: 400;
+        }
+
+        .perks-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            margin-bottom: 28px;
+        }
+        .perks-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+        }
+        .perks-title i {
+            color: #e21b1b;
+            font-size: 1.1rem;
+        }
+        .perk-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+        }
+        .perk-row:not(:last-child) {
+            border-bottom: 1px dashed #f0f0f0;
+        }
+        .perk-check {
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, #ffe8e8, #ffd6d6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .perk-check i {
+            color: #e21b1b;
+            font-size: 0.75rem;
+        }
+        .perk-text {
+            font-size: 0.86rem;
+            color: #444;
+            line-height: 1.55;
+        }
+        .perk-text strong {
+            color: #1a1a2e;
+            font-weight: 700;
+        }
+
+        .left-illustration {
             text-align: center;
-            margin-bottom: 32px;
+            margin-top: auto;
+            padding-top: 20px;
+            position: relative;
+            z-index: 1;
         }
-        .auth-logo a {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--dark);
-            text-decoration: none;
+        .left-illustration svg {
+            max-width: 320px;
+            width: 100%;
         }
-        .auth-logo a span { color: var(--primary); }
+
+        /* ============ RIGHT PANEL ============ */
+        .auth-right {
+            padding: 48px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .right-header {
+            margin-bottom: 28px;
+        }
         .auth-title {
-            text-align: center;
-            font-size: 1.5rem;
+            font-size: 1.85rem;
             font-weight: 800;
-            margin-bottom: 24px;
-            color: var(--dark);
+            color: #1a1a2e;
+            margin: 0 0 8px;
+            letter-spacing: -0.8px;
         }
+        .auth-title .accent {
+            color: #e21b1b;
+        }
+        .auth-sub {
+            color: #888;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
         .auth-alert {
-            padding: 14px 16px;
-            border-radius: var(--radius-lg);
-            margin-bottom: 20px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 18px;
             font-size: 0.875rem;
             font-weight: 500;
             display: flex;
             align-items: center;
             gap: 10px;
+            animation: slideDown 0.3s ease;
         }
-        .auth-alert.error { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
-        .auth-alert.success { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
-        .form-group { margin-bottom: 20px; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .auth-alert.error { 
+            background: #fff0f0; 
+            color: #d32f2f; 
+            border: 1px solid #ffd6d6; 
+        }
+        .auth-alert.success { 
+            background: #f0fdf4; 
+            color: #16a34a; 
+            border: 1px solid #d1fae5; 
+        }
+
+        .form-group { margin-bottom: 18px; }
         .form-group label {
             display: block;
             font-weight: 600;
-            font-size: 0.875rem;
-            margin-bottom: 6px;
-            color: var(--dark);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: #333;
         }
         .form-control {
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--slate-200);
-            border-radius: var(--radius-lg);
-            font-size: 0.9rem;
+            padding: 13px 16px;
+            border: 1.5px solid #ececec;
+            border-radius: 10px;
+            font-size: 0.95rem;
             outline: none;
-            transition: all var(--transition-base);
+            transition: all 0.2s ease;
+            background: #fafafa;
+            font-family: inherit;
         }
-        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-bg); }
+        .form-control:hover { border-color: #d0d0d0; background: #fff; }
+        .form-control:focus { 
+            border-color: #e21b1b; 
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(226, 27, 27, 0.08);
+        }
+        .form-control::placeholder { color: #b0b0b0; }
+
+        .input-wrap { position: relative; }
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #aaa;
+            font-size: 1.05rem;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+        .password-toggle:hover { color: #e21b1b; }
+
+        .remember-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .remember-me input { 
+            accent-color: #e21b1b; 
+            width: 16px; 
+            height: 16px; 
+            cursor: pointer; 
+        }
+        .remember-me span { 
+            font-size: 0.85rem; 
+            color: #555;
+        }
+        .forgot-link { 
+            font-size: 0.85rem; 
+            color: #e21b1b; 
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .forgot-link:hover { opacity: 0.75; }
+
         .btn-auth {
             width: 100%;
-            padding: 16px;
-            background: var(--primary);
+            padding: 14px;
+            background: linear-gradient(135deg, #e21b1b 0%, #ff3838 100%);
             color: #fff;
             border: none;
-            border-radius: var(--radius-lg);
+            border-radius: 10px;
             font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
-            transition: all var(--transition-base);
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            transition: all 0.25s ease;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 16px rgba(226, 27, 27, 0.25);
         }
-        .btn-auth:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45); }
-        .btn-auth:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .auth-options { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
-        .auth-options input { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
-        .auth-options label { font-size: 0.875rem; color: var(--slate-600); cursor: pointer; }
-        .auth-divider {
+        .btn-auth:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(226, 27, 27, 0.35);
+        }
+        .btn-auth:active { transform: translateY(0); }
+        .btn-auth:disabled { 
+            background: #ccc; 
+            cursor: not-allowed; 
+            box-shadow: none;
+            transform: none;
+        }
+
+        .divider {
             text-align: center;
-            margin: 24px 0;
+            margin: 22px 0;
             position: relative;
+            color: #aaa;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
-        .auth-divider::before {
+        .divider::before {
             content: '';
             position: absolute;
             top: 50%;
             left: 0;
             right: 0;
             height: 1px;
-            background: var(--slate-200);
+            background: #ececec;
+            z-index: 0;
         }
-        .auth-divider span {
-            background: var(--white);
-            padding: 0 16px;
+        .divider span {
+            background: #fff;
+            padding: 0 14px;
             position: relative;
-            font-size: 0.8rem;
-            color: var(--slate-500);
+            z-index: 1;
+        }
+
+        .social-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
         }
         .btn-social {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid var(--slate-200);
-            border-radius: var(--radius-lg);
+            padding: 12px;
+            border: 1.5px solid #ececec;
+            border-radius: 10px;
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all var(--transition-base);
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            background: var(--white);
-            margin-bottom: 12px;
+            gap: 8px;
+            background: #fff;
+            color: #333;
         }
-        .btn-social:hover { border-color: var(--slate-300); background: var(--slate-50); }
+        .btn-social:hover { 
+            border-color: #e21b1b;
+            background: #fff8f8;
+            transform: translateY(-1px);
+        }
+        .btn-social img { width: 18px; height: 18px; }
+
         .auth-footer {
             text-align: center;
-            margin-top: 24px;
-            font-size: 0.875rem;
-            color: var(--slate-500);
+            font-size: 0.88rem;
+            color: #666;
         }
-        .auth-footer a { color: var(--primary); font-weight: 600; text-decoration: none; }
-        .auth-footer a:hover { text-decoration: underline; }
+        .auth-footer a { 
+            color: #e21b1b; 
+            font-weight: 700; 
+            text-decoration: none; 
+            transition: opacity 0.2s;
+        }
+        .auth-footer a:hover { opacity: 0.75; }
+
+        @keyframes spin { 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
+        }
+        .spin { animation: spin 1s linear infinite; }
+
+        @media (max-width: 900px) {
+            .auth-container { grid-template-columns: 1fr; }
+            .auth-left { display: none; }
+            .auth-right { padding: 36px 28px; }
+        }
         @media (max-width: 480px) {
-            .auth-card { padding: 32px 24px; }
+            .auth-right { padding: 28px 20px; }
+            .auth-title { font-size: 1.5rem; }
+            .social-row { grid-template-columns: 1fr; }
+        }
+        /* Toast Notification */
+        .custom-toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 99999;
+            animation: toastSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+        .custom-toast.success { background: linear-gradient(135deg, #22c55e 0%, #059669 100%); color: #fff; }
+        .custom-toast.error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; }
+        .custom-toast.info { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #fff; }
+        .custom-toast i { font-size: 1.2rem; }
+        @keyframes toastSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastSlideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
         }
     </style>
+    <script>
+        function showToast(message, type = 'info') {
+            const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', info: 'bi-info-circle-fill' };
+            const toast = document.createElement('div');
+            toast.className = `custom-toast ${type}`;
+            toast.innerHTML = `<i class="bi ${icons[type]}"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastSlideOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-logo">
-                <a href="/">Anh<span>Trai</span>Store</a>
+    <div class="auth-page">
+        <div class="auth-container">
+            <!-- LEFT -->
+            <div class="auth-left">
+                <div class="left-content">
+                    <div class="brand-logo">
+                        <div class="brand-mark">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                        <div class="brand-text">Anh<span>Trai</span>Store</div>
+                    </div>
+
+                    <h2 class="hero-headline">
+                        Mua sắm thông minh<br>
+                        <span class="highlight">Tiết kiệm thông minh</span>
+                    </h2>
+                    <p class="hero-sub">
+                        Gia nhập cộng đồng hơn <strong>500K+</strong> khách hàng thông thái. 
+                        Nhận ngay ưu đãi độc quyền và tích điểm đổi quà mỗi đơn hàng.
+                    </p>
+
+                    <div class="perks-card">
+                        <div class="perks-title">
+                            <i class="bi bi-stars"></i>
+                            Đặc quyền thành viên
+                        </div>
+                        <div class="perk-row">
+                            <div class="perk-check"><i class="bi bi-check-lg"></i></div>
+                            <div class="perk-text">Giảm ngay <strong>5%</strong> cho mọi đơn hàng đầu tiên</div>
+                        </div>
+                        <div class="perk-row">
+                            <div class="perk-check"><i class="bi bi-check-lg"></i></div>
+                            <div class="perk-text"><strong>Free ship</strong> với đơn từ 300K & thành viên VIP</div>
+                        </div>
+                        <div class="perk-row">
+                            <div class="perk-check"><i class="bi bi-check-lg"></i></div>
+                            <div class="perk-text">Voucher sinh nhật trị giá <strong>đến 500K</strong></div>
+                        </div>
+                        <div class="perk-row">
+                            <div class="perk-check"><i class="bi bi-check-lg"></i></div>
+                            <div class="perk-text">Tích điểm đổi quà, thăng hạng nhận <strong>voucher VIP</strong></div>
+                        </div>
+                        <div class="perk-row">
+                            <div class="perk-check"><i class="bi bi-check-lg"></i></div>
+                            <div class="perk-text">Hỗ trợ <strong>24/7</strong> qua hotline riêng</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="left-illustration">
+                    <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="card1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#e21b1b"/>
+                                <stop offset="100%" stop-color="#ff4444"/>
+                            </linearGradient>
+                            <linearGradient id="card2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#1a1a2e"/>
+                                <stop offset="100%" stop-color="#3d3d5c"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Background blob -->
+                        <ellipse cx="160" cy="170" rx="130" ry="20" fill="#e21b1b" opacity="0.08"/>
+                        
+                        <!-- Main card -->
+                        <g transform="translate(60, 40)">
+                            <rect width="200" height="120" rx="14" fill="url(#card2)"/>
+                            <circle cx="170" cy="35" r="22" fill="#ffd93d" opacity="0.95"/>
+                            <circle cx="155" cy="35" r="22" fill="#ff4444" opacity="0.7"/>
+                            <text x="20" y="35" fill="#ffd93d" font-size="13" font-weight="800" letter-spacing="2">MEMBER VIP</text>
+                            <text x="20" y="80" fill="#fff" font-size="22" font-weight="900">*** *** 2024</text>
+                            <text x="20" y="105" fill="#aaa" font-size="10" font-weight="600">VALID THRU 12/28</text>
+                            <text x="160" y="105" fill="#fff" font-size="10" font-weight="700">NGUYEN VAN A</text>
+                        </g>
+
+                        <!-- Floating coin 1 -->
+                        <g transform="translate(40, 20)">
+                            <circle r="18" fill="#ffd93d"/>
+                            <text y="6" text-anchor="middle" font-size="18" fill="#b8860b">$</text>
+                        </g>
+
+                        <!-- Floating coin 2 -->
+                        <g transform="translate(280, 50)">
+                            <circle r="14" fill="#ff4444"/>
+                            <text y="5" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">%</text>
+                        </g>
+
+                        <!-- Gift box -->
+                        <g transform="translate(245, 100)">
+                            <rect x="0" y="20" width="55" height="40" rx="3" fill="#e21b1b"/>
+                            <rect x="0" y="32" width="55" height="5" fill="#b71c1c"/>
+                            <rect x="24" y="20" width="8" height="40" fill="#b71c1c"/>
+                            <path d="M 28 20 Q 20 12 16 16 Q 12 20 28 24 Z" fill="#e21b1b"/>
+                            <path d="M 28 20 Q 36 12 40 16 Q 44 20 28 24 Z" fill="#e21b1b"/>
+                        </g>
+
+                        <!-- Stars -->
+                        <text x="20" y="180" font-size="16" fill="#ffd93d">★</text>
+                        <text x="290" y="180" font-size="12" fill="#ffd93d">★</text>
+                        <text x="100" y="20" font-size="10" fill="#ffd93d">★</text>
+                        <text x="230" y="20" font-size="14" fill="#ffd93d">★</text>
+                        <text x="310" y="100" font-size="10" fill="#ffd93d">★</text>
+                    </svg>
+                </div>
             </div>
-            <h1 class="auth-title">Đăng nhập tài khoản</h1>
 
-            <div id="errorMessage" style="display:none" class="auth-alert error">
-                <i class="bi bi-exclamation-circle-fill"></i>
-                <span id="errorText"></span>
-            </div>
-
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" class="form-control" name="email" id="emailInput" placeholder="example@email.com" required>
+            <!-- RIGHT -->
+            <div class="auth-right">
+                <div class="right-header">
+                    <h1 class="auth-title">Chào mừng trở lại! <span class="accent">👋</span></h1>
+                    <p class="auth-sub">Đăng nhập để tiếp tục mua sắm và nhận ưu đãi</p>
                 </div>
-                <div class="form-group">
-                    <label>Mật khẩu</label>
-                    <input type="password" class="form-control" name="password" id="passwordInput" placeholder="Nhập mật khẩu" required>
+
+                <div id="errorMessage" style="display:none" class="auth-alert error">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span id="errorText"></span>
                 </div>
-                <div class="auth-options">
-                    <input type="checkbox" id="rememberMe">
-                    <label for="rememberMe">Lưu mật khẩu</label>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Email hoặc số điện thoại</label>
+                        <input type="text" class="form-control" name="email" id="emailInput" placeholder="example@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mật khẩu</label>
+                        <div class="input-wrap">
+                            <input type="password" class="form-control" name="password" id="passwordInput" placeholder="Nhập mật khẩu của bạn" required style="padding-right:48px">
+                            <button type="button" class="password-toggle" onclick="togglePassword()">
+                                <i class="bi bi-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="remember-row">
+                        <label class="remember-me">
+                            <input type="checkbox" id="rememberMe">
+                            <span>Ghi nhớ đăng nhập</span>
+                        </label>
+                        <a href="/forgot-password" class="forgot-link">Quên mật khẩu?</a>
+                    </div>
+                    <button type="submit" class="btn-auth" id="submitBtn">Đăng nhập ngay</button>
+                </form>
+
+                <div class="divider"><span>Hoặc tiếp tục với</span></div>
+
+                <div class="social-row">
+                    <a href="/auth/google" class="btn-social" style="text-decoration: none;">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" onerror="this.outerHTML='<i class=\'fab fa-google\' style=\'color:#EA4335;font-size:18px\'></i>'">
+                        <span>Google</span>
+                    </a>
+                    <button class="btn-social" onclick="showToast('Zalo login đang phát triển!', 'info')">
+                        <i class="bi bi-chat-dots-fill" style="color:#0068ff; font-size:18px;"></i>
+                        <span>Zalo</span>
+                    </button>
                 </div>
-                <button type="submit" class="btn-auth" id="submitBtn">
-                    <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
-                </button>
-            </form>
 
-            <div class="auth-divider"><span>hoặc</span></div>
-
-            <button class="btn-social" onclick="alert('Google login coming soon!')">
-                <i class="fab fa-google" style="color:#EA4335"></i> Đăng nhập với Google
-            </button>
-
-            <div class="auth-footer">
-                Quên mật khẩu? <a href="/forgot-password">Khôi phục mật khẩu</a><br><br>
-                Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
+                <div class="auth-footer">
+                    Chưa có tài khoản? <a href="/register">Đăng ký miễn phí</a>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+
         const savedEmail = localStorage.getItem('savedEmail');
         const savedPassword = localStorage.getItem('savedPassword');
         if (localStorage.getItem('rememberMe') === 'true' && savedEmail && savedPassword) {
@@ -222,7 +676,7 @@
             }
 
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Đang xử lý...';
+            submitBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Đang đăng nhập...';
 
             try {
                 const response = await fetch('/api/auth/login', {
@@ -238,7 +692,7 @@
                     errorText.textContent = data.error;
                     errorEl.style.display = 'flex';
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Đăng nhập';
+                    submitBtn.innerHTML = 'Đăng nhập ngay';
                     return;
                 }
 
@@ -247,10 +701,9 @@
                 errorText.textContent = 'Đã xảy ra lỗi. Vui lòng thử lại!';
                 errorEl.style.display = 'flex';
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Đăng nhập';
+                submitBtn.innerHTML = 'Đăng nhập ngay';
             }
         });
     </script>
-    <style>.spin { animation: spin 1s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
 </body>
 </html>

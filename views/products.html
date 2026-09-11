@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sản phẩm - AnhTraiStore</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=4">
+    <link rel="stylesheet" href="/css/chatbox.css">
+    <link rel="stylesheet" href="/css/filter.css">
     <style>
         .breadcrumb-bar {
             background: var(--white);
@@ -34,107 +37,6 @@
             grid-template-columns: 280px 1fr;
             gap: 32px;
         }
-        .sidebar { position: sticky; top: 100px; height: fit-content; }
-        .mobile-filter-btn {
-            display: none;
-            width: 100%;
-            padding: 14px 20px;
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: var(--radius-lg);
-            font-size: 0.9rem;
-            font-weight: 700;
-            cursor: pointer;
-            margin-bottom: 16px;
-        }
-        .filter-card {
-            background: var(--white);
-            border: 1px solid var(--slate-200);
-            border-radius: var(--radius-xl);
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-        .filter-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--slate-100);
-            background: var(--slate-50);
-        }
-        .filter-header-title {
-            font-weight: 700;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .filter-body { padding: 16px 20px; }
-        .filter-check {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            cursor: pointer;
-            font-size: 0.875rem;
-            color: var(--slate-600);
-        }
-        .filter-check:hover { color: var(--primary); }
-        .filter-check input { accent-color: var(--primary); width: 16px; height: 16px; }
-        .price-inputs {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        .price-inputs input {
-            flex: 1;
-            padding: 10px 12px;
-            border: 2px solid var(--slate-200);
-            border-radius: var(--radius-md);
-            font-size: 0.875rem;
-            outline: none;
-            transition: border-color var(--transition-fast);
-        }
-        .price-inputs input:focus { border-color: var(--primary); }
-        .price-presets {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .price-presets button {
-            padding: 8px 14px;
-            background: var(--slate-100);
-            border: none;
-            border-radius: var(--radius-md);
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-        .price-presets button:hover { background: var(--primary-bg); color: var(--primary); }
-        .btn-filter-apply {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: var(--radius-lg);
-            font-size: 0.9rem;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: all var(--transition-base);
-        }
-        .btn-filter-apply:hover { background: var(--primary-dark); }
-        .btn-filter-clear {
-            display: block;
-            text-align: center;
-            padding: 12px;
-            color: var(--slate-500);
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-top: 8px;
-        }
-        .btn-filter-clear:hover { color: var(--danger); }
 
         .products-main { min-width: 0; }
         .products-toolbar {
@@ -198,6 +100,9 @@
             overflow: hidden;
             transition: all var(--transition-slow);
             position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
         .p-card:hover {
             border-color: var(--primary);
@@ -227,7 +132,12 @@
         }
         .p-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
         .p-card:hover .p-img img { transform: scale(1.08); }
-        .p-body { padding: 16px; }
+        .p-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
         .p-brand {
             font-size: 0.65rem;
             font-weight: 800;
@@ -250,12 +160,14 @@
         }
         .p-price-wrap {
             display: flex;
-            align-items: baseline;
-            gap: 8px;
+            flex-direction: column;
+            gap: 2px;
             margin-bottom: 12px;
+            margin-top: auto;
+            max-width: 100%;
         }
-        .p-price { font-size: 1rem; font-weight: 800; color: var(--primary); }
-        .p-old-price { font-size: 0.75rem; color: var(--slate-400); text-decoration: line-through; }
+        .p-price { font-size: 1.15rem; font-weight: 800; color: var(--primary); word-break: break-word; line-height: 1.2; }
+        .p-old-price { font-size: 0.75rem; color: var(--slate-400); text-decoration: line-through; word-break: break-word; line-height: 1.2; }
         .btn-cart {
             width: 100%;
             padding: 10px;
@@ -327,9 +239,6 @@
         }
         @media (max-width: 768px) {
             .products-page { grid-template-columns: 1fr; }
-            .sidebar { display: none; position: fixed; top: 0; left: 0; width: 320px; height: 100vh; background: var(--white); z-index: 300; padding: 20px; overflow-y: auto; transform: translateX(-100%); transition: transform 0.3s ease; }
-            .sidebar.open { display: block; transform: translateX(0); }
-            .mobile-filter-btn { display: flex; align-items: center; justify-content: center; gap: 8px; }
             .products-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
         }
         @media (max-width: 480px) {
@@ -359,13 +268,14 @@
             </div>
             <ul class="nav-links">
                 <li><a href="/products" class="nav-link active"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a></li>
-                <li><a href="/products?sort=discount" class="nav-link"><i class="bi bi-tag"></i> Khuyến mãi</a></li>
+                <li><a href="/promotions" class="nav-link"><i class="bi bi-tag"></i> Khuyến mãi</a></li>
                 <li><a href="/policy" class="nav-link"><i class="bi bi-file-text"></i> Chính sách</a></li>
                 <li><a href="/contact" class="nav-link"><i class="bi bi-headset"></i> Liên hệ</a></li>
             </ul>
-            <a href="/cart" class="cart-link">
-                <i class="bi bi-bag"></i> Giỏ hàng
-                <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+            <a href="/wishlist" class="wishlist-link"><i class="bi bi-heart"></i><span class="wishlist-badge" id="wishlistBadge">0</span></a> <a href="/compare" class="compare-link"><i class="bi bi-bar-chart"></i><span class="compare-badge" id="compareBadge">0</span></a> <a href="/cart" class="cart-link">
+                <i class="bi bi-bag"></i>
+                <span>Giỏ hàng</span>
+                <span class="cart-badge" id="cartBadge">0</span>
             </a>
             <div id="userArea"></div>
             <button class="hamburger-nav" onclick="openMobileMenu()"><i class="bi bi-list"></i></button>
@@ -384,7 +294,7 @@
         </div>
         <nav class="mobile-nav">
             <a href="/products" class="mobile-nav-item active"><i class="bi bi-grid-3x3-gap"></i> Sản phẩm</a>
-            <a href="/products?sort=discount" class="mobile-nav-item"><i class="bi bi-tag"></i> Khuyến mãi</a>
+            <a href="/promotions" class="mobile-nav-item"><i class="bi bi-tag"></i> Khuyến mãi</a>
             <a href="/policy" class="mobile-nav-item"><i class="bi bi-file-text"></i> Chính sách</a>
             <a href="/contact" class="mobile-nav-item"><i class="bi bi-headset"></i> Liên hệ</a>
             <div class="mobile-nav-divider"></div>
@@ -405,7 +315,7 @@
     <!-- Main Content -->
     <div class="products-page">
         <!-- Sidebar -->
-        <aside class="sidebar" id="filterSidebar">
+        <aside class="filter-sidebar" id="filterSidebar">
             <button class="mobile-filter-btn" onclick="toggleMobileFilter()">
                 <i class="bi bi-sliders"></i> Bộ lọc
             </button>
@@ -413,30 +323,35 @@
             <form id="filterForm">
                 <input type="hidden" name="q" id="searchQuery" value="">
 
-                <div class="filter-card">
-                    <div class="filter-header">
+                <div class="filter-card" data-filter="category">
+                    <div class="filter-header" onclick="toggleFilterCard(this)">
                         <span class="filter-header-title"><i class="bi bi-grid-3x3-gap"></i> Danh mục</span>
+                        <button type="button" class="filter-toggle"><i class="bi bi-chevron-down"></i></button>
                     </div>
                     <div class="filter-body" id="categoryFilters">
-                        <label class="filter-check"><input type="radio" name="category" value="" checked> Tất cả</label>
+                        <label class="filter-check"><input type="radio" name="category" value="" checked> <span>Tất cả</span></label>
                     </div>
                 </div>
 
-                <div class="filter-card">
-                    <div class="filter-header">
+                <div class="filter-card" data-filter="brand">
+                    <div class="filter-header" onclick="toggleFilterCard(this)">
                         <span class="filter-header-title"><i class="bi bi-building"></i> Hãng</span>
+                        <button type="button" class="filter-toggle"><i class="bi bi-chevron-down"></i></button>
                     </div>
-                    <div class="filter-body" id="brandFilters"></div>
+                    <div class="filter-body" id="brandFilters">
+                        <div class="filter-empty">Đang tải...</div>
+                    </div>
                 </div>
 
-                <div class="filter-card">
-                    <div class="filter-header">
+                <div class="filter-card" data-filter="price">
+                    <div class="filter-header" onclick="toggleFilterCard(this)">
                         <span class="filter-header-title"><i class="bi bi-coins"></i> Khoảng giá</span>
+                        <button type="button" class="filter-toggle"><i class="bi bi-chevron-down"></i></button>
                     </div>
                     <div class="filter-body">
                         <div class="price-inputs">
                             <input type="text" name="price_min" id="priceMin" placeholder="Từ" inputmode="numeric" autocomplete="off">
-                            <span style="text-align:center;color:var(--slate-400);font-size:0.8rem">~</span>
+                            <span class="dash">~</span>
                             <input type="text" name="price_max" id="priceMax" placeholder="Đến" inputmode="numeric" autocomplete="off">
                         </div>
                         <div class="price-presets">
@@ -448,26 +363,30 @@
                     </div>
                 </div>
 
-                <div class="filter-card" id="ramFilter" style="display:none">
-                    <div class="filter-header">
+                <div class="filter-card" id="ramFilter" data-filter="ram" style="display:none">
+                    <div class="filter-header" onclick="toggleFilterCard(this)">
                         <span class="filter-header-title"><i class="bi bi-memory"></i> RAM</span>
+                        <button type="button" class="filter-toggle"><i class="bi bi-chevron-down"></i></button>
                     </div>
                     <div class="filter-body" id="ramFilters"></div>
                 </div>
 
-                <div class="filter-card" id="storageFilter" style="display:none">
-                    <div class="filter-header">
+                <div class="filter-card" id="storageFilter" data-filter="storage" style="display:none">
+                    <div class="filter-header" onclick="toggleFilterCard(this)">
                         <span class="filter-header-title"><i class="bi bi-device-hdd"></i> Bộ nhớ</span>
+                        <button type="button" class="filter-toggle"><i class="bi bi-chevron-down"></i></button>
                     </div>
                     <div class="filter-body" id="storageFilters"></div>
                 </div>
 
-                <button type="submit" class="btn-filter-apply">
-                    <i class="bi bi-check-lg"></i> Áp dụng bộ lọc
-                </button>
-                <a href="/products" class="btn-filter-clear">
-                    <i class="bi bi-x-circle"></i> Xóa bộ lọc
-                </a>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter-apply">
+                        <i class="bi bi-check-lg"></i> Áp dụng bộ lọc
+                    </button>
+                    <a href="/products" class="btn-filter-clear">
+                        <i class="bi bi-x-circle"></i> Xóa bộ lọc
+                    </a>
+                </div>
             </form>
         </aside>
 
@@ -492,6 +411,142 @@
             <div class="pagination-wrap" id="pagination"></div>
         </div>
     </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="login-modal-overlay" style="display: none;">
+        <div class="login-modal">
+            <button class="login-modal-close" onclick="closeLoginModal()"><i class="bi bi-x-lg"></i></button>
+            <div class="login-modal-header">
+                <div class="login-modal-icon"><i class="bi bi-bag-heart"></i></div>
+                <h3>Đăng nhập để tiếp tục</h3>
+                <p>Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng và sử dụng các tính năng khác</p>
+            </div>
+            <div class="login-modal-actions">
+                <a href="/login" class="btn-login-modal"><i class="bi bi-box-arrow-in-right"></i> Đăng nhập ngay</a>
+                <button class="btn-register-modal" onclick="closeLoginModal()"><i class="bi bi-x"></i> Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .login-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .login-modal {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .login-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--slate-100);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: var(--slate-500);
+            transition: all 0.2s;
+        }
+        .login-modal-close:hover { background: var(--slate-200); color: var(--dark); }
+        .login-modal-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, #ff6b6b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 2.5rem;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(226,27,27,0.35);
+        }
+        .login-modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 12px;
+        }
+        .login-modal-header p {
+            font-size: 0.95rem;
+            color: var(--slate-500);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        .login-modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn-login-modal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #fff;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(226,27,27,0.35);
+        }
+        .btn-login-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(226,27,27,0.45);
+        }
+        .btn-register-modal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 24px;
+            background: var(--slate-100);
+            color: var(--slate-600);
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-register-modal:hover { background: var(--slate-200); }
+    </style>
+    <script>
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        document.getElementById('loginModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeLoginModal();
+        });
+    </script>
 
     <!-- Footer -->
     <footer>
@@ -532,12 +587,12 @@
             </div>
             <div class="footer-bottom">
                 <span>&copy; 2026 AnhTraiStore. Tất cả quyền được bảo lưu.</span>
-                <span>Made with ❤️ by Nhóm 1 Thương Mại Điện Tử</span>
+                <span>Made with ❤️ by Trương Xuân Hoàng</span>
             </div>
         </div>
     </footer>
 
-    <script src="/js/app.js"></script>
+    <script src="/js/app.js?v=4"></script>
     <script>
         let currentPage = 1;
         let currentFilters = {};
@@ -578,6 +633,11 @@
             return new Intl.NumberFormat('de-DE').format(Number(n));
         }
 
+        function parseNumber(str) {
+            if (!str) return '';
+            return str.replace(/\./g, '').replace(/,/g, '.');
+        }
+
         async function loadProducts() {
             const params = new URLSearchParams(window.location.search);
             params.set('page', currentPage);
@@ -597,9 +657,9 @@
 
         function renderFilters(filters) {
             const catContainer = document.getElementById('categoryFilters');
-            let catHtml = '<label class="filter-check"><input type="radio" name="category" value="" ' + (!currentFilters.category ? 'checked' : '') + '> Tất cả</label>';
+            let catHtml = '<label class="filter-check"><input type="radio" name="category" value="" ' + (!currentFilters.category ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>Tất cả</span></label>';
             filters.categories.forEach(cat => {
-                catHtml += '<label class="filter-check"><input type="radio" name="category" value="' + cat.slug + '" ' + (currentFilters.category === cat.slug ? 'checked' : '') + '> ' + cat.name + '</label>';
+                catHtml += '<label class="filter-check"><input type="radio" name="category" value="' + cat.slug + '" ' + (currentFilters.category === cat.slug ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>' + cat.name + '</span></label>';
             });
             catContainer.innerHTML = catHtml;
 
@@ -609,16 +669,16 @@
                 const brandName = brand.name || brand;
                 const brandId = brand.id || brand;
                 const checked = currentFilters.brand == brandId ? 'checked' : '';
-                brandHtml += '<label class="filter-check"><input type="checkbox" name="brand" value="' + brandId + '" ' + checked + '> ' + brandName + '</label>';
+                brandHtml += '<label class="filter-check"><input type="checkbox" name="brand" value="' + brandId + '" ' + checked + ' onchange="autoApplyFilter()"> <span>' + brandName + '</span></label>';
             });
-            brandContainer.innerHTML = brandHtml || '<p style="color:var(--slate-400);font-size:0.85rem">Không có dữ liệu</p>';
+            brandContainer.innerHTML = brandHtml || '<div class="filter-empty">Không có dữ liệu</div>';
 
             if (filters.rams && filters.rams.length > 0) {
                 document.getElementById('ramFilter').style.display = 'block';
                 let ramHtml = '';
                 filters.rams.forEach(ram => {
                     const checked = Array.isArray(currentFilters.ram) ? currentFilters.ram.includes(ram) : currentFilters.ram === ram;
-                    ramHtml += '<label class="filter-check"><input type="checkbox" name="ram" value="' + ram + '" ' + (checked ? 'checked' : '') + '> RAM ' + ram + '</label>';
+                    ramHtml += '<label class="filter-check"><input type="checkbox" name="ram" value="' + ram + '" ' + (checked ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>RAM ' + ram + '</span></label>';
                 });
                 document.getElementById('ramFilters').innerHTML = ramHtml;
             }
@@ -628,7 +688,7 @@
                 let storageHtml = '';
                 filters.storages.forEach(storage => {
                     const checked = Array.isArray(currentFilters.storage) ? currentFilters.storage.includes(storage) : currentFilters.storage === storage;
-                    storageHtml += '<label class="filter-check"><input type="checkbox" name="storage" value="' + storage + '" ' + (checked ? 'checked' : '') + '> ' + storage + '</label>';
+                    storageHtml += '<label class="filter-check"><input type="checkbox" name="storage" value="' + storage + '" ' + (checked ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>' + storage + '</span></label>';
                 });
                 document.getElementById('storageFilters').innerHTML = storageHtml;
             }
@@ -651,7 +711,7 @@
 
             let html = '';
             products.forEach(p => {
-                const badge = p.discount_percent > 0 ? '<span class="p-badge">-' + p.discount_percent + '%</span>' : '';
+                const badge = p.discount_percent > 0 ? '<span class="p-badge">-' + Math.round(p.discount_percent) + '%</span>' : '';
                 const stockBadge = p.stock <= 0 ? '<span class="p-badge" style="background:#64748B;left:auto;right:10px;">Hết hàng</span>' : '';
                 const img = p.thumbnail ? '<img src="' + getThumbUrl(p.thumbnail) + '" alt="' + p.name + '">' : '<i class="bi bi-phone" style="font-size:3rem;color:var(--slate-300)"></i>';
                 const oldPrice = p.old_price ? '<span class="p-old-price">' + formatPrice(p.old_price) + 'đ</span>' : '';
@@ -728,9 +788,11 @@
         }
 
         function changeSort(value) {
-            currentFilters.sort = value;
-            currentPage = 1;
-            applyFilters();
+            // Cập nhật sort vào currentFilters rồi apply ngay
+            const params = new URLSearchParams(window.location.search);
+            params.set('sort', value);
+            params.delete('page');
+            window.location.href = '/products?' + params.toString();
         }
 
         function setPrice(min, max) {
@@ -795,29 +857,75 @@
             });
         }
 
+        function autoApplyFilter() {
+            // Tự động lọc khi click vào checkbox/radio (không cần nhấn nút)
+            const form = document.getElementById('filterForm');
+            const formData = new FormData(form);
+            const params = new URLSearchParams();
+
+            // Lấy category từ radio
+            const category = formData.get('category') || '';
+            if (category) params.set('category', category);
+
+            // Lấy brands từ checkboxes
+            const selectedBrands = formData.getAll('brand');
+            selectedBrands.forEach(b => params.append('brand', b));
+
+            // Lấy rams từ checkboxes
+            const selectedRams = formData.getAll('ram');
+            selectedRams.forEach(r => params.append('ram', r));
+
+            // Lấy storages từ checkboxes
+            const selectedStorages = formData.getAll('storage');
+            selectedStorages.forEach(s => params.append('storage', s));
+
+            // Giữ nguyên sort hiện tại từ URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const sort = urlParams.get('sort');
+            if (sort) params.set('sort', sort);
+
+            // Giữ nguyên search
+            const q = urlParams.get('q');
+            if (q) params.set('q', q);
+
+            // Reset về trang 1
+            params.delete('page');
+
+            window.location.href = '/products?' + params.toString();
+        }
+
         function applyFilters() {
+            // Sync currentFilters với form trước khi apply
             const form = document.getElementById('filterForm');
             const formData = new FormData(form);
 
-            const params = new URLSearchParams();
-            for (const [key, value] of formData.entries()) {
-                if (value && value !== 'undefined' && value !== '') {
-                    if (params.has(key)) {
-                        const existing = params.getAll(key);
-                        params.delete(key);
-                        existing.push(value);
-                        existing.forEach(v => params.append(key, v));
-                    } else {
-                        params.set(key, value);
-                    }
-                }
-            }
+            // Lấy category từ radio
+            currentFilters.category = formData.get('category') || '';
 
+            // Lấy brands từ checkboxes
+            const selectedBrands = formData.getAll('brand');
+            currentFilters.brand = selectedBrands.length > 0 ? selectedBrands : '';
+
+            // Lấy rams từ checkboxes
+            const selectedRams = formData.getAll('ram');
+            currentFilters.ram = selectedRams.length > 0 ? selectedRams : '';
+
+            // Lấy storages từ checkboxes
+            const selectedStorages = formData.getAll('storage');
+            currentFilters.storage = selectedStorages.length > 0 ? selectedStorages : '';
+
+            // Lấy price từ inputs
+            currentFilters.price_min = parseNumber(document.getElementById('priceMin').value);
+            currentFilters.price_max = parseNumber(document.getElementById('priceMax').value);
+
+            const params = new URLSearchParams();
+
+            // Thêm tất cả filters vào params
             for (const [key, value] of Object.entries(currentFilters)) {
-                if (key === 'q') continue;
-                if (Array.isArray(value)) {
+                if (key === 'page' || key === 'sort' || key === 'q') continue;
+                if (Array.isArray(value) && value.length > 0) {
                     value.forEach(v => params.append(key, v));
-                } else if (value) {
+                } else if (value && value !== '') {
                     params.set(key, value);
                 }
             }
@@ -827,8 +935,23 @@
 
             window.location.href = '/products?' + params.toString();
         }
+
+        function toggleMobileFilter() {
+            document.getElementById('filterSidebar').classList.toggle('open');
+        }
+
+        function toggleFilterCard(headerEl) {
+            headerEl.parentElement.classList.toggle('collapsed');
+        }
+
+        function escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            return String(text).replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[m]));
+        }
     </script>
-    <script src="/js/chatbox.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <div id="aiChatboxRoot"></div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -838,7 +961,12 @@
                     var root = document.getElementById('aiChatboxRoot');
                     if (root) {
                         root.innerHTML = h;
-                        if (window.initChatbox) initChatbox();
+                        var scripts = root.querySelectorAll('script');
+                        scripts.forEach(function(oldScript) {
+                            var newScript = document.createElement('script');
+                            newScript.textContent = oldScript.textContent;
+                            oldScript.parentNode.replaceChild(newScript, oldScript);
+                        });
                     }
                 });
         });

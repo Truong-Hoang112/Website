@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Admin</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="admin-wrapper">
@@ -37,7 +39,7 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Quản lý</div>
                     <a href="/admin/products" class="nav-item">
-                        <i class="fas fa-box"></i>
+                        <i class="fas fa-mobile-alt"></i>
                         Sản phẩm
                     </a>
                     <a href="/admin/orders" class="nav-item">
@@ -55,6 +57,18 @@
                     <a href="/admin/contacts" class="nav-item">
                         <i class="fas fa-envelope"></i>
                         Liên hệ
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Marketing</div>
+                    <a href="/admin/banners" class="nav-item">
+                        <i class="fas fa-images"></i>
+                        Banners
+                    </a>
+                    <a href="/admin/promotions" class="nav-item">
+                        <i class="fas fa-bullhorn"></i>
+                        Khuyến mãi
                     </a>
                 </div>
 
@@ -90,6 +104,29 @@
                 </div>
                 <div class="top-header-right">
                     <span class="header-date" id="currentDate"></span>
+                    <!-- Notification Bell -->
+                    <div class="notification-wrapper" id="notificationWrapper">
+                        <button class="notification-bell" id="notificationBell" onclick="toggleNotifications()">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                        </button>
+                        <div class="notification-dropdown" id="notificationDropdown">
+                            <div class="notification-header">
+                                <h3>Thông báo</h3>
+                                <button class="mark-all-read" onclick="markAllNotificationsRead()">Đánh dấu đã đọc</button>
+                            </div>
+                            <div class="notification-list" id="notificationList">
+                                <div class="notification-loading">
+                                    <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Alerts Banner -->
+                    <div class="alerts-banner" id="alertsBanner" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="alertsMessage"></span>
+                    </div>
                     <a href="/admin/products" class="btn btn-primary">
                         <i class="fas fa-plus"></i>
                         Thêm sản phẩm
@@ -98,8 +135,147 @@
             </header>
 
             <div class="page-content">
+                <!-- Low Stock Alert Banner -->
+                <div class="low-stock-alert" id="lowStockAlert" style="display: none;">
+                    <div class="low-stock-alert-header">
+                        <div class="low-stock-alert-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Cảnh báo sắp hết hàng (<strong id="lowStockCount">0</strong> sản phẩm)</span>
+                        </div>
+                        <button class="low-stock-toggle" onclick="toggleLowStockAlert()" title="Thu gọn/Mở rộng">
+                            <i class="fas fa-chevron-down" id="lowStockToggleIcon"></i>
+                        </button>
+                    </div>
+                    <div class="low-stock-alert-body" id="lowStockAlertBody">
+                        <div class="low-stock-alert-list" id="lowStockAlertList"></div>
+                        <a href="/admin/products" class="low-stock-alert-action">
+                            <i class="fas fa-arrow-right"></i> Quản lý sản phẩm
+                        </a>
+                    </div>
+                </div>
+
                 <!-- Stats Grid -->
                 <div class="stats-grid" id="statsGrid"></div>
+
+                <!-- Comparison Banner -->
+                <div class="comparison-banner" id="comparisonBanner" style="display: none;">
+                    <div class="comparison-item">
+                        <span class="comparison-label">Tháng này</span>
+                        <span class="comparison-value" id="thisMonthRevenue">0đ</span>
+                    </div>
+                    <div class="comparison-arrow">
+                        <i class="fas fa-arrows-alt-h"></i>
+                    </div>
+                    <div class="comparison-item">
+                        <span class="comparison-label">Tháng trước</span>
+                        <span class="comparison-value" id="lastMonthRevenue">0đ</span>
+                    </div>
+                    <div class="comparison-change" id="revenueChange">
+                        <i class="fas fa-arrow-up"></i> 0%
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 24px;">
+                    <!-- Revenue Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chart-line"></i>
+                                Doanh thu 12 tháng gần nhất
+                            </h2>
+                            <span style="font-size: 0.85rem; color: var(--gray-500);">Cập nhật tự động</span>
+                        </div>
+                        <div class="card-body">
+                            <div style="position: relative; height: 320px;">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Status Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chart-pie"></i>
+                                Trạng thái đơn hàng
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="position: relative; height: 320px;">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second Charts Row -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+                    <!-- 7 Days Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Doanh thu 7 ngày qua
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="position: relative; height: 280px;">
+                                <canvas id="weekChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Products Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-trophy"></i>
+                                Top 5 sản phẩm bán chạy
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div style="position: relative; height: 280px;">
+                                <canvas id="topProductsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Customers Section -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-crown"></i>
+                            Top khách hàng mua nhiều nhất
+                        </h2>
+                        <a href="/admin/users" class="btn btn-secondary btn-sm">
+                            Xem tất cả
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="topCustomersTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Khách hàng</th>
+                                    <th>Liên hệ</th>
+                                    <th>Đơn hàng</th>
+                                    <th>Tổng chi tiêu</th>
+                                    <th>Mua gần nhất</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topCustomersBody">
+                                <tr>
+                                    <td colspan="6" class="text-center" style="padding: 40px; color: var(--gray-400);">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 <!-- Content Grid -->
                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
@@ -169,15 +345,307 @@
     </div>
 
     <script>
+        function showConfirm(title, message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.innerHTML = `
+                <div class="confirm-dialog">
+                    <div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div>
+                    <div class="confirm-title">${title}</div>
+                    <div class="confirm-message">${message}</div>
+                    <div class="confirm-actions">
+                        <button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button>
+                        <button class="confirm-btn confirm">Đăng xuất</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector('.confirm-btn.confirm').onclick = () => {
+                overlay.remove();
+                onConfirm();
+            };
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        }
         async function adminLogout() {
-            if (!confirm('Đăng xuất?')) return;
-            await fetch('/api/auth/logout', { method: 'POST' });
-            window.location.href = '/login';
+            showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất khỏi tài khoản này?', async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            });
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAdminData();
+            await loadChartData();
         });
+
+        // ==================== BIỂU ĐỒ ====================
+        let revenueChart, statusChart, weekChart, topProductsChart;
+
+        async function loadChartData() {
+            try {
+                const res = await fetch('/admin/chart-data', { credentials: 'include' });
+                const data = await res.json();
+                renderRevenueChart(data.revenueByMonth);
+                renderStatusChart(data.ordersByStatus);
+                renderWeekChart(data.revenueByDay);
+                renderTopProductsChart(data.topProducts);
+            } catch (e) {
+                console.error('Chart load error:', e);
+            }
+        }
+
+        function renderRevenueChart(data) {
+            const ctx = document.getElementById('revenueChart');
+            if (!ctx) return;
+            if (revenueChart) revenueChart.destroy();
+
+            const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 320);
+            gradient.addColorStop(0, 'rgba(226, 27, 27, 0.35)');
+            gradient.addColorStop(1, 'rgba(226, 27, 27, 0.02)');
+
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Doanh thu (VNĐ)',
+                            data: data.revenue,
+                            borderColor: '#e21b1b',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#e21b1b',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Số đơn hàng',
+                            data: data.orders,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', align: 'end' },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: (ctx) => {
+                                    if (ctx.datasetIndex === 0) {
+                                        return ' Doanh thu: ' + formatPrice(ctx.parsed.y) + 'đ';
+                                    }
+                                    return ' Số đơn: ' + ctx.parsed.y;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            position: 'left',
+                            ticks: {
+                                callback: (v) => formatPrice(v) + 'đ'
+                            },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            grid: { display: false },
+                            ticks: { stepSize: 1 }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderStatusChart(data) {
+            const ctx = document.getElementById('statusChart');
+            if (!ctx) return;
+            if (statusChart) statusChart.destroy();
+
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.counts,
+                        backgroundColor: data.colors,
+                        borderWidth: 3,
+                        borderColor: '#fff',
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 12,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: (ctx) => {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                                    return ` ${ctx.label}: ${ctx.parsed} đơn (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderWeekChart(data) {
+            const ctx = document.getElementById('weekChart');
+            if (!ctx) return;
+            if (weekChart) weekChart.destroy();
+
+            const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 280);
+            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.85)');
+            gradient.addColorStop(1, 'rgba(16, 185, 129, 0.35)');
+
+            weekChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: data.revenue,
+                        backgroundColor: gradient,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 50
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: (ctx) => ' ' + formatPrice(ctx.parsed.y) + 'đ'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: (v) => formatPrice(v) + 'đ' },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderTopProductsChart(products) {
+            const ctx = document.getElementById('topProductsChart');
+            if (!ctx) return;
+            if (topProductsChart) topProductsChart.destroy();
+
+            if (!products || products.length === 0) {
+                const parent = ctx.parentElement;
+                parent.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: var(--gray-500);">
+                        <i class="fas fa-box-open" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p style="margin-top: 15px;">Chưa có dữ liệu bán hàng</p>
+                    </div>`;
+                return;
+            }
+
+            const shortNames = products.map(p => {
+                const n = p.name;
+                return n.length > 20 ? n.substring(0, 20) + '...' : n;
+            });
+
+            topProductsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: shortNames,
+                    datasets: [{
+                        label: 'Số lượng bán',
+                        data: products.map(p => p.total_sold),
+                        backgroundColor: [
+                            'rgba(226, 27, 27, 0.85)',
+                            'rgba(245, 158, 11, 0.85)',
+                            'rgba(59, 130, 246, 0.85)',
+                            'rgba(16, 185, 129, 0.85)',
+                            'rgba(139, 92, 246, 0.85)'
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 45
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                title: (items) => products[items[0].dataIndex].name,
+                                label: (ctx) => {
+                                    const p = products[ctx.dataIndex];
+                                    return [
+                                        ' Đã bán: ' + p.total_sold + ' sản phẩm',
+                                        ' Doanh thu: ' + formatPrice(p.total_revenue) + 'đ'
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { stepSize: 1 }
+                        },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
 
         async function loadAdminData() {
             // Set date
@@ -205,6 +673,13 @@
                 const statsRes = await fetch('/admin/stats', { credentials: 'include' });
                 const stats = await statsRes.json();
                 renderStats(stats);
+            } catch (e) {}
+
+            // Load low stock alert (sản phẩm sắp hết hàng dưới 20)
+            try {
+                const lowStockRes = await fetch('/admin/low-stock-products', { credentials: 'include' });
+                const lowStockData = await lowStockRes.json();
+                renderLowStockAlert(lowStockData.products || []);
             } catch (e) {}
 
             // Load recent orders
@@ -268,6 +743,67 @@
                 </div>`;
         }
 
+        // ===== LOW STOCK ALERT =====
+        function renderLowStockAlert(products) {
+            const alertBox = document.getElementById('lowStockAlert');
+            const list = document.getElementById('lowStockAlertList');
+            const count = document.getElementById('lowStockCount');
+            
+            if (!alertBox || !products || products.length === 0) {
+                if (alertBox) alertBox.style.display = 'none';
+                return;
+            }
+
+            alertBox.style.display = 'block';
+            count.textContent = products.length;
+
+            // Đánh dấu urgent nếu có sp dưới 5
+            const hasUrgent = products.some(p => p.stock < 5);
+            if (hasUrgent) alertBox.classList.add('urgent');
+            else alertBox.classList.remove('urgent');
+
+            list.innerHTML = products.map(p => {
+                const thumbStyle = p.thumbnail 
+                    ? `background-image:url('${escapeAttr(p.thumbnail)}')` 
+                    : '';
+                const stockClass = p.stock < 5 ? '' : (p.stock < 10 ? 'warn' : 'ok');
+                const stockLabel = p.stock === 0 ? 'HẾT HÀNG' : (p.stock < 5 ? 'rất ít' : (p.stock < 10 ? 'sắp hết' : 'còn ít'));
+                return `
+                    <div class="low-stock-item">
+                        <div class="low-stock-item-thumb" style="${thumbStyle}">
+                            ${!p.thumbnail ? '<i class="fas fa-mobile-alt"></i>' : ''}
+                        </div>
+                        <div class="low-stock-item-info">
+                            <div class="low-stock-item-name" title="${escapeAttr(p.name)}">${escapeHtml(p.name)}</div>
+                            <div class="low-stock-item-stock">
+                                <strong class="${stockClass}">${p.stock}</strong> sản phẩm · ${stockLabel}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleLowStockAlert() {
+            const alertBox = document.getElementById('lowStockAlert');
+            const icon = document.getElementById('lowStockToggleIcon');
+            alertBox.classList.toggle('collapsed');
+            if (alertBox.classList.contains('collapsed')) {
+                icon.className = 'fas fa-chevron-up';
+            } else {
+                icon.className = 'fas fa-chevron-down';
+            }
+        }
+
+        function escapeHtml(s) {
+            if (!s) return '';
+            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+        }
+        function escapeAttr(s) {
+            if (!s) return '';
+            return String(s).replace(/['"\\]/g, c => '\\' + c);
+        }
+
         function renderRecentOrders(orders) {
             if (!orders || orders.length === 0) {
                 document.getElementById('recentOrdersTable').innerHTML = `
@@ -323,6 +859,338 @@
         function formatPrice(price) {
             return new Intl.NumberFormat('vi-VN').format(price || 0);
         }
+
+        // ==================== NOTIFICATIONS ====================
+        let notificationInterval;
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('show');
+            if (dropdown.classList.contains('show')) {
+                loadNotifications();
+            }
+        }
+
+        async function loadNotifications() {
+            try {
+                const res = await fetch('/admin/notifications', { credentials: 'include' });
+                const data = await res.json();
+                renderNotifications(data);
+                updateNotificationBadge(data.total_alerts);
+                updateAlertsBanner(data);
+            } catch (e) {
+                console.error('Load notifications error:', e);
+            }
+        }
+
+        function renderNotifications(data) {
+            const list = document.getElementById('notificationList');
+            let html = '';
+
+            // Đơn hàng chờ xác nhận (CẦN XỬ LÝ NGAY)
+            if (data.pending_orders.length > 0) {
+                html += `<div class="notification-section-title" style="background: #fef3c7;">
+                    <i class="fas fa-exclamation-circle" style="color: #f59e0b;"></i>
+                    Đơn chờ xác nhận (${data.pending_orders.length})
+                </div>`;
+                data.pending_orders.forEach(o => {
+                    html += `
+                        <div class="notification-item" onclick="window.location.href='/admin/orders?status=pending'">
+                            <div class="notification-icon pending">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">${o.payment_code} - ${formatPrice(o.total_price)}đ</div>
+                                <div class="notification-text">Khách: ${o.shipping_name || 'Khách hàng'}</div>
+                                <div class="notification-time"><i class="fas fa-clock"></i> ${timeAgo(o.created_at)}</div>
+                            </div>
+                        </div>`;
+                });
+            }
+
+            // Đơn hàng mới đã xác nhận (trong 24h)
+            if (data.new_orders && data.new_orders.length > 0) {
+                html += `<div class="notification-section-title">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                    Đơn mới xác nhận (${data.new_orders.length})
+                </div>`;
+                data.new_orders.forEach(o => {
+                    html += `
+                        <div class="notification-item" onclick="window.location.href='/admin/orders'">
+                            <div class="notification-icon neworder">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">${o.payment_code} - ${formatPrice(o.total_price)}đ</div>
+                                <div class="notification-text">${o.shipping_name || 'Khách hàng'}</div>
+                                <div class="notification-time"><i class="fas fa-clock"></i> ${timeAgo(o.created_at)}</div>
+                            </div>
+                        </div>`;
+                });
+            }
+
+            // Yêu cầu hỗ trợ/liên hệ chưa đọc
+            if (data.unread_contacts.length > 0) {
+                html += `<div class="notification-section-title" style="background: #dbeafe;">
+                    <i class="fas fa-headset" style="color: #3b82f6;"></i>
+                    Yêu cầu hỗ trợ (${data.unread_contacts.length})
+                </div>`;
+                data.unread_contacts.forEach(c => {
+                    html += `
+                        <div class="notification-item" onclick="window.location.href='/admin/contacts'">
+                            <div class="notification-icon contact">
+                                <i class="fas fa-envelope-open-text"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">${c.full_name}</div>
+                                <div class="notification-text">${c.message ? c.message.substring(0, 50) + '...' : ''}</div>
+                                <div class="notification-time"><i class="fas fa-clock"></i> ${timeAgo(c.created_at)}</div>
+                            </div>
+                        </div>`;
+                });
+            }
+
+            // Đánh giá mới
+            if (data.new_reviews && data.new_reviews.length > 0) {
+                html += `<div class="notification-section-title">
+                    <i class="fas fa-star" style="color: #f59e0b;"></i>
+                    Đánh giá mới (${data.new_reviews.length})
+                </div>`;
+                data.new_reviews.forEach(r => {
+                    const stars = '★'.repeat(r.rating || 0) + '☆'.repeat(5 - (r.rating || 0));
+                    html += `
+                        <div class="notification-item" onclick="window.location.href='/admin/reviews'">
+                            <div class="notification-icon review">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">
+                                    ${r.user_name || 'Khách'} - ${stars}
+                                </div>
+                                <div class="notification-text">${r.product_name || 'Sản phẩm'}: "${r.comment ? r.comment.substring(0, 50) + '...' : ''}"</div>
+                                <div class="notification-time"><i class="fas fa-clock"></i> ${timeAgo(r.created_at)}</div>
+                            </div>
+                        </div>`;
+                });
+            }
+
+            // Cảnh báo sản phẩm sắp hết
+            if (data.low_stock_products.length > 0) {
+                html += `<div class="notification-section-title" style="background: #fee2e2;">
+                    <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+                    Sắp hết hàng (${data.low_stock_products.length})
+                </div>`;
+                data.low_stock_products.forEach(p => {
+                    html += `
+                        <div class="notification-item" onclick="window.location.href='/admin/products'">
+                            <div class="notification-icon lowstock">
+                                <i class="fas fa-box-open"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">${p.name}</div>
+                                <div class="notification-text">Chỉ còn <strong>${p.stock}</strong> sản phẩm</div>
+                            </div>
+                        </div>`;
+                });
+            }
+
+            if (html === '') {
+                html = `
+                    <div class="notification-empty">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <p>Tất cả đã xử lý!</p>
+                        <p style="font-size: 0.8rem; margin-top: 4px;">Không có thông báo mới</p>
+                    </div>`;
+            }
+
+            list.innerHTML = html;
+        }
+
+        function updateNotificationBadge(count) {
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            // Update nav badge cho đơn hàng
+            const navBadge = document.getElementById('navBadgeOrders');
+            if (navBadge) {
+                navBadge.textContent = count > 0 ? count : '';
+                navBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+            }
+        }
+
+        function updateAlertsBanner(data) {
+            const banner = document.getElementById('alertsBanner');
+            const message = document.getElementById('alertsMessage');
+            const parts = [];
+            const urgent = [];
+
+            // Các thông báo cần xử lý ngay (màu đỏ)
+            if (data.counts.pending_orders > 0) {
+                urgent.push(`⚠️ ${data.counts.pending_orders} đơn chờ xác nhận`);
+            }
+            if (data.counts.contacts > 0) {
+                urgent.push(`📩 ${data.counts.contacts} yêu cầu hỗ trợ mới`);
+            }
+
+            // Các thông báo thường (màu xanh)
+            if (data.counts.new_orders > 0) {
+                parts.push(`✓ ${data.counts.new_orders} đơn mới xác nhận`);
+            }
+            if (data.counts.reviews > 0) {
+                parts.push(`★ ${data.counts.reviews} đánh giá mới`);
+            }
+            if (data.counts.low_stock > 0) {
+                parts.push(`📦 ${data.counts.low_stock} sản phẩm sắp hết`);
+            }
+
+            const allParts = [...urgent, ...parts];
+            if (allParts.length > 0) {
+                message.innerHTML = allParts.join(' &nbsp;•&nbsp; ');
+                banner.style.display = 'flex';
+                // Đổi màu nếu có urgent
+                banner.style.background = urgent.length > 0 
+                    ? 'linear-gradient(135deg, #fee2e2, #fecaca)'
+                    : 'linear-gradient(135deg, #fef3c7, #fde68a)';
+                banner.style.color = urgent.length > 0 ? '#991b1b' : '#92400e';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function markAllNotificationsRead() {
+            // This would typically call an API
+            loadNotifications();
+        }
+
+        function timeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+
+            if (diff < 60) return 'Vừa xong';
+            if (diff < 3600) return Math.floor(diff / 60) + ' phút trước';
+            if (diff < 86400) return Math.floor(diff / 3600) + ' giờ trước';
+            if (diff < 604800) return Math.floor(diff / 86400) + ' ngày trước';
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        // Close notification when clicking outside
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('notificationWrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('notificationDropdown').classList.remove('show');
+            }
+        });
+
+        // ==================== TOP CUSTOMERS ====================
+        async function loadTopCustomers() {
+            try {
+                const res = await fetch('/admin/top-customers', { credentials: 'include' });
+                const data = await res.json();
+                renderTopCustomers(data.top_customers);
+            } catch (e) {
+                console.error('Load top customers error:', e);
+            }
+        }
+
+        function renderTopCustomers(customers) {
+            const tbody = document.getElementById('topCustomersBody');
+            if (!customers || customers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center" style="padding: 40px; color: var(--gray-400);">
+                            <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <p>Chưa có dữ liệu khách hàng</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            let html = '';
+            customers.forEach((c, i) => {
+                const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
+                const crown = i === 0 ? '<i class="fas fa-crown" style="color: #f59e0b;"></i> ' : '';
+                html += `
+                    <tr>
+                        <td>
+                            <span class="rank-badge ${rankClass}">${crown}${i + 1}</span>
+                        </td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar" style="width:36px;height:36px;font-size:0.8rem;">
+                                    ${(c.full_name || 'K').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div class="user-name">${c.full_name || 'Khách'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="customer-contact">
+                            <div>${c.email || ''}</div>
+                            <div style="color: var(--gray-400);">${c.phone || ''}</div>
+                        </td>
+                        <td style="font-weight:600">${c.total_orders} đơn</td>
+                        <td class="total-spent">${formatPrice(c.total_spent)}đ</td>
+                        <td class="last-order">${c.last_order_date ? timeAgo(c.last_order_date) : '-'}</td>
+                    </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // ==================== REAL-TIME AUTO REFRESH ====================
+        let refreshInterval;
+
+        function startAutoRefresh() {
+            // Refresh data every 60 seconds
+            refreshInterval = setInterval(async () => {
+                console.log('🔄 Auto-refresh dashboard...');
+                await Promise.all([
+                    loadNotifications(),
+                    loadChartData(),
+                    loadTopCustomers()
+                ]);
+                // Refresh low stock alert mỗi 60s
+                try {
+                    const res = await fetch('/admin/low-stock-products', { credentials: 'include' });
+                    const data = await res.json();
+                    renderLowStockAlert(data.products || []);
+                } catch (e) {}
+            }, 60000); // 60 seconds
+        }
+
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        }
+
+        // Start notifications polling
+        function startNotificationsPolling() {
+            loadNotifications();
+            notificationInterval = setInterval(loadNotifications, 30000); // Check every 30 seconds
+        }
+
+        // ==================== UPDATED INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAdminData();
+            await loadChartData();
+            await loadTopCustomers();
+            startNotificationsPolling();
+            startAutoRefresh();
+        });
+
+        // Clean up on page leave
+        window.addEventListener('beforeunload', () => {
+            stopAutoRefresh();
+            if (notificationInterval) clearInterval(notificationInterval);
+        });
     </script>
 </body>
 </html>

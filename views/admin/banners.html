@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Banners - Admin</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .banner-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-top: 24px;
+        }
+        @media (max-width: 900px) {
+            .banner-grid { grid-template-columns: 1fr; }
+            .banner-side-stack { grid-template-rows: 1fr 1fr; }
+        }
+        .banner-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--gray-100);
+            transition: all 0.3s;
+        }
+        .banner-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+        .banner-preview {
+            position: relative;
+            height: 200px;
+            background: var(--gray-100);
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+        }
+        .banner-preview.main {
+            height: 280px;
+        }
+        .banner-preview-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.1));
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+            color: white;
+        }
+        .preview-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+        .preview-content p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .banner-side-stack {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+        }
+        .banner-info {
+            padding: 18px 20px;
+        }
+        .banner-controls {
+            padding: 16px 20px 20px;
+            border-top: 1px solid var(--gray-100);
+            background: var(--gray-50);
+            margin-top: 16px;
+            border-radius: 0 0 16px 16px;
+        }
+        .banner-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .banner-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            background: rgba(226, 27, 27, 0.1);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .banner-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .banner-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--gray-600);
+        }
+        .toggle-label {
+            font-weight: 500;
+        }
+        .banner-link-info {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--gray-200);
+            font-size: 0.78rem;
+            color: var(--gray-500);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .banner-link-info i {
+            color: var(--gray-400);
+            margin-right: 4px;
+        }
+        .switch {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            background: var(--gray-300);
+            border-radius: 11px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .switch.active {
+            background: #10b981;
+        }
+        .switch::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .switch.active::after {
+            left: 20px;
+        }
+        .placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--gray-400);
+            font-size: 2.5rem;
+        }
+        .btn-action {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--gray-200);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--gray-700);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-action:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-300);
+        }
+        .btn-action.primary {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .btn-action.primary:hover {
+            background: #c81818;
+        }
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .modal-overlay.show {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: slideUp 0.25s ease;
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-100);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: var(--gray-500);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+        .modal-close:hover {
+            background: var(--gray-100);
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--gray-100);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .image-upload-zone {
+            border: 2px dashed var(--gray-300);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--gray-50);
+        }
+        .image-upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(226, 27, 27, 0.05);
+        }
+        .image-upload-zone.has-image {
+            padding: 0;
+            border-style: solid;
+            overflow: hidden;
+        }
+        .image-upload-zone img {
+            width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+            display: block;
+        }
+        .upload-icon {
+            font-size: 2.5rem;
+            color: var(--gray-400);
+            margin-bottom: 10px;
+        }
+        .upload-text {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+        }
+        .upload-text small {
+            display: block;
+            color: var(--gray-400);
+            margin-top: 4px;
+        }
+        .position-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            padding: 14px 16px;
+            background: var(--gray-50);
+            border-radius: 10px;
+            border-left: 3px solid var(--primary);
+        }
+        .info-box h4 {
+            font-size: 0.85rem;
+            margin: 0 0 4px;
+            color: var(--gray-800);
+        }
+        .info-box p {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+            margin: 0;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 22px;
+            background: #10b981;
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 10000;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+        .toast.show {
+            transform: translateX(0);
+        }
+        .toast.error {
+            background: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <a href="/admin">
+                    <div class="sidebar-logo-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div>
+                        <div class="sidebar-logo-text">AnhTraiStore</div>
+                        <div class="sidebar-logo-sub">Admin Panel</div>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Tổng quan</div>
+                    <a href="/admin" class="nav-item">
+                        <i class="fas fa-chart-pie"></i>
+                        Dashboard
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Quản lý</div>
+                    <a href="/admin/products" class="nav-item">
+                        <i class="fas fa-box"></i>
+                        Sản phẩm
+                    </a>
+                    <a href="/admin/orders" class="nav-item">
+                        <i class="fas fa-shopping-bag"></i>
+                        Đơn hàng
+                    </a>
+                    <a href="/admin/users" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        Khách hàng
+                    </a>
+                    <a href="/admin/reviews" class="nav-item">
+                        <i class="fas fa-star"></i>
+                        Đánh giá
+                    </a>
+                    <a href="/admin/contacts" class="nav-item">
+                        <i class="fas fa-envelope"></i>
+                        Liên hệ
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Marketing</div>
+                    <a href="/admin/banners" class="nav-item active">
+                        <i class="fas fa-images"></i>
+                        Banners
+                    </a>
+                    <a href="/admin/promotions" class="nav-item">
+                        <i class="fas fa-bullhorn"></i>
+                        Khuyến mãi
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Hệ thống</div>
+                    <a href="/" class="nav-item" target="_blank">
+                        <i class="fas fa-external-link-alt"></i>
+                        Xem cửa hàng
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-user" id="adminUser">
+                    <div class="sidebar-avatar">A</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">Admin</div>
+                        <div class="sidebar-user-role">Quản trị viên</div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="adminLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Đăng xuất
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="top-header-left">
+                    <h1 class="top-header-title">Quản lý Banners</h1>
+                </div>
+                <div class="top-header-right">
+                    <span class="header-date" id="currentDate"></span>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <!-- Hướng dẫn -->
+                <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #fef3c7, #fde68a); border: none;">
+                    <div style="display: flex; align-items: center; gap: 14px; padding: 4px;">
+                        <i class="fas fa-lightbulb" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1rem; color: #92400e;">Quản lý 3 banner trang chủ</h3>
+                            <p style="margin: 4px 0 0; font-size: 0.85rem; color: #78350f;">
+                                Banner chính hiển thị lớn ở giữa, 2 banner phụ nhỏ xếp bên phải. Click "Chỉnh sửa" để thay đổi ảnh, tiêu đề, mô tả và liên kết.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banner chính -->
+                <div class="banner-grid">
+                    <div class="banner-card" id="mainBannerCard">
+                        <div class="banner-label" style="margin: 16px 20px 0;">
+                            <i class="fas fa-image"></i>
+                            Banner chính (Hero)
+                        </div>
+                        <div style="padding: 16px 20px 0;">
+                            <div class="banner-preview main" id="mainPreview">
+                                <div class="placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Controls luôn hiển thị -->
+                        <div class="banner-controls" id="mainControls">
+                            <div class="banner-toggle">
+                                <span>Hiển thị:</span>
+                                <div class="switch active" id="mainSwitch" onclick="toggleBanner('main')">
+                                </div>
+                                <span class="toggle-label" id="mainToggleLabel">Đang hiển thị</span>
+                            </div>
+                            <div class="banner-actions">
+                                <button class="btn-action primary" onclick="editBanner('main')">
+                                    <i class="fas fa-edit"></i>
+                                    Chỉnh sửa
+                                </button>
+                                <button class="btn-action" onclick="previewBanner('main')">
+                                    <i class="fas fa-external-link-alt"></i>
+                                    Xem
+                                </button>
+                            </div>
+                            <div class="banner-link-info" id="mainLinkInfo">
+                                <i class="fas fa-link"></i> <span>Đang tải...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="banner-side-stack">
+                        <!-- Side banner 1 -->
+                        <div class="banner-card" id="side1BannerCard">
+                            <div class="banner-label" style="margin: 16px 20px 0;">
+                                <i class="fas fa-image"></i>
+                                Banner phụ 1
+                            </div>
+                            <div style="padding: 16px 20px 0;">
+                                <div class="banner-preview" id="side1Preview">
+                                    <div class="placeholder">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="banner-controls">
+                                <div class="banner-toggle">
+                                    <span>Hiển thị:</span>
+                                    <div class="switch active" id="side1Switch" onclick="toggleBanner('side1')">
+                                    </div>
+                                    <span class="toggle-label" id="side1ToggleLabel">Đang hiển thị</span>
+                                </div>
+                                <div class="banner-actions">
+                                    <button class="btn-action primary" onclick="editBanner('side1')">
+                                        <i class="fas fa-edit"></i>
+                                        Sửa
+                                    </button>
+                                    <button class="btn-action" onclick="previewBanner('side1')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="banner-link-info" id="side1LinkInfo">
+                                    <i class="fas fa-link"></i> <span>Đang tải...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Side banner 2 -->
+                        <div class="banner-card" id="side2BannerCard">
+                            <div class="banner-label" style="margin: 16px 20px 0;">
+                                <i class="fas fa-image"></i>
+                                Banner phụ 2
+                            </div>
+                            <div style="padding: 16px 20px 0;">
+                                <div class="banner-preview" id="side2Preview">
+                                    <div class="placeholder">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="banner-controls">
+                                <div class="banner-toggle">
+                                    <span>Hiển thị:</span>
+                                    <div class="switch active" id="side2Switch" onclick="toggleBanner('side2')">
+                                    </div>
+                                    <span class="toggle-label" id="side2ToggleLabel">Đang hiển thị</span>
+                                </div>
+                                <div class="banner-actions">
+                                    <button class="btn-action primary" onclick="editBanner('side2')">
+                                        <i class="fas fa-edit"></i>
+                                        Sửa
+                                    </button>
+                                    <button class="btn-action" onclick="previewBanner('side2')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="banner-link-info" id="side2LinkInfo">
+                                    <i class="fas fa-link"></i> <span>Đang tải...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal chỉnh sửa -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i class="fas fa-image"></i> Chỉnh sửa Banner</h2>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="bannerForm">
+                    <input type="hidden" id="bannerId">
+                    <input type="hidden" id="bannerPosition">
+                    <input type="hidden" id="bannerSlot">
+
+                    <!-- Upload ảnh -->
+                    <div class="form-group">
+                        <label>Hình ảnh banner</label>
+                        <div class="image-upload-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+                            <div id="uploadPlaceholder">
+                                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                <div class="upload-text">
+                                    <strong>Click để chọn ảnh</strong>
+                                    <small>JPG, PNG, WEBP (tối đa 5MB)</small>
+                                </div>
+                            </div>
+                            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- Tiêu đề -->
+                    <div class="form-group">
+                        <label>Tiêu đề</label>
+                        <input type="text" id="bannerTitle" placeholder="VD: iPhone 17 Pro Max">
+                    </div>
+
+                    <!-- Mô tả -->
+                    <div class="form-group">
+                        <label>Mô tả phụ</label>
+                        <input type="text" id="bannerSubtitle" placeholder="VD: Siêu phẩm công nghệ 2026">
+                    </div>
+
+                    <!-- Link -->
+                    <div class="form-group">
+                        <label>Liên kết (khi click vào banner)</label>
+                        <input type="text" id="bannerLink" placeholder="VD: /products?brand=apple">
+                    </div>
+
+                    <!-- Thứ tự -->
+                    <div class="form-group">
+                        <label>Thứ tự hiển thị</label>
+                        <input type="number" id="bannerSort" value="0">
+                    </div>
+
+                    <!-- Trạng thái -->
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="bannerActive" checked style="width: auto;">
+                            <span>Hiển thị banner trên trang chủ</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action" onclick="closeModal()">Hủy</button>
+                <button class="btn-action primary" onclick="saveBanner()">
+                    <i class="fas fa-save"></i>
+                    Lưu thay đổi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Thành công!</span>
+    </div>
+
+    <script>
+        // Cache banners theo slot
+        let bannersCache = {
+            main: null,    // hero
+            side1: null,   // side
+            side2: null    // quick
+        };
+
+        function getSlot(position) {
+            // Hỗ trợ cả số (0,1,2) và chuỗi ('hero','side','quick')
+            if (position === 0 || position === 'hero') return 'main';
+            if (position === 1 || position === 'side') return 'side1';
+            if (position === 2 || position === 'quick') return 'side2';
+            return null;
+        }
+
+        // Hiển thị ngày
+        document.addEventListener('DOMContentLoaded', async () => {
+            const now = new Date();
+            const options = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('vi-VN', options);
+
+            // Load admin info
+            try {
+                const userRes = await fetch('/api/auth/me', { credentials: 'include' });
+                const userData = await userRes.json();
+                if (userData.user) {
+                    const initial = (userData.user.full_name || 'A').charAt(0).toUpperCase();
+                    document.getElementById('adminUser').innerHTML = `
+                        <div class="sidebar-avatar">${initial}</div>
+                        <div class="sidebar-user-info">
+                            <div class="sidebar-user-name">${userData.user.full_name || 'Admin'}</div>
+                            <div class="sidebar-user-role">Quản trị viên</div>
+                        </div>`;
+                }
+            } catch (e) {}
+
+            await loadBanners();
+            setupImageUpload();
+        });
+
+        // Load banners
+        async function loadBanners() {
+            try {
+                const res = await fetch('/admin/banners/list', { credentials: 'include' });
+                const data = await res.json();
+                if (data.banners) {
+                    renderBanners(data.banners);
+                } else {
+                    showToast('Không thể tải danh sách banner!', true);
+                }
+            } catch (e) {
+                console.error('Load banners error:', e);
+                showToast('Lỗi khi tải banner!', true);
+            }
+        }
+
+        function renderBanners(banners) {
+            // Reset cache
+            bannersCache = { main: null, side1: null, side2: null };
+
+            // Phân loại banner vào 3 slot
+            banners.forEach(b => {
+                const pos = b.position;
+                // Đơn giản: 0=main, 1=side1, 2=side2
+                if ((pos === 0 || pos === 'hero') && !bannersCache.main) {
+                    bannersCache.main = b;
+                } else if ((pos === 1 || pos === 'side') && !bannersCache.side1) {
+                    bannersCache.side1 = b;
+                } else if ((pos === 2 || pos === 'quick') && !bannersCache.side2) {
+                    bannersCache.side2 = b;
+                }
+            });
+
+            // Render từng slot
+            ['main', 'side1', 'side2'].forEach(slot => {
+                renderSlot(slot, bannersCache[slot]);
+            });
+        }
+
+        function renderSlot(slot, banner) {
+            const previewId = slot === 'main' ? 'mainPreview' : slot + 'Preview';
+            const switchId = slot + 'Switch';
+            const toggleLabelId = slot + 'ToggleLabel';
+            const linkInfoId = slot + 'LinkInfo';
+
+            // Render preview
+            const el = document.getElementById(previewId);
+            if (el) {
+                if (banner && banner.image_url) {
+                    const url = banner.image_url.startsWith('/') ? banner.image_url : '/' + banner.image_url;
+                    el.style.backgroundImage = `url('${url}')`;
+                    el.innerHTML = `
+                        <div class="banner-preview-overlay">
+                            <div class="preview-content">
+                                <h3>${escapeHtml(banner.title || '')}</h3>
+                                <p>${escapeHtml(banner.subtitle || '')}</p>
+                            </div>
+                        </div>
+                        ${!banner.is_active ? '<div style="position:absolute;top:10px;right:10px;background:rgba(239,68,68,0.9);color:white;padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:600;z-index:2;"><i class="fas fa-eye-slash"></i> Đang ẩn</div>' : ''}
+                    `;
+                } else {
+                    el.style.backgroundImage = '';
+                    el.innerHTML = `<div class="placeholder"><i class="fas fa-image"></i></div>`;
+                }
+            }
+
+            // Render switch
+            const switchEl = document.getElementById(switchId);
+            const labelEl = document.getElementById(toggleLabelId);
+            const linkInfoEl = document.getElementById(linkInfoId);
+
+            if (switchEl && labelEl) {
+                if (banner && banner.is_active == 1) {
+                    switchEl.classList.add('active');
+                    labelEl.textContent = 'Đang hiển thị';
+                    labelEl.style.color = '#10b981';
+                } else {
+                    switchEl.classList.remove('active');
+                    labelEl.textContent = 'Đang ẩn';
+                    labelEl.style.color = '#6b7280';
+                }
+            }
+
+            // Render link info
+            if (linkInfoEl) {
+                if (banner) {
+                    linkInfoEl.innerHTML = '<i class="fas fa-link"></i> <span>' + escapeHtml(banner.link || 'Chưa có liên kết') + '</span>';
+                } else {
+                    linkInfoEl.innerHTML = '<i class="fas fa-exclamation-circle" style="color:#f59e0b;"></i> <span>Chưa tạo banner</span>';
+                }
+            }
+        }
+
+        // Toggle banner (slot-based)
+        async function toggleBanner(slot) {
+            const banner = bannersCache[slot];
+            if (!banner) {
+                showToast('Banner chưa được tạo!', true);
+                return;
+            }
+            try {
+                const newStatus = !(banner.is_active == 1);
+                const res = await fetch(`/admin/banners/${banner.id}/toggle`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_active: newStatus })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    banner.is_active = newStatus ? 1 : 0;
+                    renderSlot(slot, banner);
+                    showToast(newStatus ? 'Đã bật banner!' : 'Đã tắt banner!');
+                } else {
+                    showToast(data.error || 'Lỗi khi cập nhật!', true);
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Lỗi khi cập nhật!', true);
+            }
+        }
+
+        // Preview banner
+        function previewBanner(slot) {
+            const banner = bannersCache[slot];
+            if (!banner || !banner.link) {
+                showToast('Banner chưa có liên kết!', true);
+                return;
+            }
+            window.open(banner.link, '_blank');
+        }
+
+        // Edit banner (slot-based)
+        async function editBanner(slot) {
+            const banner = bannersCache[slot];
+            uploadedImageUrl = banner ? banner.image_url : null;
+
+            document.getElementById('bannerSlot').value = slot;
+            document.getElementById('bannerId').value = banner ? banner.id : '';
+            // Đơn giản: slot tương ứng với position số
+            const positionMap = { 'main': '0', 'side1': '1', 'side2': '2' };
+            document.getElementById('bannerPosition').value = banner ? banner.position : (positionMap[slot] || '0');
+            document.getElementById('uploadZone').classList.remove('has-image');
+            document.getElementById('uploadPlaceholder').style.display = 'block';
+
+            // Reset image preview
+            const existingImg = document.getElementById('uploadZone').querySelector('img');
+            if (existingImg) existingImg.remove();
+
+            if (banner) {
+                document.getElementById('bannerTitle').value = banner.title || '';
+                document.getElementById('bannerSubtitle').value = banner.subtitle || '';
+                document.getElementById('bannerLink').value = banner.link || '';
+                document.getElementById('bannerSort').value = banner.sort_order || 0;
+                document.getElementById('bannerActive').checked = banner.is_active == 1;
+                document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Chỉnh sửa Banner ' + (slot === 'main' ? 'chính' : 'phụ ' + (slot === 'side1' ? '1' : '2'));
+
+                if (banner.image_url) {
+                    const url = banner.image_url.startsWith('/') ? banner.image_url : '/' + banner.image_url;
+                    showPreviewImage(url);
+                }
+            } else {
+                document.getElementById('bannerTitle').value = '';
+                document.getElementById('bannerSubtitle').value = '';
+                document.getElementById('bannerLink').value = '';
+                document.getElementById('bannerSort').value = slot === 'side1' ? 1 : slot === 'side2' ? 2 : 0;
+                document.getElementById('bannerActive').checked = true;
+                document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Tạo Banner mới';
+            }
+
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        function setupImageUpload() {
+            const input = document.getElementById('imageInput');
+            input.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Show preview ngay
+                const reader = new FileReader();
+                reader.onload = (e) => showPreviewImage(e.target.result);
+                reader.readAsDataURL(file);
+
+                // Upload
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const res = await fetch('/admin/banners/upload', {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        uploadedImageUrl = data.url;
+                        showToast('Upload ảnh thành công!');
+                    } else {
+                        showToast(data.error || 'Lỗi upload!', true);
+                    }
+                } catch (e) {
+                    showToast('Lỗi khi upload ảnh!', true);
+                }
+            });
+        }
+
+        function showPreviewImage(url) {
+            const zone = document.getElementById('uploadZone');
+            const placeholder = document.getElementById('uploadPlaceholder');
+            
+            zone.classList.add('has-image');
+            placeholder.style.display = 'none';
+            
+            // Remove existing img
+            const existingImg = zone.querySelector('img');
+            if (existingImg) existingImg.remove();
+            
+            const img = document.createElement('img');
+            img.src = url;
+            zone.appendChild(img);
+        }
+
+        async function saveBanner() {
+            const id = document.getElementById('bannerId').value;
+            const slot = document.getElementById('bannerSlot').value;
+            const position = document.getElementById('bannerPosition').value;
+            const title = document.getElementById('bannerTitle').value.trim();
+            const subtitle = document.getElementById('bannerSubtitle').value.trim();
+            const link = document.getElementById('bannerLink').value.trim();
+            const sort_order = parseInt(document.getElementById('bannerSort').value) || 0;
+            const is_active = document.getElementById('bannerActive').checked;
+
+            if (!uploadedImageUrl) {
+                showToast('Vui lòng chọn ảnh cho banner!', true);
+                return;
+            }
+
+            try {
+                let res;
+                if (id) {
+                    // Update
+                    res = await fetch(`/admin/banners/${id}`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, subtitle, link, image_url: uploadedImageUrl, is_active, sort_order })
+                    });
+                } else {
+                    // Create
+                    res = await fetch('/admin/banners', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ position, title, subtitle, link, image_url: uploadedImageUrl, is_active, sort_order })
+                    });
+                }
+                const data = await res.json();
+                if (data.success) {
+                    showToast(id ? 'Đã cập nhật banner!' : 'Đã tạo banner mới!');
+                    closeModal();
+                    // Reload để cập nhật cache và UI
+                    await loadBanners();
+                } else {
+                    showToast(data.error || 'Lỗi khi lưu!', true);
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Có lỗi xảy ra!', true);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('show');
+            uploadedImageUrl = null;
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.toggle('error', isError);
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showConfirm(title, message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        }
+        function adminLogout() {
+            showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', () => {
+                fetch('/api/auth/logout', { method: 'POST' }).then(() => {
+                    window.location.href = '/login';
+                });
+            });
+        }
+
+        // Đóng modal khi click ngoài
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editModal') closeModal();
+        });
+    </script>
+</body>
+</html>

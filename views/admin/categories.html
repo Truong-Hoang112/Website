@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý danh mục - Admin</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -31,6 +32,10 @@
                     <a href="/admin/users" class="nav-item"><i class="fas fa-users"></i> Khách hàng</a>
                     <a href="/admin/reviews" class="nav-item"><i class="fas fa-star"></i> Đánh giá</a>
                     <a href="/admin/contacts" class="nav-item"><i class="fas fa-envelope"></i> Liên hệ</a>
+                </div>
+                <div class="nav-section"><div class="nav-section-title">Marketing</div>
+                    <a href="/admin/banners" class="nav-item"><i class="fas fa-images"></i> Banners</a>
+                    <a href="/admin/promotions" class="nav-item"><i class="fas fa-bullhorn"></i> Khuyến mãi</a>
                 </div>
                 <div class="nav-section"><div class="nav-section-title">Hệ thống</div>
                     <a href="/" class="nav-item" target="_blank"><i class="fas fa-external-link-alt"></i> Xem cửa hàng</a>
@@ -115,10 +120,19 @@
     <script>
         let editingId = null;
 
+        function showConfirm(title, message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        }
         async function adminLogout() {
-            if (!confirm('Đăng xuất?')) return;
-            await fetch('/api/auth/logout', { method: 'POST' });
-            window.location.href = '/login';
+            showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            });
         }
 
         document.addEventListener('DOMContentLoaded', async () => {

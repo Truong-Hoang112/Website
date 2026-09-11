@@ -1,561 +1,687 @@
-<div id="aiChatbox" class="ai-chatbox-container">
-    <div class="ai-chatbox-window" id="chatWindow">
-        <div class="ai-chatbox-header">
-            <div class="ai-header-info">
-                <div class="ai-avatar">
-                    <i class="bi bi-robot"></i>
-                </div>
-                <div>
-                    <div class="ai-header-title">Tư Vấn AI</div>
-                    <div class="ai-header-status"><span class="status-dot"></span> Online</div>
-                </div>
+<!-- Inline styles - phải có fixed position -->
+<style>
+#unifiedChatbox {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 99999 !important;
+}
+#ucWindow { display: none !important; }
+#ucWindow.active { display: flex !important; }
+</style>
+
+<div id="unifiedChatbox" class="uc-container">
+    <!-- Toggle Button -->
+    <button class="uc-toggle" id="ucToggle" title="Chat với chúng tôi">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span class="uc-notification-dot" id="ucNotification" style="display:none"></span>
+    </button>
+
+    <!-- Chat Window -->
+    <div class="uc-window" id="ucWindow">
+        <!-- Header với 2 tabs -->
+        <div class="uc-header">
+            <div class="uc-tabs">
+                <button class="uc-tab active" data-tab="ai" id="ucTabAI">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                        <path d="M12 13v4"/>
+                    </svg>
+                    <span>Tư vấn AI</span>
+                </button>
+                <button class="uc-tab" data-tab="admin" id="ucTabAdmin">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Admin</span>
+                </button>
             </div>
-            <button class="ai-close-btn" id="aiCloseBtn">
-                <i class="bi bi-x-lg"></i>
+            <button class="uc-minimize-btn" id="ucMinimize" title="Thu nhỏ">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
             </button>
         </div>
 
-        <div class="ai-chatbox-messages" id="chatMessages">
-            <div class="ai-message ai-bot-message">
-                <div class="ai-message-content">
-                    <p>Xin chào! 👋 Tôi là <strong>Tư Vấn Viên Thông Minh</strong>.</p>
-                    <p>Tôi có thể giúp bạn tìm chiếc điện thoại phù hợp nhất với:</p>
-                    <ul>
-                        <li>📱 Ngân sách của bạn</li>
-                        <li>📸 Nhu cầu chụp ảnh</li>
-                        <li>🎮 Nhu cầu gaming</li>
-                        <li>🔋 Dung lượng pin</li>
+        <!-- Admin Status Bar -->
+        <div class="uc-admin-status" id="ucAdminStatus">
+            <span class="uc-status-dot offline"></span>
+            <span class="uc-status-text">Admin đang offline</span>
+        </div>
+
+        <!-- AI Chat Area -->
+        <div class="uc-chat-area active" id="ucAIArea">
+            <div class="uc-messages" id="ucMessages">
+                <div class="uc-msg bot">
+                    <div class="uc-avatar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                            <path d="M12 13v4"/>
+                        </svg>
+                    </div>
+                    <div class="uc-msg-content">
+                        <p>Xin chào! 👋 Tôi là trợ lý AI của cửa hàng. Tôi có thể giúp bạn:</p>
+                        <ul>
+                            <li>Tìm kiếm sản phẩm theo nhu cầu</li>
+                            <li>Tư vấn về sản phẩm, giá cả</li>
+                            <li>Hướng dẫn đặt hàng, thanh toán</li>
+                            <li>Giải đáp thắc mắc về chính sách</li>
                     </ul>
-                    <p>Bạn cần tư vấn gì hôm nay?</p>
+                        <p>Bạn cần tôi hỗ trợ gì?</p>
+                    </div>
                 </div>
-                <div class="ai-message-time">Vừa xong</div>
+        <!-- Các câu hỏi mặc định -->
+                <div class="uc-quick-questions" id="ucQuickQuestions" style="display:flex;flex-wrap:wrap;gap:8px;padding:16px;border-top:1px solid #f1f5f9;background:linear-gradient(180deg,#fafafa 0%,#fff 100%);">
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Cách đặt hàng như thế nào?')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🛒</span> Cách đặt hàng</button>
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Có mã giảm giá nào không?')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🎫</span> Mã giảm giá</button>
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Chính sách đổi trả thế nào?')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🔄</span> Đổi trả hàng</button>
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Thanh toán bằng cách nào?')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>💳</span> Thanh toán</button>
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Giao hàng trong bao lâu?')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🚚</span> Giao hàng</button>
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Tôi cần tư vấn sản phẩm')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>✨</span> Tư vấn sản phẩm</button>
+                </div>
+            </div>
+            <div class="uc-input-area">
+                <div class="uc-input-wrapper">
+                    <div class="uc-input-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <textarea id="ucInput" placeholder="Nhập câu hỏi của bạn..." rows="1"></textarea>
+                    <button id="ucSendBtn" title="Gửi">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="ai-quick-questions" id="quickQuestions">
-            <button class="ai-quick-btn" data-question="Tôi muốn mua điện thoại dưới 10 triệu">
-                📱 Dưới 10 triệu
-            </button>
-            <button class="ai-quick-btn" data-question="Tôi cần điện thoại chụp ảnh đẹp">
-                📸 Chụp ảnh đẹp
-            </button>
-            <button class="ai-quick-btn" data-question="Tôi thích chơi game, cần máy mạnh">
-                🎮 Chơi game
-            </button>
-            <button class="ai-quick-btn" data-question="Tôi muốn mua iPhone">
-                🍎 iPhone
-            </button>
-            <button class="ai-quick-btn" data-question="Pin trâu, dùng lâu không cần sạc">
-                🔋 Pin trâu
-            </button>
-        </div>
-
-        <div class="ai-chatbox-input">
-            <input type="text" id="chatInput" placeholder="Nhập câu hỏi của bạn...">
-            <button class="ai-send-btn" id="aiSendBtn">
-                <i class="bi bi-send"></i>
-            </button>
+        <!-- Admin Chat Area -->
+        <div class="uc-chat-area" id="ucAdminArea">
+            <div class="uc-messages" id="ucAdminMessages">
+                <div class="uc-msg bot">
+                    <div class="uc-avatar admin">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <div class="uc-msg-content">
+                        <p>Kết nối với đội ngũ hỗ trợ của chúng tôi. Vui lòng đợi trong giây lát...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="uc-input-area">
+                <div class="uc-input-wrapper">
+                    <div class="uc-input-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <textarea id="ucAdminInput" placeholder="Nhập tin nhắn..." rows="1"></textarea>
+                    <button id="ucAdminSendBtn" title="Gửi">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-
-    <button class="ai-chatbox-toggle" id="chatToggle">
-        <i class="bi bi-chat-dots" id="chatIcon"></i>
-        <span class="ai-notification-dot" id="chatNotification" style="display:none"></span>
-    </button>
 </div>
 
-<style>
-.ai-chatbox-container {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 9999;
-    font-family: 'Nunito', sans-serif;
-}
+<script>
+(function () {
+    'use strict';
 
-.ai-chatbox-toggle {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #D70018 0%, #FF4757 100%);
-    border: none;
-    box-shadow: 0 4px 20px rgba(215, 0, 24, 0.4);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    position: relative;
-}
+    // Expose sendQuickQuestion globally for onclick handlers
+    window.sendQuickQuestion = function(question) {
+        const ucInput = document.getElementById('ucInput');
+        const ucMessages = document.getElementById('ucMessages');
+        const ucSendBtn = document.getElementById('ucSendBtn');
+        if (!ucInput || !ucMessages) return;
 
-.ai-chatbox-toggle:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 25px rgba(215, 0, 24, 0.5);
-}
+        ucInput.value = question;
+        const text = ucInput.value.trim();
+        if (!text) return;
 
-.ai-chatbox-toggle i {
-    font-size: 28px;
-    color: white;
-}
+        // Hide quick questions
+        const quickBtns = document.getElementById('ucQuickQuestions');
+        if (quickBtns) quickBtns.style.display = 'none';
 
-.ai-notification-dot {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 12px;
-    height: 12px;
-    background: #FFD700;
-    border-radius: 50%;
-    border: 2px solid white;
-    animation: pulse 2s infinite;
-}
+        // Trigger send
+        ucSendBtn.click();
+    };
 
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.2); opacity: 0.7; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.ai-chatbox-window {
-    position: absolute;
-    bottom: 80px;
-    right: 0;
-    width: 380px;
-    height: 520px;
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.15);
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-    animation: slideUp 0.3s ease;
-}
-
-.ai-chatbox-window.active {
-    display: flex;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.ai-chatbox-header {
-    background: linear-gradient(135deg, #D70018 0%, #FF4757 100%);
-    padding: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.ai-header-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.ai-avatar {
-    width: 44px;
-    height: 44px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ai-avatar i {
-    font-size: 24px;
-    color: white;
-}
-
-.ai-header-title {
-    color: white;
-    font-weight: 700;
-    font-size: 1rem;
-}
-
-.ai-header-status {
-    color: rgba(255,255,255,0.8);
-    font-size: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    background: #4ADE80;
-    border-radius: 50%;
-}
-
-.ai-close-btn {
-    background: none;
-    border: none;
-    color: white;
-    cursor: pointer;
-    padding: 4px;
-    font-size: 1.2rem;
-    opacity: 0.8;
-    transition: opacity 0.2s;
-}
-
-.ai-close-btn:hover {
-    opacity: 1;
-}
-
-.ai-chatbox-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    background: #F8FAFC;
-}
-
-.ai-message {
-    margin-bottom: 16px;
-    display: flex;
-    flex-direction: column;
-}
-
-.ai-bot-message {
-    align-items: flex-start;
-}
-
-.ai-user-message {
-    align-items: flex-end;
-}
-
-.ai-message-content {
-    max-width: 85%;
-    padding: 12px 16px;
-    border-radius: 16px;
-    font-size: 0.875rem;
-    line-height: 1.6;
-}
-
-.ai-bot-message .ai-message-content {
-    background: white;
-    border: 1px solid #E5E7EB;
-    border-bottom-left-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.ai-bot-message .ai-message-content p {
-    margin: 0 0 8px 0;
-}
-
-.ai-bot-message .ai-message-content p:last-child {
-    margin-bottom: 0;
-}
-
-.ai-bot-message .ai-message-content ul {
-    margin: 8px 0;
-    padding-left: 20px;
-}
-
-.ai-bot-message .ai-message-content li {
-    margin-bottom: 4px;
-}
-
-.ai-user-message .ai-message-content {
-    background: linear-gradient(135deg, #D70018 0%, #FF4757 100%);
-    color: white;
-    border-bottom-right-radius: 4px;
-}
-
-.ai-message-time {
-    font-size: 0.7rem;
-    color: #9CA3AF;
-    margin-top: 4px;
-    padding: 0 4px;
-}
-
-/* Product recommendation cards */
-.ai-product-recommendation {
-    background: white;
-    border: 1px solid #E5E7EB;
-    border-radius: 12px;
-    padding: 12px;
-    margin-top: 12px;
-}
-
-.ai-product-header {
-    font-size: 0.75rem;
-    color: #6B7280;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.ai-product-card {
-    display: flex;
-    gap: 12px;
-    padding: 10px;
-    background: #F9FAFB;
-    border-radius: 10px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    color: inherit;
-}
-
-.ai-product-card:last-child {
-    margin-bottom: 0;
-}
-
-.ai-product-card:hover {
-    background: #FEF2F2;
-    transform: translateX(4px);
-}
-
-.ai-product-img {
-    width: 56px;
-    height: 56px;
-    object-fit: cover;
-    border-radius: 8px;
-    background: white;
-    flex-shrink: 0;
-}
-
-.ai-product-img-placeholder {
-    width: 56px;
-    height: 56px;
-    background: #F3F4F6;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    flex-shrink: 0;
-}
-
-.ai-product-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.ai-product-name {
-    font-weight: 600;
-    font-size: 0.8rem;
-    color: #1F2937;
-    margin-bottom: 4px;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.ai-product-price {
-    color: #D70018;
-    font-weight: 700;
-    font-size: 0.9rem;
-}
-
-.ai-product-old-price {
-    color: #9CA3AF;
-    text-decoration: line-through;
-    font-size: 0.75rem;
-    font-weight: normal;
-    margin-left: 4px;
-}
-
-.ai-product-specs {
-    font-size: 0.7rem;
-    color: #6B7280;
-    margin-top: 4px;
-}
-
-.ai-product-discount {
-    background: #D70018;
-    color: white;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 600;
-}
-
-.ai-see-more {
-    display: block;
-    text-align: center;
-    padding: 10px;
-    background: linear-gradient(135deg, #D70018 0%, #FF4757 100%);
-    color: white;
-    border-radius: 10px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-top: 12px;
-    text-decoration: none;
-    transition: transform 0.2s;
-}
-
-.ai-see-more:hover {
-    transform: scale(1.02);
-    color: white;
-}
-
-/* Quick questions */
-.ai-quick-questions {
-    padding: 12px 16px;
-    background: white;
-    border-top: 1px solid #E5E7EB;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.ai-quick-btn {
-    background: #FEF2F2;
-    border: 1px solid #FECACA;
-    color: #D70018;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-.ai-quick-btn:hover {
-    background: #D70018;
-    color: white;
-    border-color: #D70018;
-}
-
-/* Chat input */
-.ai-chatbox-input {
-    padding: 12px 16px;
-    background: white;
-    border-top: 1px solid #E5E7EB;
-    display: flex;
-    gap: 8px;
-}
-
-.ai-chatbox-input input {
-    flex: 1;
-    padding: 10px 16px;
-    border: 1px solid #E5E7EB;
-    border-radius: 24px;
-    font-size: 0.875rem;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.ai-chatbox-input input:focus {
-    border-color: #D70018;
-}
-
-.ai-send-btn {
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(135deg, #D70018 0%, #FF4757 100%);
-    border: none;
-    border-radius: 50%;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s;
-}
-
-.ai-send-btn:hover {
-    transform: scale(1.05);
-}
-
-.ai-send-btn i {
-    font-size: 18px;
-}
-
-/* Loading animation */
-.ai-loading {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #6B7280;
-    font-size: 0.875rem;
-    padding: 12px 16px;
-    background: white;
-    border-radius: 16px;
-    border-bottom-left-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.ai-loading-dots {
-    display: flex;
-    gap: 4px;
-}
-
-.ai-loading-dots span {
-    width: 8px;
-    height: 8px;
-    background: #D70018;
-    border-radius: 50%;
-    animation: bounce 1.4s infinite ease-in-out both;
-}
-
-.ai-loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-.ai-loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes bounce {
-    0%, 80%, 100% { transform: scale(0); }
-    40% { transform: scale(1); }
-}
-
-/* Typing indicator */
-.ai-typing-indicator {
-    display: flex;
-    gap: 4px;
-    padding: 4px 0;
-}
-
-.ai-typing-indicator span {
-    width: 6px;
-    height: 6px;
-    background: #9CA3AF;
-    border-radius: 50%;
-    animation: typing 1.4s infinite ease-in-out both;
-}
-
-.ai-typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-.ai-typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-.ai-typing-indicator span:nth-child(3) { animation-delay: 0s; }
-
-@keyframes typing {
-    0%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-6px); }
-}
-
-/* Mobile responsive */
-@media (max-width: 480px) {
-    .ai-chatbox-container {
-        bottom: 16px;
-        right: 16px;
+    // Inject CSS file nếu chưa có (với cache busting)
+    if (!document.getElementById('uc-chatbox-css')) {
+        const link = document.createElement('link');
+        link.id = 'uc-chatbox-css';
+        link.rel = 'stylesheet';
+        link.href = '/css/chatbox.css?v=' + Date.now();
+        document.head.appendChild(link);
     }
 
-    .ai-chatbox-window {
-        width: calc(100vw - 32px);
-        height: calc(100vh - 120px);
-        bottom: 70px;
-        right: -8px;
+    // Inject inline styles for quick buttons (backup if external CSS fails)
+    const quickBtnStyles = document.createElement('style');
+    quickBtnStyles.textContent = `
+        .uc-quick-btn:hover {
+            background: linear-gradient(135deg, #D70018 0%, #B71525 100%) !important;
+            color: #fff !important;
+            border-color: transparent !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(217, 0, 24, 0.3) !important;
+        }
+        .uc-quick-btn:active {
+            transform: translateY(0) !important;
+        }
+    `;
+    document.head.appendChild(quickBtnStyles);
+
+    // ===== ELEMENTS =====
+    const $ = (id) => document.getElementById(id);
+    const ucToggle = $('ucToggle');
+    const ucWindow = $('ucWindow');
+    const ucMinimize = $('ucMinimize');
+    const ucTabAI = $('ucTabAI');
+    const ucTabAdmin = $('ucTabAdmin');
+    const ucAIArea = $('ucAIArea');
+    const ucAdminArea = $('ucAdminArea');
+    const ucMessages = $('ucMessages');
+    const ucAdminMessages = $('ucAdminMessages');
+    const ucInput = $('ucInput');
+    const ucAdminInput = $('ucAdminInput');
+    const ucSendBtn = $('ucSendBtn');
+    const ucAdminSendBtn = $('ucAdminSendBtn');
+    const ucNotification = $('ucNotification');
+    const ucAdminStatus = $('ucAdminStatus');
+
+    // ===== STATE =====
+    let isOpen = false;
+    let currentTab = 'ai';
+    let isTyping = false;
+    let adminTyping = false;
+    let unreadCount = 0;
+    let adminConnected = false;
+    let currentConversationId = null;
+    let isLoggedIn = false;
+
+    // ===== SOCKET =====
+    let socket = null;
+    
+    function getSocket() {
+        if (!socket) {
+            socket = io({
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionAttempts: 5
+            });
+        }
+        return socket;
+    }
+    
+    // Initialize socket with proper error handling
+    (function initSocket() {
+        const sock = getSocket();
+        
+        sock.on('connect', () => {
+            console.log('Chatbox: Socket connected');
+            sock.emit('check_admin_status');
+        });
+
+        sock.on('admin_status', (data) => {
+            updateAdminStatus(data.online);
+        });
+
+        // Nhận tin nhắn mới từ admin
+        sock.on('new_message', (data) => {
+            if (data.conversation_id == currentConversationId) {
+                addMessage('bot', data.message.content, ucAdminMessages);
+                scrollToBottom(ucAdminMessages);
+            }
+            // Thông báo nếu chat đang đóng hoặc tab khác
+            if (!isOpen || currentTab !== 'admin') {
+                unreadCount++;
+                ucNotification.textContent = unreadCount;
+                ucNotification.style.display = 'flex';
+            }
+        });
+
+        // Admin đang gõ
+        sock.on('typing', (data) => {
+            if (data.conversation_id == currentConversationId && data.sender === 'admin') {
+                if (!adminTyping) {
+                    adminTyping = true;
+                    addTypingIndicator(ucAdminMessages, true);
+                }
+            }
+        });
+
+        // Admin ngừng gõ
+        sock.on('stop_typing', (data) => {
+            if (data.conversation_id == currentConversationId && data.sender === 'admin') {
+                adminTyping = false;
+                removeTypingIndicator(ucAdminMessages);
+            }
+        });
+
+        // Handle disconnection gracefully
+        sock.on('disconnect', () => {
+            console.log('Chatbox: Socket disconnected');
+        });
+
+        sock.on('connect_error', (err) => {
+            console.log('Chatbox: Socket connection error (will retry)');
+        });
+    })();
+
+    // ===== INIT =====
+
+    function setupEventListeners() {
+        // Toggle window
+        ucToggle.addEventListener('click', toggleWindow);
+        ucMinimize.addEventListener('click', minimizeWindow);
+
+        // Tab switching
+        ucTabAI.addEventListener('click', () => switchTab('ai'));
+        ucTabAdmin.addEventListener('click', () => switchTab('admin'));
+
+        // Send buttons
+        ucSendBtn.addEventListener('click', sendAIMessage);
+        ucAdminSendBtn.addEventListener('click', sendAdminMessage);
+
+        // Enter to send (Shift+Enter for new line)
+        ucInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAIMessage();
+            }
+        });
+        ucAdminInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAdminMessage();
+            }
+        });
+
+        // Auto resize textarea
+        ucInput.addEventListener('input', autoResize);
+        ucAdminInput.addEventListener('input', autoResize);
     }
 
-    .ai-chatbox-toggle {
-        width: 52px;
-        height: 52px;
+    function autoResize() {
+        [ucInput, ucAdminInput].forEach(el => {
+            if (el) {
+                el.style.height = 'auto';
+                el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+            }
+        });
     }
 
-    .ai-chatbox-toggle i {
-        font-size: 24px;
+    // ===== WINDOW CONTROL =====
+    function toggleWindow() {
+        isOpen = !isOpen;
+        ucWindow.classList.toggle('active', isOpen);
+        if (isOpen) {
+            ucToggle.classList.add('open');
+            ucNotification.style.display = 'none';
+            unreadCount = 0;
+            if (currentTab === 'ai') {
+                ucInput.focus();
+            } else {
+                ucAdminInput.focus();
+                connectToAdmin();
+            }
+        } else {
+            ucToggle.classList.remove('open');
+        }
     }
-}
-</style>
+
+    function minimizeWindow() {
+        isOpen = false;
+        ucWindow.classList.remove('active');
+        ucToggle.classList.remove('open');
+    }
+
+    // ===== TAB SWITCHING =====
+    function switchTab(tab) {
+        currentTab = tab;
+        ucTabAI.classList.toggle('active', tab === 'ai');
+        ucTabAdmin.classList.toggle('active', tab === 'admin');
+        ucAIArea.classList.toggle('active', tab === 'ai');
+        ucAdminArea.classList.toggle('active', tab === 'admin');
+
+        if (tab === 'admin') {
+            ucNotification.style.display = 'none';
+            ucAdminInput.focus();
+            if (!adminConnected) {
+                connectToAdmin();
+            }
+        } else {
+            ucInput.focus();
+        }
+    }
+
+    // ===== ADMIN STATUS =====
+    function checkAdminStatus() {
+        // Kiểm tra admin online qua socket connection
+        getSocket().emit('check_admin_status');
+    }
+
+    function updateAdminStatus(online) {
+        const dot = ucAdminStatus.querySelector('.uc-status-dot');
+        const text = ucAdminStatus.querySelector('.uc-status-text');
+        if (online) {
+            dot.classList.remove('offline');
+            dot.classList.add('online');
+            text.textContent = 'Admin đang online';
+        } else {
+            dot.classList.remove('online');
+            dot.classList.add('offline');
+            text.textContent = 'Admin đang offline';
+        }
+    }
+
+    // ===== SOCKET EVENTS =====
+    // Socket events are initialized in initSocket() above
+    // Re-export for use in other functions
+
+    // ===== AI CHAT =====
+    function sendAIMessage() {
+        const text = ucInput.value.trim();
+        if (!text || isTyping) return;
+
+        addMessage('user', text, ucMessages);
+        ucInput.value = '';
+        autoResize();
+
+        isTyping = true;
+        const typingEl = addTypingIndicator(ucMessages);
+
+        fetch('/api/chat/ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+        })
+        .then(r => r.json())
+        .then(data => {
+            removeTypingIndicator(typingEl);
+            isTyping = false;
+            if (data.success) {
+                addMessage('bot', data.reply, ucMessages);
+            } else {
+                addMessage('bot', 'Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau.', ucMessages);
+            }
+            scrollToBottom(ucMessages);
+        })
+        .catch(err => {
+            console.error('AI Chat Error:', err);
+            removeTypingIndicator(typingEl);
+            isTyping = false;
+            addMessage('bot', 'Xin lỗi, đã xảy ra lỗi: ' + err.message, ucMessages);
+            scrollToBottom(ucMessages);
+        });
+    }
+
+    // ===== ADMIN CHAT =====
+    function connectToAdmin() {
+        if (adminConnected) return;
+        
+        // Join user's socket room (nếu đã đăng nhập)
+        getSocket().emit('join_user_room');
+        
+        // Lắng nghe tin nhắn mới
+        getSocket().on('message_update', (data) => {
+            if (data.conversation_id == currentConversationId) {
+                addMessage('bot', data.content, ucAdminMessages);
+                scrollToBottom(ucAdminMessages);
+                
+                // Đánh dấu đã đọc
+                if (data.sender_type === 'admin') {
+                    markAsRead(currentConversationId);
+                }
+            }
+        });
+
+        adminConnected = true;
+        
+        // Load conversations để tìm conversation hiện tại hoặc tạo mới
+        loadOrCreateConversation();
+    }
+
+    async function loadOrCreateConversation() {
+        // Thử load conversation cũ hoặc tạo mới
+        try {
+            const res = await fetch('/api/messages/conversations', { credentials: 'include' });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.conversations && data.conversations.length > 0) {
+                    // Lấy conversation mới nhất
+                    currentConversationId = data.conversations[0].id;
+                    loadMessages(currentConversationId);
+                } else {
+                    showWelcomeMessage();
+                }
+            } else {
+                showWelcomeMessage();
+            }
+        } catch (e) {
+            showWelcomeMessage();
+        }
+    }
+
+    async function loadMessages(conversationId) {
+        try {
+            const res = await fetch(`/api/messages/${conversationId}`, { credentials: 'include' });
+            if (res.ok) {
+                const data = await res.json();
+                ucAdminMessages.innerHTML = '';
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(m => {
+                        const type = m.sender_type === 'admin' ? 'bot' : 'user';
+                        addMessage(type, m.content, ucAdminMessages);
+                    });
+                } else {
+                    showWelcomeMessage();
+                }
+                scrollToBottom(ucAdminMessages);
+                
+                // Join socket room
+                socket.emit('join_conversation', conversationId);
+                
+                // Đánh dấu đã đọc
+                markAsRead(conversationId);
+            }
+        } catch (e) {
+            showWelcomeMessage();
+        }
+    }
+
+    function showWelcomeMessage() {
+        ucAdminMessages.innerHTML = `
+            <div class="uc-msg bot">
+                <div class="uc-avatar admin">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <div class="uc-msg-content">
+                    <p>Xin chào! 👋 Đội ngũ hỗ trợ sẵn sàng giúp bạn.</p>
+                    <p>Bạn cần hỗ trợ gì? Gửi tin nhắn để bắt đầu cuộc trò chuyện với chúng tôi.</p>
+                </div>
+            </div>
+        `;
+    }
+
+    async function markAsRead(conversationId) {
+        try {
+            await fetch(`/api/messages/${conversationId}`, { credentials: 'include' });
+        } catch (e) {}
+    }
+
+    async function sendAdminMessage() {
+        const text = ucAdminInput.value.trim();
+        if (!text) return;
+
+        addMessage('user', text, ucAdminMessages);
+        ucAdminInput.value = '';
+        autoResize();
+
+        try {
+            let conversationId = currentConversationId;
+
+            if (!conversationId) {
+                // Tạo conversation mới bằng cách gửi contact form
+                const res = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        full_name: 'Khách hàng',
+                        email: 'guest@localhost',
+                        phone: '',
+                        message: text,
+                        start_conversation: true
+                    })
+                });
+                const data = await res.json();
+                if (data.conversation_id) {
+                    conversationId = data.conversation_id;
+                    currentConversationId = conversationId;
+                    getSocket().emit('join_conversation', conversationId);
+                }
+            } else {
+                // Gửi tin nhắn vào conversation hiện tại
+                await fetch(`/api/messages/${conversationId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ content: text })
+                });
+            }
+        } catch (e) {
+            console.error('Send message error:', e);
+        }
+
+        scrollToBottom(ucAdminMessages);
+    }
+
+    // ===== MESSAGE HELPERS =====
+    function addMessage(type, content, container, escape = true) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `uc-msg ${type}`;
+
+        const isAdminChat = container === ucAdminMessages;
+        const avatarClass = (type === 'bot' && isAdminChat) ? 'admin' : '';
+        
+        const avatarHtml = type === 'bot' ? `
+            <div class="uc-avatar ${avatarClass}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    ${isAdminChat 
+                        ? '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+                        : '<path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><circle cx="12" cy="10" r="3"/><path d="M12 13v4"/>'}
+                </svg>
+            </div>
+        ` : '';
+
+        let formattedContent = content || '';
+        if (escape) {
+            formattedContent = escapeHtml(formattedContent);
+        }
+        formattedContent = formattedContent.replace(/\n/g, '<br>');
+        formattedContent = formattedContent.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+
+        msgDiv.innerHTML = `
+            ${avatarHtml}
+            <div class="uc-msg-content">
+                <div class="uc-msg-text">${formattedContent}</div>
+                <div class="uc-msg-time">${formatTime(new Date())}</div>
+            </div>
+        `;
+
+        container.appendChild(msgDiv);
+        scrollToBottom(container);
+    }
+
+    function addTypingIndicator(container, isAdmin = false) {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = `uc-msg bot`;
+        typingDiv.innerHTML = `
+            <div class="uc-avatar ${isAdmin ? 'admin' : ''}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    ${isAdmin
+                        ? '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+                        : '<path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><circle cx="12" cy="10" r="3"/><path d="M12 13v4"/>'}
+                </svg>
+            </div>
+            <div class="uc-msg-content">
+                <div class="uc-typing">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        `;
+        container.appendChild(typingDiv);
+        scrollToBottom(container);
+        return typingDiv;
+    }
+
+    function removeTypingIndicator(el) {
+        if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
+        } else {
+            // Fallback: remove all typing indicators
+            const typing = ucAdminMessages.querySelectorAll('.uc-typing');
+            typing.forEach(t => t.closest('.uc-msg').remove());
+        }
+    }
+
+    function scrollToBottom(container) {
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatTime(date) {
+        return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatPrice(price) {
+        if (!price) return 'Liên hệ';
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    }
+
+    // ===== INIT =====
+    const initChatbox = function() {
+        // Đảm bảo window đóng khi khởi tạo
+        isOpen = false;
+        ucWindow.classList.remove('active');
+        ucToggle.classList.remove('open');
+        
+        setupEventListeners();
+        checkAdminStatus();
+        autoResize();
+    };
+
+    window.initChatbox = initChatbox;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initChatbox);
+    } else {
+        initChatbox();
+    }
+})();
+</script>
