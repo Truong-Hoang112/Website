@@ -14,7 +14,7 @@ Server chạy tại: `https://anhtraisstore.com/`
 ## 📋 Tài khoản demo
 
 **Admin:**
-- Email: `admin@anhtrai.com`
+- Email: `admin@anhtraisstore.com`
 - Password: `admin123`
 
 **Khách hàng:**
