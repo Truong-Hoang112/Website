@@ -8,7 +8,7 @@ const fs = require('fs');
 // Setup multer for image upload
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const dir = path.join(__dirname, '..', 'public', 'uploads', 'products');
+        const dir = path.join(__dirname, '..', 'public', 'assets', 'images', 'products');
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         cb(null, dir);
     },
@@ -24,7 +24,7 @@ router.post('/upload-image', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'Không có file ảnh!' });
     }
-    const url = '/uploads/products/' + req.file.filename;
+    const url = '/assets/images/products/' + req.file.filename;
     res.json({ url });
 });
 

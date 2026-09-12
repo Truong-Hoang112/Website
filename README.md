@@ -2,171 +2,351 @@
 
 Đồ án demo website thương mại điện tử bán điện thoại và phụ kiện.
 
-## 🚀 Cài đặt
+## 🚀 Yêu cầu hệ thống
+
+- **Node.js** v16 hoặc cao hơn
+- **XAMPP** (có MySQL và phpMyAdmin)
+- **Trình duyệt** Chrome, Firefox, Edge
+
+---
+
+## 🗄️ Cài đặt Database với XAMPP
+
+### Bước 1: Mở XAMPP và khởi động MySQL
+
+1. Mở **XAMPP Control Panel**
+2. Nhấn **Start** ở mục **MySQL**
+3. Đợi đến khi MySQL chuyển sang trạng thái **Running** (màu xanh)
+
+### Bước 2: Truy cập phpMyAdmin
+
+1. Mở trình duyệt
+2. Truy cập: `http://localhost/phpmyadmin/`
+3. Hoặc nhấn nút **Admin** trong XAMPP Control Panel
+
+### Bước 3: Tạo Database
+
+1. Trong phpMyAdmin, click **New** (mới) ở panel bên trái
+2. Tên database: `anhtraisstore`
+3. Collation: `utf8mb4_unicode_ci`
+4. Nhấn **Create**
+
+### Bước 4: Import Database
+
+1. Chọn database `anhtraisstore` vừa tạo
+2. Click tab **Import**
+3. Click **Choose File** và chọn file: `database/dt.sql`
+4. Cuộn xuống và nhấn **Go** (Execute)
+5. Đợi import thành công
+
+### Thông tin kết nối Database (XAMPP mặc định)
+
+| Thông số | Giá trị |
+|----------|---------|
+| Host | `localhost` |
+| User | `root` |
+| Password | `""` (trống) |
+| Port | `3306` |
+| Database | `anhtraisstore` |
+
+---
+
+## 📦 Cài đặt Project
+
+### Bước 1: Cài đặt Node.js dependencies
 
 ```bash
+# Mở terminal trong thư mục project
+cd e:\Website
+
+# Cài đặt các package cần thiết
 npm install
+```
+
+### Bước 2: Cấu hình file `.env`
+
+Tạo file `.env` trong thư mục gốc với nội dung:
+
+```env
+# Database (XAMPP)
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=anhtraisstore
+
+# Server
+PORT=3000
+SESSION_SECRET=anhtraisstore_secret_key_2024
+
+# Email (tùy chọn - để gửi email thật)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=xxxx xxxx xxxx xxxx
+SITE_NAME=AnhTraiStore
+SITE_URL=http://localhost:3000
+
+# Google OAuth (tùy chọn)
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+```
+
+### Bước 3: Chạy Server
+
+```bash
 npm start
 ```
 
-Server chạy tại: `https://anhtraisstore.com/`
+### Bước 4: Truy cập Website
+
+Mở trình duyệt: **`http://localhost:3000`**
+
+---
 
 ## 📋 Tài khoản demo
 
-**Admin:**
-- Email: `admin@anhtraisstore.com`
-- Password: `admin123`
+### Admin (Quản trị viên)
 
-**Khách hàng:**
-- Đăng ký tài khoản mới
+| Thông tin | Giá trị |
+|-----------|---------|
+| Email | `adminanhtrai@gmail.com` |
+| Password | `admin123` |
+| URL Admin | `http://localhost:3000/admin` |
+
+### Khách hàng
+
+- Đăng ký tài khoản mới tại: `http://localhost:3000/register`
+- Hoặc đăng nhập bằng Google (nếu đã cấu hình OAuth)
+
+---
 
 ## ✨ Tính năng chính
 
-### Khách hàng
-- 🏠 Trang chủ với banner, sản phẩm nổi bật
-- 🔍 Tìm kiếm & lọc sản phẩm (theo danh mục, thương hiệu, giá)
-- 📱 Xem chi tiết sản phẩm với hình ảnh, mô tả, đánh giá
-- ❤️ Wishlist (yêu thích)
-- ⚖️ So sánh sản phẩm
-- 🛒 Giỏ hàng
-- 💳 Thanh toán (COD, VNPay, MoMo)
-- 🎫 Áp dụng mã giảm giá
-- 📦 Quản lý đơn hàng
-- ⭐ Đánh giá sản phẩm
-- 💬 Chatbot AI tư vấn
-- 👤 Quản lý tài khoản
-- 🔐 **Đăng nhập bằng Google (OAuth)**
-- 📧 **Gửi email xác nhận đơn hàng**
-- 🔑 **Quên mật khẩu bằng OTP qua email**
+### 👤 Khách hàng
 
-### Admin
-- 📊 Dashboard thống kê
-- 📦 CRUD sản phẩm, danh mục, thương hiệu
-- 🛒 Quản lý đơn hàng
-- 👥 Quản lý người dùng
-- ⭐ Duyệt đánh giá
-- 📬 Xem tin nhắn liên hệ
-- 💬 **Chat trực tiếp với khách hàng** (realtime qua Socket.IO, xem lịch sử, typing indicator)
-- 🖼️ Quản lý banner
-- 🎫 Quản lý mã giảm giá
+| Tính năng | Mô tả |
+|------------|--------|
+| 🏠 Trang chủ | Banner, sản phẩm nổi bật, danh mục |
+| 🔍 Tìm kiếm & lọc | Theo danh mục, thương hiệu, giá, xếp theo |
+| 📱 Chi tiết sản phẩm | Hình ảnh gallery, mô tả, thông số kỹ thuật, đánh giá |
+| ❤️ Wishlist | Lưu sản phẩm yêu thích |
+| ⚖️ So sánh | So sánh tối đa 3 sản phẩm |
+| 🛒 Giỏ hàng | Thêm, bớt, xóa, cập nhật số lượng |
+| 💳 Thanh toán | COD, VNPay, MoMo (demo) |
+| 🎫 Mã giảm giá | Áp dụng coupon khi thanh toán |
+| 📦 Quản lý đơn hàng | Xem, theo dõi, hủy đơn |
+| ⭐ Đánh giá | Đánh giá và bình luận sản phẩm |
+| 💬 Chatbot AI | Tự động tư vấn sản phẩm |
+| 👤 Tài khoản | Quản lý thông tin cá nhân |
+| 🔐 Đăng nhập Google | OAuth 2.0 qua Google |
+| 📧 Email xác nhận | Nhận email khi đặt hàng, đăng ký |
+| 🔑 Quên mật khẩu | Đặt lại bằng OTP qua email |
 
-## 🛠️ Công nghệ
+### 🔧 Admin (Quản trị)
 
-- **Backend:** Node.js, Express, Socket.IO
-- **Database:** MySQL
-- **Frontend:** HTML, CSS, JavaScript (vanilla)
-- **Session:** Express Session
-- **Upload:** Multer
+| Tính năng | Mô tả |
+|------------|--------|
+| 📊 Dashboard | Thống kê tổng quan |
+| 📦 CRUD Sản phẩm | Thêm, sửa, xóa, upload ảnh gallery |
+| 📁 CRUD Danh mục | Quản lý danh mục sản phẩm |
+| 🏷️ CRUD Thương hiệu | Quản lý thương hiệu |
+| 🛒 Quản lý đơn hàng | Xác nhận, cập nhật trạng thái |
+| 👥 Quản lý người dùng | Xem danh sách khách hàng |
+| ⭐ Duyệt đánh giá | Duyệt/xóa đánh giá sản phẩm |
+| 💬 Chat realtime | Nhắn tin với khách (Socket.IO) |
+| 📬 Quản lý liên hệ | Xem và trả lời tin nhắn liên hệ |
+| 🖼️ Quản lý Banner | Thêm, sửa, xóa banner trang chủ |
+| 🎫 Quản lý Coupon | Tạo và quản lý mã giảm giá |
 
-## 📁 Cấu trúc
+---
+
+## 🎫 Mã giảm giá demo
+
+| Mã | Loại | Giảm | Điều kiện |
+|----|------|------|-----------|
+| `WELCOME10` | % | 10% | Đơn từ 1 triệu |
+| `FREESHIP` | Tiền | 30.000đ | Đơn từ 500K |
+| `VIP20` | % | 20% | Đơn từ 3 triệu |
+| `SALE5TR` | Tiền | 500.000đ | Đơn từ 30 triệu |
+
+---
+
+## 🛠️ Công nghệ sử dụng
+
+### Backend
+| Công nghệ | Mô tả |
+|-----------|--------|
+| Node.js | JavaScript runtime |
+| Express.js | Web framework |
+| Socket.IO | Realtime communication |
+| Passport.js | Authentication (OAuth) |
+| Nodemailer | Gửi email SMTP |
+
+### Database
+| Công nghệ | Mô tả |
+|-----------|--------|
+| MySQL (XAMPP) | Hệ quản trị CSDL |
+| phpMyAdmin | Quản lý database |
+
+### Frontend
+| Công nghệ | Mô tả |
+|-----------|--------|
+| HTML5 | Cấu trúc trang |
+| CSS3 | Styling + Responsive |
+| Vanilla JS | Tương tác |
+| Bootstrap Icons | Icon |
+
+---
+
+## 📁 Cấu trúc thư mục
 
 ```
 Website/
-├── server.js           # Entry point (Express + Socket.IO)
-├── routes/             # API routes
-│   ├── auth.js
-│   ├── products.js
-│   ├── cart.js
-│   ├── orders.js
-│   ├── wishlist.js
-│   ├── coupons.js
-│   ├── chat.js         # AI chatbot tư vấn sản phẩm
-│   ├── messages.js     # Chat admin ↔ khách hàng (realtime)
-│   ├── api.js
-│   └── admin.js
-├── views/              # HTML pages
-│   ├── *.html          # Customer pages
-│   └── admin/          # Admin dashboard
-├── public/             # Static files
+├── server.js              # Entry point (Express + Socket.IO)
+├── package.json
+├── .env                   # Environment variables
+│
+├── routes/                # API Routes
+│   ├── auth.js           # Đăng ký, đăng nhập, Google OAuth
+│   ├── products.js       # CRUD sản phẩm
+│   ├── cart.js          # Giỏ hàng
+│   ├── orders.js        # Đơn hàng
+│   ├── wishlist.js     # Yêu thích
+│   ├── coupons.js      # Mã giảm giá
+│   ├── chat.js         # AI Chatbot
+│   ├── messages.js     # Chat admin ↔ khách (Socket.IO)
+│   ├── api.js          # Upload ảnh
+│   └── admin.js        # Admin API
+│
+├── views/                # HTML Pages (Customer)
+│   ├── index.html       # Trang chủ
+│   ├── products.html    # Danh sách sản phẩm
+│   ├── product-detail.html
+│   ├── cart.html
+│   ├── checkout.html
+│   ├── orders.html
+│   ├── order-detail.html
+│   ├── compare.html
+│   ├── wishlist.html
+│   ├── profile.html
+│   ├── login.html
+│   ├── register.html
+│   ├── forgot-password.html
+│   ├── reset-password.html
+│   ├── contact.html
+│   ├── promotions.html
+│   ├── policy.html
+│   ├── components/
+│   │   └── ai-chatbox.html
+│   └── admin/           # Admin Dashboard
+│       ├── index.html   # Dashboard
+│       ├── products.html
+│       ├── categories.html
+│       ├── brands.html
+│       ├── orders.html
+│       ├── users.html
+│       ├── reviews.html
+│       ├── banners.html
+│       ├── promotions.html
+│       └── contacts.html
+│
+├── public/              # Static Files
 │   ├── css/
+│   │   ├── style.css
+│   │   ├── admin.css
+│   │   ├── filter.css
+│   │   └── chatbox.css
 │   ├── js/
-│   │   ├── app.js      # Core app (user, cart, wishlist)
-│   │   ├── chatbox.js  # AI chatbot widget
-│   │   └── chat-widget.js  # 💬 Widget chat với admin
+│   │   ├── app.js       # Core app (cart, wishlist)
+│   │   ├── chatbox.js   # AI chatbot
+│   │   └── chat-widget.js # Chat với admin
 │   ├── images/
-│   └── uploads/
+│   │   └── no-image.svg
+│   └── assets/
+│       └── images/
+│           └── products/ # Ảnh sản phẩm
+│
 ├── database/
-│   └── dt.sql          # Database schema + sample data
+│   └── dt.sql           # Schema + Sample data (~60 sản phẩm)
+│
 └── config/
-    └── database.js     # DB connection
+    ├── database.js      # MySQL connection
+    ├── passport.js      # Google OAuth config
+    └── mail.js          # Email SMTP config
 ```
+
+---
 
 ## 💬 Hệ thống Chat Admin ↔ Khách hàng
 
 ### Tính năng
-- ✅ Khách hàng **đã đăng nhập** gửi liên hệ → tự động tạo cuộc hội thoại
-- ✅ Admin trả lời trong trang `/admin/contacts` (giao diện 2 cột như Messenger)
-- ✅ Tin nhắn **realtime** qua Socket.IO (không cần F5)
-- ✅ **Typing indicator** - hiển thị khi đối phương đang nhập
-- ✅ Widget chat nổi ở góc phải (riêng biệt với AI chatbot ở góc trái)
+- ✅ Tin nhắn **realtime** qua Socket.IO
+- ✅ **Typing indicator** - hiển thị "đang nhập..."
+- ✅ Widget chat nổi ở góc phải màn hình
 - ✅ Badge đếm tin nhắn chưa đọc
-- ✅ Đóng/mở hội thoại, xem lịch sử
-- ✅ Lưu trữ trong bảng `conversations` + `messages` (xem `database/dt.sql`)
+- ✅ Xem lịch sử hội thoại
+- ✅ Đóng/mở hội thoại
 
 ### Cách hoạt động
-1. Khách đăng nhập → truy cập bất kỳ trang nào có widget chat
-2. Mở widget → thấy danh sách hội thoại cũ + nút "Gửi liên hệ mới"
-3. Gửi liên hệ → lưu vào bảng `contacts` + tự động tạo `conversation`
-4. Admin vào `/admin/contacts` → thấy danh sách hội thoại → click để mở khung chat
-5. Hai bên nhắn tin qua lại realtime, tin nhắn lưu vào bảng `messages`
+1. Khách đăng nhập → Mở widget chat
+2. Gửi tin nhắn → Lưu vào database
+3. Admin vào `/admin/contacts` → Nhắn tin phản hồi
+4. Cả hai nhận tin realtime (không cần F5)
 
-### API chính
-- `GET /api/messages/conversations` - User lấy DS hội thoại của mình
-- `GET /api/messages/:conv_id` - User lấy chi tiết hội thoại
-- `POST /api/messages/:conv_id` - User gửi tin nhắn
-- `GET /api/messages/admin/conversations` - Admin lấy tất cả hội thoại
-- `GET /api/messages/admin/:conv_id` - Admin xem chi tiết
-- `POST /api/messages/admin/:conv_id` - Admin reply
-- `PUT /api/messages/admin/:conv_id/close` - Đóng hội thoại
-- `PUT /api/messages/admin/:conv_id/reopen` - Mở lại
+### Socket.IO Events
+| Event | Mô tả |
+|-------|--------|
+| `join_conversation` | Tham gia phòng chat |
+| `typing` | Typing indicator |
+| `new_message` | Tin nhắn mới |
+| `admin_status` | Trạng thái online của admin |
 
-### Socket.IO events
-- `join_conversation(conv_id)` - Join room conversation
-- `typing({ room, user })` - Typing indicator
-- `new_message` - Server push tin nhắn mới
-
-## 🎫 Mã giảm giá demo
-
-| Mã | Giảm | Điều kiện |
-|----|------|-----------|
-| `WELCOME10` | 10% | Đơn từ 1 triệu |
-| `FREESHIP` | 30K | Đơn từ 500K |
-| `VIP20` | 20% | Đơn từ 3 triệu |
-| `SALE5TR` | 500K | Đơn từ 5 triệu |
+---
 
 ## 📧 Cấu hình Email (Gmail SMTP)
 
-### 1. Gmail App Password
-
-Để gửi email thật, bạn cần tạo **App Password** từ Google:
+### 1. Tạo Gmail App Password
 
 1. Truy cập [myaccount.google.com](https://myaccount.google.com) → **Bảo mật**
-2. Bật **Xác thực 2 bước** (bắt buộc)
-3. Vào **App Passwords** → Tạo mới (chọn app: "Mail", device: "Other")
-4. Copy mật khẩu 16 ký tự được tạo
+2. Bật **Xác thực 2 bước**
+3. Vào **App Passwords** → Tạo mới
+4. Chọn App: "Mail", Device: "Other"
+5. Copy mật khẩu 16 ký tự
 
 ### 2. Cập nhật file `.env`
 
 ```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com        # Email Gmail của bạn
-SMTP_PASS=xxxx xxxx xxxx xxxx         # App Password vừa tạo
-SITE_NAME=Tên Cửa Hàng
-SITE_URL=http://localhost:3000
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=xxxx xxxx xxxx xxxx  # App Password
 ```
 
-### 3. Google OAuth (Đăng nhập bằng Google)
+### Tính năng Email
+
+| Tính năng | Mô tả |
+|-----------|--------|
+| 📧 Xác nhận đơn hàng | Gửi email khi đặt hàng thành công |
+| 🔑 OTP đặt lại mật khẩu | Mã 6 số, hết hạn sau 5 phút |
+| 👋 Email chào mừng | Gửi khi đăng ký qua Google |
+
+---
+
+## 🔐 Google OAuth (Đăng nhập bằng Google)
+
+### 1. Tạo OAuth Client
 
 1. Truy cập [console.cloud.google.com](https://console.cloud.google.com/)
-2. Tạo Project mới hoặc chọn Project hiện có
-3. **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**
-4. Application type: **Web application**
-5. Thêm Authorized redirect URI:
-   - Development: `http://localhost:3000/auth/google/callback`
-   - Production: `https://yourdomain.com/auth/google/callback`
-6. Copy **Client ID** và **Client Secret** vào `.env`:
+2. Tạo Project mới
+3. **APIs & Services** → **Credentials** → **Create Credentials**
+4. Chọn **OAuth client ID**
+5. Application type: **Web application**
+6. Thêm Authorized redirect URI:
+   - `http://localhost:3000/auth/google/callback`
+
+### 2. Cập nhật file `.env`
 
 ```env
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
@@ -174,17 +354,74 @@ GOOGLE_CLIENT_SECRET=your-client-secret
 GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 ```
 
-### Tính năng Email
+---
 
-| Tính năng | Mô tả |
-|-----------|--------|
-| 📧 Xác nhận đơn hàng | Gửi email chi tiết khi đặt hàng thành công |
-| 🔑 OTP đặt lại mật khẩu | Mã 6 số qua email, hết hạn sau 5 phút |
-| 👋 Email chào mừng | Gửi tự động khi đăng ký Google |
+## 🗃️ Database Schema (18 bảng)
+
+| Bảng | Mô tả |
+|------|--------|
+| `users` | Người dùng (khách + admin) |
+| `reset_tokens` | Token đặt lại mật khẩu |
+| `categories` | Danh mục sản phẩm |
+| `brands` | Thương hiệu |
+| `products` | Sản phẩm |
+| `product_images` | Gallery ảnh sản phẩm |
+| `orders` | Đơn hàng |
+| `order_items` | Chi tiết đơn hàng |
+| `cart` | Giỏ hàng tạm |
+| `reviews` | Đánh giá sản phẩm |
+| `wishlists` | Sản phẩm yêu thích |
+| `coupons` | Mã giảm giá |
+| `user_coupons` | Lịch sử dùng coupon |
+| `contacts` | Form liên hệ |
+| `conversations` | Hội thoại chat |
+| `messages` | Tin nhắn chat |
+| `promotions` | Khuyến mãi |
+| `banners` | Banner trang chủ |
+
+---
+
+## ❓ Giải quyết sự cố
+
+### Lỗi "Can't connect to MySQL server"
+
+1. Kiểm tra XAMPP đã Start MySQL chưa
+2. Kiểm tra port 3306 có bị chiếm dụng không
+3. Thử restart MySQL trong XAMPP
+
+### Lỗi "Database 'anhtraisstore' doesn't exist"
+
+1. Truy cập phpMyAdmin: `http://localhost/phpmyadmin/`
+2. Tạo database `anhtraisstore`
+3. Import lại file `database/dt.sql`
+
+### Lỗi "Port 3000 already in use"
+
+```bash
+# Tìm và kill process sử dụng port 3000
+netstat -ano | findstr :3000
+taskkill /PID <process_id> /F
+```
+
+### Lỗi khi import SQL
+
+1. Kiểm tra file `dt.sql` có tồn tại không
+2. Tăng `max_execution_time` trong php.ini nếu file lớn
+3. Thử import từng phần nhỏ
+
+---
 
 ## 📝 Ghi chú
 
-**Đồ án demo**, một số lưu ý:
-- Thanh toán VNPay/MoMo chỉ mô phỏng (không có thực)
-- Rate limiting chưa đầy đủ
+- **Đồ án demo** - Phù hợp cho mục đích học tập
+- Thanh toán VNPay/MoMo chỉ mô phỏng giao diện (chưa tích hợp thực)
 - Khuyến nghị bật HTTPS khi deploy thật
+- Nên sử dụng XAMPP phiên bản mới nhất
+
+---
+
+## 👨‍💻 Tác giả
+
+Đồ án được phát triển bởi [Tên Sinh viên]
+
+**Liên hệ hỗ trợ:** [Email]

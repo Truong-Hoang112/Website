@@ -739,7 +739,7 @@
             let productsHtml = '';
             items.forEach(item => {
                 const img = item.thumbnail
-                    ? (item.thumbnail.startsWith('http') ? item.thumbnail : '/uploads/products/' + item.thumbnail)
+                    ? (item.thumbnail.startsWith('http') ? item.thumbnail : '/assets/images/products/' + item.thumbnail)
                     : '/images/no-image.svg';
                 productsHtml += `
                 <div class="product-item">

@@ -3,10 +3,7 @@
 -- Phiên bản: 2026-09-11
 -- Các tính năng: Sản phẩm, Giỏ hàng, Đơn hàng, Yêu thích, So sánh, 
 --                Coupon, Chat, Liên hệ, Banner, Khuyến mãi
--- MỚI: Product Images Gallery (nhiều ảnh cho sản phẩm)
--- 
 
--- 
 -- 1. USERS TABLE (khách hàng + admin)
 -- 
 CREATE TABLE IF NOT EXISTS users (

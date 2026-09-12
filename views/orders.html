@@ -694,7 +694,7 @@
                 const showImgs = items.slice(0, 3);
                 showImgs.forEach(item => {
                     const img = item.thumbnail
-                        ? (item.thumbnail.startsWith('http') ? item.thumbnail : '/uploads/products/' + item.thumbnail)
+                        ? (item.thumbnail.startsWith('http') ? item.thumbnail : '/assets/images/products/' + item.thumbnail)
                         : '/images/no-image.svg';
                     productImgsHtml += `<img src="${img}" alt="${item.name || ''}" class="order-product-img" onerror="this.src='/images/no-image.svg'">`;
                 });
