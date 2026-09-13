@@ -3,12 +3,18 @@ function formatPrice(price) {
     return new Intl.NumberFormat('vi-VN').format(price);
 }
 
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[char]);
+}
+
 // Toast Notification
 function showToast(message, type = 'success') {
     const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', info: 'bi-info-circle-fill', warning: 'bi-exclamation-circle-fill' };
     const toast = document.createElement('div');
     toast.className = `custom-toast ${type}`;
-    toast.innerHTML = `<i class="bi ${icons[type]}"></i><span>${message}</span>`;
+    toast.innerHTML = `<i class="bi ${icons[type]}"></i><span>${escapeHtml(message)}</span>`;
     document.body.appendChild(toast);
     setTimeout(() => { toast.style.animation = 'toastSlideOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
@@ -33,26 +39,28 @@ async function loadUserInfo() {
 
             if (data.user) {
                 const roleLabel = data.user.role === 'admin' ? 'Quản trị viên' : 'Khách hàng';
+                const safeName = escapeHtml(data.user.full_name || 'Người dùng');
+                const safeAvatar = escapeHtml(data.user.avatar || '');
                 const adminLink = data.user.role === 'admin'
                     ? '<a href="/admin" class="user-dropdown-item"><i class="bi bi-speedometer2"></i> Trang quản trị</a>'
                     : '';
 
                 const avatarHtml = data.user.avatar
-                    ? '<div class="user-avatar"><img src="' + data.user.avatar + '" alt="Avatar"></div>'
+                    ? '<div class="user-avatar"><img src="' + safeAvatar + '" alt="Avatar"></div>'
                     : '<div class="user-avatar"><i class="bi bi-person-fill"></i></div>';
 
                 const userHtml = `
                 <div class="user-dropdown">
                     <button class="btn-login user-dropdown-btn">
                         <i class="bi bi-person-circle"></i>
-                        ${data.user.full_name}
+                        ${safeName}
                         <i class="bi bi-chevron-down" style="font-size:0.65rem"></i>
                     </button>
                     <div class="user-dropdown-menu">
                         <div class="user-dropdown-header">
                             ${avatarHtml}
                             <div>
-                                <div class="user-name">${data.user.full_name}</div>
+                                <div class="user-name">${safeName}</div>
                                 <div class="user-role">${roleLabel}</div>
                             </div>
                         </div>
@@ -67,14 +75,14 @@ async function loadUserInfo() {
                 </div>`;
 
                 const mobileAvatarHtml = data.user.avatar
-                    ? '<div class="user-avatar"><img src="' + data.user.avatar + '" alt="Avatar"></div>'
+                    ? '<div class="user-avatar"><img src="' + safeAvatar + '" alt="Avatar"></div>'
                     : '<div class="user-avatar"><i class="bi bi-person-fill"></i></div>';
 
                 const mobileUserHtml = `
                 <div class="mobile-nav-user">
                     ${mobileAvatarHtml}
                     <div>
-                        <div style="font-weight:700;font-size:0.875rem">${data.user.full_name}</div>
+                        <div style="font-weight:700;font-size:0.875rem">${safeName}</div>
                         <div style="font-size:0.72rem;color:var(--gray)">${roleLabel}</div>
                     </div>
                 </div>

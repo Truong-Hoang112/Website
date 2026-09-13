@@ -781,7 +781,7 @@
 
                 const badge = discount > 0 ? '<span class="p-badge">-' + discount + '%</span>' : '';
                 const img = item.thumbnail
-                    ? '<img src="' + getThumbUrl(item.thumbnail) + '" alt="' + escapeHtml(item.name) + '" loading="lazy">'
+                    ? '<img src="' + getThumbUrl(item.thumbnail) + '" alt="' + escapeHtml(item.name) + '" loading="lazy" onerror="this.onerror=null;this.src=&quot;/images/no-image.svg&quot;">'
                     : '<i class="bi bi-phone" style="font-size:3rem;color:var(--slate-300)"></i>';
                 const oldPriceHtml = (oldPrice > 0 && oldPrice > price)
                     ? '<span class="p-old-price">' + formatPriceVND(oldPrice) + 'đ</span>'

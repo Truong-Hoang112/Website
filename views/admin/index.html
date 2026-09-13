@@ -942,8 +942,8 @@
                                 <i class="fas fa-envelope-open-text"></i>
                             </div>
                             <div class="notification-content">
-                                <div class="notification-title">${c.full_name}</div>
-                                <div class="notification-text">${c.message ? c.message.substring(0, 50) + '...' : ''}</div>
+                                <div class="notification-title">${escapeHtml(c.full_name)}</div>
+                                <div class="notification-text">${escapeHtml(c.message ? c.message.substring(0, 50) + '...' : '')}</div>
                                 <div class="notification-time"><i class="fas fa-clock"></i> ${timeAgo(c.created_at)}</div>
                             </div>
                         </div>`;
@@ -965,9 +965,9 @@
                             </div>
                             <div class="notification-content">
                                 <div class="notification-title">
-                                    ${r.user_name || 'Khách'} - ${stars}
+                                    ${escapeHtml(r.user_name || 'Khách')} - ${stars}
                                 </div>
-                                <div class="notification-text">${r.product_name || 'Sản phẩm'}: "${r.comment ? r.comment.substring(0, 50) + '...' : ''}"</div>
+                                <div class="notification-text">${escapeHtml(r.product_name || 'Sản phẩm')}: "${escapeHtml(r.comment ? r.comment.substring(0, 50) + '...' : '')}"</div>
                                 <div class="notification-time"><i class="fas fa-clock"></i> ${timeAgo(r.created_at)}</div>
                             </div>
                         </div>`;
@@ -1125,16 +1125,16 @@
                         <td>
                             <div class="user-info">
                                 <div class="user-avatar" style="width:36px;height:36px;font-size:0.8rem;">
-                                    ${(c.full_name || 'K').charAt(0).toUpperCase()}
+                                    ${escapeHtml((c.full_name || 'K').charAt(0).toUpperCase())}
                                 </div>
                                 <div>
-                                    <div class="user-name">${c.full_name || 'Khách'}</div>
+                                    <div class="user-name">${escapeHtml(c.full_name || 'Khách')}</div>
                                 </div>
                             </div>
                         </td>
                         <td class="customer-contact">
-                            <div>${c.email || ''}</div>
-                            <div style="color: var(--gray-400);">${c.phone || ''}</div>
+                            <div>${escapeHtml(c.email || '')}</div>
+                            <div style="color: var(--gray-400);">${escapeHtml(c.phone || '')}</div>
                         </td>
                         <td style="font-weight:600">${c.total_orders} đơn</td>
                         <td class="total-spent">${formatPrice(c.total_spent)}đ</td>

@@ -422,7 +422,7 @@
                 const userRes = await fetch('/api/auth/me', { credentials: 'include' });
                 const userData = await userRes.json();
                 if (userData.user) {
-                    document.getElementById('adminUser').innerHTML = `<div class="sidebar-avatar">${userData.user.full_name?.charAt(0) || 'A'}</div><div class="sidebar-user-info"><div class="sidebar-user-name">${userData.user.full_name || 'Admin'}</div><div class="sidebar-user-role">Quản trị viên</div></div>`;
+                    document.getElementById('adminUser').innerHTML = `<div class="sidebar-avatar">${escapeHtml(userData.user.full_name?.charAt(0) || 'A')}</div><div class="sidebar-user-info"><div class="sidebar-user-name">${escapeHtml(userData.user.full_name || 'Admin')}</div><div class="sidebar-user-role">Quản trị viên</div></div>`;
                     // Khởi tạo socket
                     initSocket();
                 }
@@ -496,7 +496,7 @@
             filtered.forEach(c => {
                 const name = c.user_name || c.full_name || 'Khách vãng lai';
                 const email = c.user_email || c.email || '';
-                const initial = name.charAt(0).toUpperCase();
+                const initial = escapeHtml(name.charAt(0).toUpperCase());
                 const lastTime = c.last_message_at || c.created_at;
                 const preview = c.last_message || c.first_message || '';
                 const unread = c.unread_count || 0;
@@ -696,8 +696,8 @@
 
         // ============ Utilities ============
         function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>"']/g, c => ({
+            if (str == null) return '';
+            return String(str).replace(/[&<>"']/g, c => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
             }[c]));
         }

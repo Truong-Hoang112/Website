@@ -473,17 +473,25 @@
 
         async function loadProducts() {
             try {
-                const response = await fetch('/api/products?limit=100', { credentials: 'include' });
-                const data = await response.json();
+                const firstResponse = await fetch('/api/products?limit=200&page=1', { credentials: 'include' });
+                if (!firstResponse.ok) throw new Error('Không thể tải danh sách sản phẩm');
+                const data = await firstResponse.json();
+                const products = [...(data.products || [])];
+                for (let page = 2; page <= (data.totalPages || 1); page++) {
+                    const response = await fetch(`/api/products?limit=200&page=${page}`, { credentials: 'include' });
+                    if (!response.ok) throw new Error('Không thể tải đầy đủ danh sách sản phẩm');
+                    const pageData = await response.json();
+                    products.push(...(pageData.products || []));
+                }
                 const tbody = document.getElementById('productsBody');
 
-                if (!data.products || data.products.length === 0) {
+                if (products.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-box-open"></i><h3>Chưa có sản phẩm nào</h3><p>Thêm sản phẩm đầu tiên của bạn</p></div></td></tr>`;
                     return;
                 }
 
                 let html = '';
-                data.products.forEach(p => {
+                products.forEach(p => {
                     const stockClass = p.stock > 10 ? 'badge-success' : p.stock > 0 ? 'badge-warning' : 'badge-danger';
                     const stockText = p.stock > 10 ? 'Còn hàng' : p.stock > 0 ? `Còn ${p.stock}` : 'Hết hàng';
                     const imgSrc = p.thumbnail ? (p.thumbnail.startsWith('http') ? p.thumbnail : '/assets/images/products/' + p.thumbnail) : '';
@@ -491,7 +499,7 @@
                         <td>
                             <img src="${imgSrc}" class="product-img" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.style.display='none'">
                         </td>
-                        <td><strong>${p.name}</strong><br><span style="color: var(--gray-500); font-size: 0.8rem;">${p.ram ? 'RAM: ' + p.ram + 'GB' : ''}${p.ram && p.storage ? ' | ' : ''}${p.storage ? 'ROM: ' + p.storage + 'GB' : ''}</span></td>
+                        <td><strong>${p.name}</strong><br><span style="color: var(--gray-500); font-size: 0.8rem;">${p.ram ? 'RAM: ' + p.ram : ''}${p.ram && p.storage ? ' | ' : ''}${p.storage ? 'ROM: ' + p.storage : ''}</span></td>
                         <td>${p.brand_name || '-'}</td>
                         <td style="font-weight: 700; color: var(--primary);">${formatPrice(p.price)}đ</td>
                         <td>${p.stock}</td>
@@ -588,7 +596,8 @@
                         id: img.id,
                         url: '/assets/images/products/' + img.image_url,
                         isPrimary: img.is_primary == 1 || index === 0,
-                        isNew: false
+                        isNew: false,
+                        file: null
                     }));
                 } else {
                     galleryImages = [];
@@ -623,7 +632,8 @@
                                 url: e.target.result,
                                 isPrimary: galleryImages.length === 0,
                                 isNew: true,
-                                id: 'new_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+                                id: 'new_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                                file
                             });
                         };
                         reader.readAsDataURL(file);
@@ -748,21 +758,15 @@
             formData.append('storage', document.getElementById('storage').value || null);
 
             // Add gallery images as files
-            const newGalleryImages = galleryImages.filter(img => img.isNew);
-            newGalleryImages.forEach((img, index) => {
-                // Convert base64 to blob and add to formData
-                const base64Data = img.url.split(',')[1];
-                if (base64Data) {
-                    const byteCharacters = atob(base64Data);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const blob = new Blob([byteArray], { type: 'image/jpeg' });
-                    formData.append('galleryFiles', blob, 'image_' + index + '.jpg');
-                }
+            const newGalleryImages = galleryImages.filter(img => img.isNew && img.file);
+            newGalleryImages.forEach(img => {
+                formData.append('galleryFiles', img.file, img.file.name);
             });
+            const uploadIndexes = new Map(newGalleryImages.map((img, index) => [img.id, index]));
+            formData.append('galleryManifest', JSON.stringify(galleryImages.map(img => img.isNew
+                ? { type: 'new', uploadIndex: uploadIndexes.get(img.id) }
+                : { type: 'existing', id: Number(img.id) }
+            )));
             // Send primary image index
             const primaryIndex = galleryImages.findIndex(img => img.isPrimary);
             if (primaryIndex >= 0) {

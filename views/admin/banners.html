@@ -669,9 +669,9 @@
 
         function getSlot(position) {
             // Hỗ trợ cả số (0,1,2) và chuỗi ('hero','side','quick')
-            if (position === 0 || position === 'hero') return 'main';
-            if (position === 1 || position === 'side') return 'side1';
-            if (position === 2 || position === 'quick') return 'side2';
+            if (position === 0 || position === '0' || position === 'hero') return 'main';
+            if (position === 1 || position === '1' || position === 'side') return 'side1';
+            if (position === 2 || position === '2' || position === 'quick') return 'side2';
             return null;
         }
 
@@ -724,11 +724,11 @@
             banners.forEach(b => {
                 const pos = b.position;
                 // Đơn giản: 0=main, 1=side1, 2=side2
-                if ((pos === 0 || pos === 'hero') && !bannersCache.main) {
+                if ((pos === 0 || pos === '0' || pos === 'hero') && !bannersCache.main) {
                     bannersCache.main = b;
-                } else if ((pos === 1 || pos === 'side') && !bannersCache.side1) {
+                } else if ((pos === 1 || pos === '1' || pos === 'side') && !bannersCache.side1) {
                     bannersCache.side1 = b;
-                } else if ((pos === 2 || pos === 'quick') && !bannersCache.side2) {
+                } else if ((pos === 2 || pos === '2' || pos === 'quick') && !bannersCache.side2) {
                     bannersCache.side2 = b;
                 }
             });
@@ -840,8 +840,10 @@
             document.getElementById('bannerSlot').value = slot;
             document.getElementById('bannerId').value = banner ? banner.id : '';
             // Đơn giản: slot tương ứng với position số
-            const positionMap = { 'main': '0', 'side1': '1', 'side2': '2' };
-            document.getElementById('bannerPosition').value = banner ? banner.position : (positionMap[slot] || '0');
+            const positionMap = { 'main': 'hero', 'side1': 'side', 'side2': 'quick' };
+            document.getElementById('bannerPosition').value = banner
+                ? (positionMap[getSlot(banner.position)] || 'hero')
+                : (positionMap[slot] || 'hero');
             document.getElementById('uploadZone').classList.remove('has-image');
             document.getElementById('uploadPlaceholder').style.display = 'block';
 

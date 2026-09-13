@@ -792,7 +792,7 @@
                     <i class="bi bi-x-circle-fill"></i>
                     <div>
                         <h4>Đơn hàng đã bị hủy</h4>
-                        <p>Lý do: ${order.cancel_reason}</p>
+                        <p>Lý do: ${escapeHtml(order.cancel_reason)}</p>
                     </div>
                 </div>`;
             }

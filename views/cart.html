@@ -445,7 +445,7 @@
             // Mặc định bỏ tích tất cả sản phẩm (người dùng tự chọn)
             let itemsHtml = '';
             data.items.forEach(item => {
-                const img = item.thumbnail ? '<img src="' + getThumbUrl(item.thumbnail) + '" alt="' + item.name + '">' : '<i class="bi bi-phone" style="font-size:2rem;color:var(--slate-300)"></i>';
+                const img = item.thumbnail ? '<img src="' + getThumbUrl(item.thumbnail) + '" alt="' + item.name + '" onerror="this.onerror=null;this.src=&quot;/images/no-image.svg&quot;">' : '<i class="bi bi-phone" style="font-size:2rem;color:var(--slate-300)"></i>';
                 
                 // Use variant price if available
                 const price = item.variant_price || item.price;

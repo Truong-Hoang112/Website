@@ -1642,17 +1642,17 @@
                 for (let i = 1; i <= 5; i++) {
                     stars += '<i class="bi bi-star' + (i <= r.rating ? '-fill' : '') + '"></i>';
                 }
-                const initial = r.full_name ? r.full_name.charAt(0).toUpperCase() : 'U';
+                const initial = escapeHtml(r.full_name ? r.full_name.charAt(0).toUpperCase() : 'U');
                 html += '<div class="review-card">' +
                     '<div class="review-header">' +
                         '<div class="review-user">' +
                             '<div class="review-avatar">' + initial + '</div>' +
-                            '<div><div class="review-name">' + (r.full_name || 'Người dùng ẩn danh') + '</div>' +
+                            '<div><div class="review-name">' + escapeHtml(r.full_name || 'Người dùng ẩn danh') + '</div>' +
                             '<div class="review-date">' + formatDate(r.created_at) + '</div></div>' +
                         '</div>' +
                         '<div class="review-stars">' + stars + '</div>' +
                     '</div>' +
-                    '<div class="review-content">' + r.comment + '</div>' +
+                    '<div class="review-content">' + escapeHtml(r.comment) + '</div>' +
                 '</div>';
             });
 
@@ -1673,7 +1673,7 @@
             let html = '<h2>Sản phẩm liên quan</h2><div class="products-grid">';
             products.forEach(p => {
                 const badge = p.discount_percent > 0 ? '<span class="product-badge">-' + Math.round(p.discount_percent) + '%</span>' : '';
-                const img = p.thumbnail ? '<img src="' + getThumbUrl(p.thumbnail) + '" alt="' + p.name + '" loading="lazy">' : '<i class="bi bi-phone" style="font-size:4rem;color:var(--slate-300)"></i>';
+                const img = p.thumbnail ? '<img src="' + getThumbUrl(p.thumbnail) + '" alt="' + p.name + '" loading="lazy" onerror="this.onerror=null;this.src=&quot;/images/no-image.svg&quot;">' : '<i class="bi bi-phone" style="font-size:4rem;color:var(--slate-300)"></i>';
                 const oldPrice = p.old_price ? '<span class="product-old-price">' + formatPrice(p.old_price) + 'đ</span>' : '';
                 html += '<div class="product-card">' + badge +
                     '<a href="/product/' + p.id + '"><div class="product-img-wrap">' + img + '</div></a>' +
@@ -1750,7 +1750,7 @@
 
                     if (product) {
                         productInfo.innerHTML = `
-                            <img src="${product.thumbnail ? getThumbUrl(product.thumbnail) : '/images/no-image.svg'}" alt="${product.name}">
+                            <img src="${product.thumbnail ? getThumbUrl(product.thumbnail) : '/images/no-image.svg'}" alt="${product.name}" onerror="this.onerror=null;this.src='/images/no-image.svg'">
                             <div class="info-text">
                                 <div class="info-name">${product.name}</div>
                                 <div class="info-price">${formatPrice(product.price)}đ</div>

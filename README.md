@@ -65,7 +65,7 @@ npm install
 
 ### Bước 2: Cấu hình file `.env`
 
-Tạo file `.env` trong thư mục gốc với nội dung:
+Sao chép `.env.example` thành `.env`, sau đó điền thông tin của môi trường chạy:
 
 ```env
 # Database (XAMPP)
@@ -75,8 +75,10 @@ DB_PASS=
 DB_NAME=anhtraisstore
 
 # Server
+NODE_ENV=development
 PORT=3000
 SESSION_SECRET=anhtraisstore_secret_key_2024
+CORS_ORIGINS=http://localhost:3000
 
 # Email (tùy chọn - để gửi email thật)
 SMTP_HOST=smtp.gmail.com
@@ -167,7 +169,7 @@ Mở trình duyệt: **`http://localhost:3000`**
 - Đơn COD được tạo ở trạng thái `pending` và trừ kho ngay khi đặt hàng.
 - MoMo/VNPay là thanh toán mô phỏng: đơn được tạo ở trạng thái `pending`; người dùng nhấn **Xác nhận đã thanh toán** để chuyển sang `confirmed` và trừ kho.
 - Trạng thái đơn đi theo luồng `pending → confirmed → shipping → delivered`; đơn chưa giao có thể chuyển sang `cancelled` và được hoàn kho nếu trước đó đã trừ kho.
-- Coupon được backend kiểm tra lại khi tạo hoặc xác nhận đơn. Mỗi tài khoản chỉ dùng một coupon một lần; `WELCOME10` và `NEWUSER` chỉ áp dụng cho đơn đầu tiên.
+- Coupon được backend kiểm tra lại khi tạo hoặc xác nhận đơn. Mỗi tài khoản chỉ dùng một coupon một lần; `WELCOME10` và `NEWUSER` chỉ áp dụng cho đơn đầu tiên. `VIP20` dành cho khách có tổng đơn đã giao từ 30 triệu.
 - Chỉ khách đã nhận sản phẩm (`delivered`) mới có thể gửi đánh giá.
 - Chỉ xóa sản phẩm chưa có trong đơn hàng. Sản phẩm đã được đặt mua cùng hình ảnh được giữ lại để bảo toàn lịch sử đơn hàng.
 - Khôi phục mật khẩu dùng OTP qua email tại `/forgot-password`; trang này thực hiện đủ các bước nhập email, OTP và mật khẩu mới.
@@ -179,8 +181,8 @@ Mở trình duyệt: **`http://localhost:3000`**
 | Mã | Loại | Giảm | Điều kiện |
 |----|------|------|-----------|
 | `WELCOME10` | % | 10% | Đơn từ 1 triệu |
-| `FREESHIP` | Tiền | 30.000đ | Đơn từ 500K |
-| `VIP20` | % | 20% | Đơn từ 3 triệu |
+| `FREESHIP` | Tiền | 30.000đ | Đơn từ 500K (giảm trực tiếp vào đơn) |
+| `VIP20` | % | 20% | Đã mua thành công từ 30 triệu; đơn mới từ 3 triệu |
 | `SALE5TR` | Tiền | 500.000đ | Đơn từ 30 triệu |
 
 ---
@@ -216,21 +218,18 @@ Mở trình duyệt: **`http://localhost:3000`**
 
 ```
 Website/
-├── server.js              # Entry point (Express + Socket.IO)
+├── server.js              # Entry point tương thích hosting
 ├── package.json
-├── .env                   # Environment variables
+├── .env.example           # Mẫu biến môi trường
 │
-├── routes/                # API Routes
-│   ├── auth.js           # Đăng ký, đăng nhập, Google OAuth
-│   ├── products.js       # CRUD sản phẩm
-│   ├── cart.js          # Giỏ hàng
-│   ├── orders.js        # Đơn hàng
-│   ├── wishlist.js     # Yêu thích
-│   ├── coupons.js      # Mã giảm giá
-│   ├── chat.js         # AI Chatbot
-│   ├── messages.js     # Chat admin ↔ khách (Socket.IO)
-│   ├── api.js          # Upload ảnh
-│   └── admin.js        # Admin API
+├── src/                   # Mã nguồn backend
+│   ├── app.js             # Cấu hình Express
+│   ├── server.js          # HTTP server và graceful shutdown
+│   ├── config/            # Database, SMTP, OAuth, runtime
+│   ├── core/              # Đường dẫn và hằng số dùng chung
+│   ├── middleware/        # Xác thực và xử lý lỗi
+│   ├── realtime/          # Socket.IO chat
+│   └── routes/            # API và page routes theo nghiệp vụ
 │
 ├── views/                # HTML Pages (Customer)
 │   ├── index.html       # Trang chủ
@@ -270,9 +269,8 @@ Website/
 │   │   ├── filter.css
 │   │   └── chatbox.css
 │   ├── js/
-│   │   ├── app.js       # Core app (cart, wishlist)
-│   │   ├── chatbox.js   # AI chatbot
-│   │   └── chat-widget.js # Chat với admin
+│   │   ├── app.js       # Logic giao diện dùng chung
+│   │   └── vietnam-address.js # Dữ liệu địa chỉ Việt Nam
 │   ├── images/
 │   │   └── no-image.svg
 │   └── assets/
@@ -280,12 +278,11 @@ Website/
 │           └── products/ # Ảnh sản phẩm
 │
 ├── database/
-│   └── dt.sql           # Schema + Sample data (~60 sản phẩm)
-│
-└── config/
-    ├── database.js      # MySQL connection
-    ├── passport.js      # Google OAuth config
-    └── mail.js          # Email SMTP config
+│   └── dt.sql             # Schema và dữ liệu mẫu
+├── docs/
+│   ├── architecture.md    # Tài liệu kiến trúc
+│   └── security.md        # Kết quả rà soát API và bảo mật
+└── tests/                 # Kiểm tra hồi quy
 ```
 
 ---
@@ -427,6 +424,8 @@ taskkill /PID <process_id> /F
 - **Đồ án demo** - Phù hợp cho mục đích học tập
 - Thanh toán VNPay/MoMo là luồng mô phỏng phục vụ đồ án, không kết nối cổng thanh toán thật. Nút xác nhận thanh toán trên giao diện đóng vai trò kết quả giao dịch demo.
 - File `database/dt.sql` là schema và dữ liệu mẫu gốc; các chỉnh sửa nghiệp vụ trong mã nguồn không yêu cầu thay đổi file này.
+- Xem [docs/security.md](docs/security.md) để biết các cơ chế bảo vệ API và yêu cầu khi triển khai.
+- Các quyết định và hướng nâng cấp đã thống nhất được lưu tại [docs/project-memory.md](docs/project-memory.md).
 - Khuyến nghị bật HTTPS khi deploy thật
 - Nên sử dụng XAMPP phiên bản mới nhất
 

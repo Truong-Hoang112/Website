@@ -106,6 +106,12 @@
             overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
             overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
         }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
+        }
         async function adminLogout() {
             showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', async () => {
                 await fetch('/api/auth/logout', { method: 'POST' });
@@ -122,7 +128,7 @@
                 const userRes = await fetch('/api/auth/me', { credentials: 'include' });
                 const userData = await userRes.json();
                 if (userData.user) {
-                    document.getElementById('adminUser').innerHTML = `<div class="sidebar-avatar">${userData.user.full_name?.charAt(0) || 'A'}</div><div class="sidebar-user-info"><div class="sidebar-user-name">${userData.user.full_name || 'Admin'}</div><div class="sidebar-user-role">Quản trị viên</div></div>`;
+                    document.getElementById('adminUser').innerHTML = `<div class="sidebar-avatar">${escapeHtml(userData.user.full_name?.charAt(0) || 'A')}</div><div class="sidebar-user-info"><div class="sidebar-user-name">${escapeHtml(userData.user.full_name || 'Admin')}</div><div class="sidebar-user-role">Quản trị viên</div></div>`;
                 }
             } catch (e) {}
 
@@ -163,10 +169,10 @@
                 reviews.forEach(r => {
                     const stars = '★'.repeat(r.rating || 5) + '☆'.repeat(5 - (r.rating || 5));
                     html += `<tr>
-                        <td><strong>${r.product_name || 'N/A'}</strong></td>
-                        <td>${r.user_name || 'Khách'}</td>
+                        <td><strong>${escapeHtml(r.product_name || 'N/A')}</strong></td>
+                        <td>${escapeHtml(r.user_name || 'Khách')}</td>
                         <td><span style="color: #F59E0B;">${stars}</span></td>
-                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.comment || '-'}</td>
+                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(r.comment || '-')}</td>
                         <td>${r.created_at ? new Date(r.created_at).toLocaleDateString('vi-VN') : '-'}</td>
                         <td>
                             <button class="btn btn-sm btn-danger" onclick="deleteReview(${r.id})"><i class="fas fa-trash"></i></button>

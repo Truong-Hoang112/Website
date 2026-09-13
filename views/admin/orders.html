@@ -129,6 +129,12 @@
         let currentFilter = 'all';
         let currentOrder = null;
 
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
+        }
+
         function showConfirm(title, message, onConfirm) {
             const overlay = document.createElement('div');
             overlay.className = 'confirm-overlay';
@@ -152,7 +158,7 @@
                 const userRes = await fetch('/api/auth/me', { credentials: 'include' });
                 const userData = await userRes.json();
                 if (userData.user) {
-                    document.getElementById('adminUser').innerHTML = `<div class="sidebar-avatar">${userData.user.full_name?.charAt(0) || 'A'}</div><div class="sidebar-user-info"><div class="sidebar-user-name">${userData.user.full_name || 'Admin'}</div><div class="sidebar-user-role">Quản trị viên</div></div>`;
+                    document.getElementById('adminUser').innerHTML = `<div class="sidebar-avatar">${escapeHtml(userData.user.full_name?.charAt(0) || 'A')}</div><div class="sidebar-user-info"><div class="sidebar-user-name">${escapeHtml(userData.user.full_name || 'Admin')}</div><div class="sidebar-user-role">Quản trị viên</div></div>`;
                 }
             } catch (e) {}
 
@@ -208,8 +214,8 @@
                     html += `<tr>
                         <td><span class="order-code">${o.payment_code || o.id}</span></td>
                         <td>
-                            <strong>${o.customer_name || 'Khách'}</strong><br>
-                            <span style="color: var(--gray-500); font-size: 0.8rem;">${o.shipping_phone || ''}</span>
+                            <strong>${escapeHtml(o.customer_name || 'Khách')}</strong><br>
+                            <span style="color: var(--gray-500); font-size: 0.8rem;">${escapeHtml(o.shipping_phone || '')}</span>
                         </td>
                         <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${o.items ? o.items.substring(0, 50) + '...' : '-'}</td>
                         <td style="font-weight: 700; color: var(--primary);">${formatPrice(o.total_price)}đ</td>
@@ -271,9 +277,9 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
                         <h4 style="margin-bottom: 12px; color: var(--gray-500); font-size: 0.8rem; text-transform: uppercase;">Thông tin khách hàng</h4>
-                        <p><strong>Tên:</strong> ${order.customer_name || 'N/A'}</p>
-                        <p><strong>Điện thoại:</strong> ${order.shipping_phone || 'N/A'}</p>
-                        <p><strong>Địa chỉ:</strong> ${order.shipping_address || 'N/A'}</p>
+                        <p><strong>Tên:</strong> ${escapeHtml(order.customer_name || 'N/A')}</p>
+                        <p><strong>Điện thoại:</strong> ${escapeHtml(order.shipping_phone || 'N/A')}</p>
+                        <p><strong>Địa chỉ:</strong> ${escapeHtml(order.shipping_address || 'N/A')}</p>
                     </div>
                     <div>
                         <h4 style="margin-bottom: 12px; color: var(--gray-500); font-size: 0.8rem; text-transform: uppercase;">Thông tin đơn hàng</h4>

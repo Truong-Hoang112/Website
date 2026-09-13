@@ -775,7 +775,7 @@
             const badge = discount > 0 ? '<span class="p-badge">-' + Math.round(discount) + '%</span>' : '';
             const stockBadge = stock <= 0 ? '<span class="p-badge" style="background:#64748B;left:auto;right:10px;">Hết hàng</span>' : '';
             const img = p.thumbnail
-                ? '<img src="' + getThumbUrl(p.thumbnail) + '" alt="' + escapeHtml(p.name) + '" loading="lazy">'
+                ? '<img src="' + getThumbUrl(p.thumbnail) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" onerror="this.onerror=null;this.src=&quot;/images/no-image.svg&quot;">'
                 : '<i class="bi bi-phone" style="font-size:3rem;color:var(--slate-300)"></i>';
             // FIX: tách giá cũ bằng wrapper riêng + có dấu đ phía sau rõ ràng
             const oldPriceHtml = (oldPrice > 0 && oldPrice > price)

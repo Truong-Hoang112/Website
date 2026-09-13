@@ -461,7 +461,7 @@
         }
         function adminLogout() {
             showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', () => {
-                fetch('/auth/logout', { method: 'POST', credentials: 'include' })
+                fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
                     .then(() => { window.location.href = '/login'; });
             });
         }

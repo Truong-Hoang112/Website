@@ -640,7 +640,7 @@
 
         function createProductCard(p) {
             const badge = p.discount_percent > 0 ? '<span class="product-badge">-' + Math.round(p.discount_percent) + '%</span>' : '';
-            const img = p.thumbnail ? '<img src="' + getThumbUrl(p.thumbnail) + '" alt="' + p.name + '" loading="lazy">' : '<i class="bi bi-phone" style="font-size: 4rem; color: var(--slate-300);"></i>';
+            const img = p.thumbnail ? '<img src="' + getThumbUrl(p.thumbnail) + '" alt="' + p.name + '" loading="lazy" onerror="this.onerror=null;this.src=&quot;/images/no-image.svg&quot;">' : '<i class="bi bi-phone" style="font-size: 4rem; color: var(--slate-300);"></i>';
             const oldPrice = p.old_price ? '<span class="product-old-price">' + formatPrice(p.old_price) + 'đ</span>' : '';
             
             return '<div class="product-card">' +
@@ -713,7 +713,7 @@
             const sideBanners = document.getElementById('sideBanners');
 
             // Hỗ trợ cả số (0,1,2,3) và chuỗi ('hero','side','quick')
-            const main = banners.find(b => b.position === 0 || b.position === 'hero');
+            const main = banners.find(b => b.position === 0 || b.position === '0' || b.position === 'hero');
             if (main) {
                 const imgUrl = main.image_url.startsWith('/') ? main.image_url : '/' + main.image_url;
                 console.log('Main banner image:', imgUrl);
@@ -730,8 +730,8 @@
             }
 
             const sides = [
-                banners.find(b => b.position === 1 || b.position === 'side'),
-                banners.find(b => b.position === 2 || b.position === 'quick')
+                banners.find(b => b.position === 1 || b.position === '1' || b.position === 'side'),
+                banners.find(b => b.position === 2 || b.position === '2' || b.position === 'quick')
             ].filter(Boolean);
             console.log('Side banners:', sides);
 

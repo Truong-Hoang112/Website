@@ -1176,7 +1176,7 @@
             let itemsHtml = '';
             cartData.items.forEach(item => {
                 const img = item.thumbnail
-                    ? `<img src="${getThumbUrl(item.thumbnail)}" alt="${item.name}">`
+                    ? `<img src="${getThumbUrl(item.thumbnail)}" alt="${item.name}" onerror="this.onerror=null;this.src='/images/no-image.svg'">`
                     : '<i class="bi bi-phone" style="color:var(--slate-400)"></i>';
                 itemsHtml += `
                     <div class="summary-item">
