@@ -3,218 +3,285 @@ const router = express.Router();
 const pool = require('../config/database');
 const { sendOrderEmail } = require('../config/mail');
 
+const ONLINE_PAYMENT_METHODS = ['vnpay', 'momo'];
+
+function parseItemIds(itemIds) {
+    if (!Array.isArray(itemIds)) return [];
+    return [...new Set(itemIds
+        .map(id => Number.parseInt(id, 10))
+        .filter(id => Number.isInteger(id) && id > 0))];
+}
+
+async function getCheckoutItems(db, userId, itemIds, buyNow) {
+    let items;
+
+    if (itemIds.length > 0) {
+        [items] = await db.query(
+            `SELECT c.id AS cart_id, c.product_id, c.quantity, p.price, p.stock, p.name
+             FROM cart c
+             JOIN products p ON c.product_id = p.id
+             WHERE c.user_id = ? AND c.id IN (?)`,
+            [userId, itemIds]
+        );
+    } else if (buyNow) {
+        const [products] = await db.query(
+            'SELECT id AS product_id, name, price, stock FROM products WHERE id = ?',
+            [buyNow.product_id]
+        );
+        items = products.map(product => ({ ...product, quantity: Number(buyNow.quantity), cart_id: 'buy_now' }));
+    } else {
+        [items] = await db.query(
+            `SELECT c.id AS cart_id, c.product_id, c.quantity, p.price, p.stock, p.name
+             FROM cart c
+             JOIN products p ON c.product_id = p.id
+             WHERE c.user_id = ?`,
+            [userId]
+        );
+    }
+
+    if (items.length === 0) {
+        const error = new Error('Giỏ hàng trống hoặc sản phẩm không hợp lệ!');
+        error.status = 400;
+        throw error;
+    }
+
+    for (const item of items) {
+        const quantity = Number(item.quantity);
+        if (!Number.isInteger(quantity) || quantity < 1) {
+            const error = new Error(`Số lượng của sản phẩm "${item.name}" không hợp lệ!`);
+            error.status = 400;
+            throw error;
+        }
+        if (Number(item.stock) < quantity) {
+            const error = new Error(`Sản phẩm "${item.name}" không đủ hàng!`);
+            error.status = 400;
+            throw error;
+        }
+        item.quantity = quantity;
+        item.price = Number(item.price);
+    }
+
+    return items;
+}
+
+async function calculateCoupon(db, userId, code, subtotal) {
+    if (!code) return { coupon: null, discount: 0 };
+
+    const normalizedCode = String(code).trim().toUpperCase();
+    const [rows] = await db.query(
+        `SELECT * FROM coupons
+         WHERE code = ? AND is_active = 1
+           AND (start_date IS NULL OR start_date <= NOW())
+           AND (expires_at IS NULL OR expires_at >= NOW())`,
+        [normalizedCode]
+    );
+
+    const coupon = rows[0];
+    if (!coupon) {
+        const error = new Error('Mã giảm giá không tồn tại hoặc đã hết hạn!');
+        error.status = 400;
+        throw error;
+    }
+    if (coupon.usage_limit && Number(coupon.used_count) >= Number(coupon.usage_limit)) {
+        const error = new Error('Mã giảm giá đã hết lượt sử dụng!');
+        error.status = 400;
+        throw error;
+    }
+    if (subtotal < Number(coupon.min_order_value || 0)) {
+        const error = new Error(`Đơn hàng chưa đạt giá trị tối thiểu để dùng mã ${normalizedCode}!`);
+        error.status = 400;
+        throw error;
+    }
+
+    const [used] = await db.query(
+        'SELECT id FROM user_coupons WHERE user_id = ? AND coupon_id = ? LIMIT 1',
+        [userId, coupon.id]
+    );
+    if (used.length > 0) {
+        const error = new Error('Bạn đã sử dụng mã giảm giá này!');
+        error.status = 400;
+        throw error;
+    }
+
+    if (normalizedCode === 'WELCOME10' || normalizedCode === 'NEWUSER') {
+        const [orders] = await db.query(
+            `SELECT id FROM orders
+             WHERE user_id = ?
+               AND (status IN ('confirmed', 'shipping', 'delivered')
+                    OR (payment_method = 'cod' AND status = 'pending'))
+             LIMIT 1`,
+            [userId]
+        );
+        if (orders.length > 0) {
+            const error = new Error('Mã này chỉ áp dụng cho đơn hàng đầu tiên!');
+            error.status = 400;
+            throw error;
+        }
+    }
+
+    let discount = coupon.discount_type === 'percent'
+        ? Math.round(subtotal * Number(coupon.discount_value) / 100)
+        : Number(coupon.discount_value);
+    if (coupon.max_discount) discount = Math.min(discount, Number(coupon.max_discount));
+    discount = Math.max(0, Math.min(discount, subtotal));
+
+    return { coupon, discount };
+}
+
+async function useCoupon(db, userId, coupon, orderId, discount) {
+    if (!coupon || discount <= 0) return;
+
+    const [used] = await db.query(
+        'SELECT id FROM user_coupons WHERE user_id = ? AND coupon_id = ? LIMIT 1',
+        [userId, coupon.id]
+    );
+    if (used.length > 0) {
+        const error = new Error('Bạn đã sử dụng mã giảm giá này!');
+        error.status = 400;
+        throw error;
+    }
+
+    const [updated] = await db.query(
+        `UPDATE coupons SET used_count = used_count + 1
+         WHERE id = ? AND (usage_limit IS NULL OR used_count < usage_limit)`,
+        [coupon.id]
+    );
+    if (updated.affectedRows !== 1) {
+        const error = new Error('Mã giảm giá đã hết lượt sử dụng!');
+        error.status = 400;
+        throw error;
+    }
+    await db.query(
+        'INSERT INTO user_coupons (user_id, coupon_id, order_id, discount_amount) VALUES (?, ?, ?, ?)',
+        [userId, coupon.id, orderId, discount]
+    );
+}
+
+async function releaseCoupon(db, order) {
+    if (!order.coupon_code) return;
+    const [deleted] = await db.query('DELETE FROM user_coupons WHERE order_id = ?', [order.id]);
+    if (deleted.affectedRows > 0) {
+        await db.query(
+            'UPDATE coupons SET used_count = GREATEST(used_count - 1, 0) WHERE code = ?',
+            [order.coupon_code]
+        );
+    }
+}
+
+async function decreaseStock(db, items) {
+    for (const item of items) {
+        const [updated] = await db.query(
+            'UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?',
+            [item.quantity, item.product_id, item.quantity]
+        );
+        if (updated.affectedRows !== 1) {
+            const error = new Error(`Sản phẩm "${item.name || item.product_id}" không đủ hàng!`);
+            error.status = 400;
+            throw error;
+        }
+    }
+}
+
+function sendConfirmationEmail(orderId, userId) {
+    (async () => {
+        try {
+            const [[orderRows], [userRows], [items]] = await Promise.all([
+                pool.query('SELECT * FROM orders WHERE id = ?', [orderId]),
+                pool.query('SELECT * FROM users WHERE id = ?', [userId]),
+                pool.query(
+                    `SELECT oi.*, p.name
+                     FROM order_items oi JOIN products p ON p.id = oi.product_id
+                     WHERE oi.order_id = ?`,
+                    [orderId]
+                )
+            ]);
+            if (orderRows[0] && userRows[0]) {
+                await sendOrderEmail(orderRows[0], userRows[0], items);
+            }
+        } catch (error) {
+            console.error('Lỗi gửi email xác nhận:', error.message);
+        }
+    })();
+}
+
 // Create order
 router.post('/', async (req, res) => {
+    let connection;
     try {
         if (!req.session.user_id) {
             return res.status(401).json({ error: 'Vui lòng đăng nhập!' });
         }
 
-        const { shipping_name, shipping_phone, shipping_address, payment_method, notes, coupon_code, discount_amount, item_ids } = req.body;
-        const user_id = req.session.user_id;
+        const { shipping_name, shipping_phone, shipping_address, notes, coupon_code, item_ids } = req.body;
+        const paymentMethod = req.body.payment_method || 'cod';
+        const userId = req.session.user_id;
 
         if (!shipping_name || !shipping_phone || !shipping_address) {
             return res.status(400).json({ error: 'Vui lòng nhập đầy đủ thông tin giao hàng!' });
         }
-
-        // Get cart items - lọc theo item_ids nếu có
-        const itemIdsInt = (item_ids && Array.isArray(item_ids))
-            ? item_ids.map(id => parseInt(id)).filter(id => !isNaN(id) && id > 0)
-            : [];
-
-        let cartItems = [];
-
-        // Nếu có session.buyNow và KHÔNG có item_ids hợp lệ → dùng buy-now
-        // Nếu KHÔNG có session.buyNow → dùng cart (tất cả items)
-        // Nếu CÓ item_ids hợp lệ → dùng cart (chỉ items đã chọn)
-        if (itemIdsInt.length > 0) {
-            // User chọn items cụ thể từ cart
-            [cartItems] = await pool.query(
-                `SELECT c.*, p.price, p.stock, p.name
-                 FROM cart c
-                 JOIN products p ON c.product_id = p.id
-                 WHERE c.user_id = ? AND c.id IN (?)`,
-                [user_id, itemIdsInt]
-            );
-        } else if (req.session.buyNow) {
-            // Buy Now mode - dùng session.buyNow
-            const bp = req.session.buyNow;
-            const [products] = await pool.query(
-                'SELECT id, name, price, stock FROM products WHERE id = ?',
-                [bp.product_id]
-            );
-            if (products.length === 0) {
-                return res.status(400).json({ error: 'Sản phẩm không tồn tại!' });
-            }
-            const p = products[0];
-            cartItems = [{
-                product_id: p.id,
-                quantity: bp.quantity,
-                price: bp.price,
-                stock: p.stock,
-                name: p.name,
-                cart_id: 'buy_now'
-            }];
-        } else {
-            // Cart mode - lấy TẤT CẢ items trong cart
-            [cartItems] = await pool.query(
-                `SELECT c.*, p.price, p.stock, p.name
-                 FROM cart c
-                 JOIN products p ON c.product_id = p.id
-                 WHERE c.user_id = ?`,
-                [user_id]
-            );
+        if (paymentMethod !== 'cod') {
+            return res.status(400).json({ error: 'Thanh toán MoMo/VNPay phải dùng luồng thanh toán mô phỏng!' });
         }
 
-        if (cartItems.length === 0) {
-            return res.status(400).json({ error: 'Giỏ hàng trống hoặc sản phẩm không hợp lệ!' });
-        }
+        const itemIds = parseItemIds(item_ids);
+        const cartItems = await getCheckoutItems(pool, userId, itemIds, req.session.buyNow);
+        const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const shippingFee = subtotal >= 500000 ? 0 : 30000;
+        const { coupon, discount } = await calculateCoupon(pool, userId, coupon_code, subtotal);
+        const finalTotal = subtotal + shippingFee - discount;
+        const paymentCode = 'PS' + Date.now();
 
-        // Calculate total
-        let total = 0;
-        const orderItems = [];
-
-        for (const item of cartItems) {
-            if (item.stock < item.quantity) {
-                return res.status(400).json({ error: `Sản phẩm "${item.name}" không đủ hàng!` });
-            }
-            total += item.price * item.quantity;
-            orderItems.push({
-                product_id: item.product_id,
-                quantity: item.quantity,
-                price: item.price
-            });
-        }
-
-        // Shipping fee
-        const shipping_fee = total >= 500000 ? 0 : 30000;
-
-        // Discount từ coupon (nếu có)
-        const validDiscount = Math.max(0, Math.min(parseFloat(discount_amount) || 0, total));
-
-        const final_total = total + shipping_fee - validDiscount;
-
-        // Generate payment code
-        const payment_code = 'PS' + Date.now();
-
-        // Auto-confirm for online payments (vnpay, momo)
-        const initialStatus = ['vnpay', 'momo'].includes(payment_method) ? 'confirmed' : 'pending';
-
-        // Start transaction
-        const connection = await pool.getConnection();
+        connection = await pool.getConnection();
         await connection.beginTransaction();
 
-        try {
-        // Insert order with appropriate status
-            const [orderResult] = await connection.query(
-                `INSERT INTO orders (user_id, payment_code, total_price, shipping_fee, shipping_name, shipping_phone, shipping_address, notes, payment_method, status, discount_amount, coupon_code, cart_item_ids)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [user_id, payment_code, final_total, shipping_fee, shipping_name, shipping_phone, shipping_address, notes || '', payment_method, initialStatus, validDiscount, coupon_code || null, itemIdsInt.length > 0 ? itemIdsInt.join(',') : null]
+        const [orderResult] = await connection.query(
+            `INSERT INTO orders (user_id, payment_code, total_price, shipping_fee, shipping_name, shipping_phone, shipping_address, notes, payment_method, status, discount_amount, coupon_code, cart_item_ids)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'cod', 'pending', ?, ?, ?)`,
+            [userId, paymentCode, finalTotal, shippingFee, shipping_name, shipping_phone, shipping_address,
+                notes || '', discount, coupon ? coupon.code : null, itemIds.length > 0 ? itemIds.join(',') : null]
+        );
+        const orderId = orderResult.insertId;
+
+        for (const item of cartItems) {
+            await connection.query(
+                'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
+                [orderId, item.product_id, item.quantity, item.price]
             );
+        }
+        await decreaseStock(connection, cartItems);
+        await useCoupon(connection, userId, coupon, orderId, discount);
 
-            const order_id = orderResult.insertId;
+        if (itemIds.length > 0) {
+            await connection.query('DELETE FROM cart WHERE id IN (?) AND user_id = ?', [itemIds, userId]);
+        } else if (!req.session.buyNow) {
+            await connection.query('DELETE FROM cart WHERE user_id = ?', [userId]);
+        }
+        delete req.session.buyNow;
 
-            // Insert order items
-            for (const item of orderItems) {
-                await connection.query(
-                    'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
-                    [order_id, item.product_id, item.quantity, item.price]
-                );
+        await connection.commit();
+        connection.release();
+        connection = null;
 
-                // Update stock
-                await connection.query(
-                    'UPDATE products SET stock = stock - ? WHERE id = ?',
-                    [item.quantity, item.product_id]
-                );
-            }
+        sendConfirmationEmail(orderId, userId);
 
-            // Nếu có coupon, đánh dấu đã dùng
-            if (coupon_code && validDiscount > 0) {
-                try {
-                    const [coupons] = await connection.query(
-                        'SELECT id FROM coupons WHERE code = ?',
-                        [coupon_code]
-                    );
-                    if (coupons.length > 0) {
-                        await connection.query(
-                            'UPDATE coupons SET used_count = used_count + 1 WHERE id = ?',
-                            [coupons[0].id]
-                        );
-                        await connection.query(
-                            'INSERT INTO user_coupons (user_id, coupon_id, order_id, discount_amount) VALUES (?, ?, ?, ?)',
-                            [user_id, coupons[0].id, order_id, validDiscount]
-                        );
-                    }
-                } catch (e) {
-                    console.error('Coupon update error:', e);
-                }
-            }
-
-            // Clear cart - chỉ xóa những sản phẩm đã đặt
-            if (itemIdsInt.length > 0) {
-                await connection.query('DELETE FROM cart WHERE id IN (?) AND user_id = ?', [itemIdsInt, user_id]);
-            } else {
-                await connection.query('DELETE FROM cart WHERE user_id = ?', [user_id]);
-            }
-
-            // Clear buyNow session to prevent reuse
-            if (req.session.buyNow) {
-                delete req.session.buyNow;
-            }
-
-            await connection.commit();
-            connection.release();
-
-            // Gửi email xác nhận đơn hàng (async, không block response)
-            (async () => {
-                try {
-                    const [userInfo] = await pool.query('SELECT * FROM users WHERE id = ?', [user_id]);
-                    const [orderItems] = await pool.query(
-                        `SELECT oi.*, p.name 
-                         FROM order_items oi 
-                         JOIN products p ON oi.product_id = p.id 
-                         WHERE oi.order_id = ?`,
-                        [order_id]
-                    );
-                    
-                    if (userInfo.length > 0) {
-                        const orderData = {
-                            id: order_id,
-                            payment_code,
-                            total_price: final_total,
-                            shipping_fee,
-                            discount_amount: validDiscount,
-                            shipping_name,
-                            shipping_phone,
-                            shipping_address,
-                            created_at: new Date()
-                        };
-                        await sendOrderEmail(orderData, userInfo[0], orderItems);
-                    }
-                } catch (emailError) {
-                    console.error('Lỗi gửi email xác nhận:', emailError.message);
-                }
-            })();
-
-            res.json({
-                success: true,
-                order_id,
-                payment_code,
-                subtotal: total,
-                shipping_fee,
-                discount_amount: validDiscount,
-                coupon_code: coupon_code || null,
-                total: final_total,
-                status: initialStatus
-            });
-        } catch (err) {
+        res.json({
+            success: true,
+            order_id: orderId,
+            payment_code: paymentCode,
+            subtotal,
+            shipping_fee: shippingFee,
+            discount_amount: discount,
+            coupon_code: coupon ? coupon.code : null,
+            total: finalTotal,
+            status: 'pending'
+        });
+    } catch (error) {
+        if (connection) {
             await connection.rollback();
             connection.release();
-            throw err;
         }
-    } catch (error) {
         console.error('Create order error:', error);
-        res.status(500).json({ error: 'Đã xảy ra lỗi: ' + error.message });
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Đã xảy ra lỗi: ' + error.message });
     }
 });
 
@@ -277,6 +344,7 @@ router.get('/:id', async (req, res) => {
 
 // Cancel order
 router.put('/:id/cancel', async (req, res) => {
+    let connection;
     try {
         if (!req.session.user_id) {
             return res.status(401).json({ error: 'Vui lòng đăng nhập!' });
@@ -284,41 +352,37 @@ router.put('/:id/cancel', async (req, res) => {
 
         const { id } = req.params;
         const { reason } = req.body;
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
 
-        // Get order
-        const [orders] = await pool.query(
-            'SELECT * FROM orders WHERE id = ? AND user_id = ?',
+        const [orders] = await connection.query(
+            'SELECT * FROM orders WHERE id = ? AND user_id = ? FOR UPDATE',
             [id, req.session.user_id]
         );
-
         if (orders.length === 0) {
-            return res.status(404).json({ error: 'Đơn hàng không tồn tại!' });
+            const error = new Error('Đơn hàng không tồn tại!');
+            error.status = 404;
+            throw error;
         }
 
         const order = orders[0];
-
-        // Only pending orders can be cancelled
         if (order.status !== 'pending') {
-            return res.status(400).json({ error: 'Chỉ có thể hủy đơn hàng đang chờ xác nhận!' });
+            const error = new Error('Chỉ có thể hủy đơn hàng đang chờ xác nhận!');
+            error.status = 400;
+            throw error;
         }
 
-        // Start transaction to restore stock
-        const connection = await pool.getConnection();
-        await connection.beginTransaction();
+        await connection.query(
+            'UPDATE orders SET status = ?, cancel_reason = ?, cancelled_at = NOW() WHERE id = ?',
+            ['cancelled', reason || '', id]
+        );
 
-        try {
-            // Update order status
-            await connection.query(
-                'UPDATE orders SET status = ?, cancel_reason = ?, cancelled_at = NOW() WHERE id = ?',
-                ['cancelled', reason || '', id]
-            );
-
-            // Restore stock
+        // COD giữ hàng ngay khi đặt; đơn online pending chưa trừ kho.
+        if (order.payment_method === 'cod') {
             const [orderItems] = await connection.query(
                 'SELECT product_id, quantity FROM order_items WHERE order_id = ?',
                 [id]
             );
-
             for (const item of orderItems) {
                 await connection.query(
                     'UPDATE products SET stock = stock + ? WHERE id = ?',
@@ -326,152 +390,89 @@ router.put('/:id/cancel', async (req, res) => {
                 );
             }
 
-            await connection.commit();
-            connection.release();
+        }
+        await releaseCoupon(connection, order);
 
-            res.json({ success: true, message: 'Đơn hàng đã được hủy thành công!' });
-        } catch (err) {
+        await connection.commit();
+        connection.release();
+        connection = null;
+        res.json({ success: true, message: 'Đơn hàng đã được hủy thành công!' });
+    } catch (error) {
+        if (connection) {
             await connection.rollback();
             connection.release();
-            throw err;
         }
-    } catch (error) {
         console.error('Cancel order error:', error);
-        res.status(500).json({ error: 'Đã xảy ra lỗi!' });
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Đã xảy ra lỗi!' });
     }
 });
 
 // Initiate order for online payment (MoMo/VNPay)
 router.post('/initiate', async (req, res) => {
+    let connection;
     try {
         if (!req.session.user_id) {
             return res.status(401).json({ error: 'Vui lòng đăng nhập!' });
         }
 
-        const { shipping_name, shipping_phone, shipping_address, payment_method, notes, coupon_code, discount_amount, item_ids } = req.body;
-        const user_id = req.session.user_id;
+        const { shipping_name, shipping_phone, shipping_address, payment_method, notes, coupon_code, item_ids } = req.body;
+        const userId = req.session.user_id;
 
         if (!shipping_name || !shipping_phone || !shipping_address) {
             return res.status(400).json({ error: 'Vui lòng nhập đầy đủ thông tin giao hàng!' });
         }
-
-        // Get cart items - lọc theo item_ids nếu có
-        const itemIdsInt = (item_ids && Array.isArray(item_ids))
-            ? item_ids.map(id => parseInt(id)).filter(id => !isNaN(id) && id > 0)
-            : [];
-
-        let cartItems = [];
-
-        // Nếu có session.buyNow và KHÔNG có item_ids hợp lệ → dùng buy-now
-        // Nếu KHÔNG có session.buyNow → dùng cart (tất cả items)
-        // Nếu CÓ item_ids hợp lệ → dùng cart (chỉ items đã chọn)
-        if (itemIdsInt.length > 0) {
-            // User chọn items cụ thể từ cart
-            [cartItems] = await pool.query(
-                `SELECT c.*, p.price, p.stock, p.name
-                 FROM cart c
-                 JOIN products p ON c.product_id = p.id
-                 WHERE c.user_id = ? AND c.id IN (?)`,
-                [user_id, itemIdsInt]
-            );
-        } else if (req.session.buyNow) {
-            // Buy Now mode - dùng session.buyNow
-            const bp = req.session.buyNow;
-            const [products] = await pool.query(
-                'SELECT id, name, price, stock FROM products WHERE id = ?',
-                [bp.product_id]
-            );
-            if (products.length === 0) {
-                return res.status(400).json({ error: 'Sản phẩm không tồn tại!' });
-            }
-            const p = products[0];
-            cartItems = [{
-                product_id: p.id,
-                quantity: bp.quantity,
-                price: bp.price,
-                stock: p.stock,
-                name: p.name,
-                cart_id: 'buy_now'
-            }];
-        } else {
-            // Cart mode - lấy TẤT CẢ items trong cart
-            [cartItems] = await pool.query(
-                `SELECT c.*, p.price, p.stock, p.name
-                 FROM cart c
-                 JOIN products p ON c.product_id = p.id
-                 WHERE c.user_id = ?`,
-                [user_id]
-            );
+        if (!ONLINE_PAYMENT_METHODS.includes(payment_method)) {
+            return res.status(400).json({ error: 'Phương thức thanh toán mô phỏng không hợp lệ!' });
         }
 
-        if (cartItems.length === 0) {
-            return res.status(400).json({ error: 'Giỏ hàng trống hoặc sản phẩm không hợp lệ!' });
-        }
+        const itemIds = parseItemIds(item_ids);
+        const cartItems = await getCheckoutItems(pool, userId, itemIds, req.session.buyNow);
+        const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const shippingFee = subtotal >= 500000 ? 0 : 30000;
+        const { coupon, discount } = await calculateCoupon(pool, userId, coupon_code, subtotal);
+        const finalTotal = subtotal + shippingFee - discount;
+        const paymentCode = 'PS' + Date.now();
 
-        // Calculate total
-        let total = 0;
-        const orderItems = [];
-
-        for (const item of cartItems) {
-            if (item.stock < item.quantity) {
-                return res.status(400).json({ error: `Sản phẩm "${item.name}" không đủ hàng!` });
-            }
-            total += item.price * item.quantity;
-            orderItems.push({
-                product_id: item.product_id,
-                quantity: item.quantity,
-                price: item.price
-            });
-        }
-
-        const shipping_fee = total >= 500000 ? 0 : 30000;
-        const validDiscount = Math.max(0, Math.min(parseFloat(discount_amount) || 0, total));
-        const final_total = total + shipping_fee - validDiscount;
-        const payment_code = 'PS' + Date.now();
-
-        const connection = await pool.getConnection();
+        connection = await pool.getConnection();
         await connection.beginTransaction();
 
-        try {
-            // Insert order with PENDING status (chờ thanh toán)
-            const [orderResult] = await connection.query(
-                `INSERT INTO orders (user_id, payment_code, total_price, shipping_fee, shipping_name, shipping_phone, shipping_address, notes, payment_method, status, discount_amount, coupon_code, cart_item_ids)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [user_id, payment_code, final_total, shipping_fee, shipping_name, shipping_phone, shipping_address, notes || '', payment_method, 'pending', validDiscount, coupon_code || null, itemIdsInt.length > 0 ? itemIdsInt.join(',') : null]
+        const [orderResult] = await connection.query(
+            `INSERT INTO orders (user_id, payment_code, total_price, shipping_fee, shipping_name, shipping_phone, shipping_address, notes, payment_method, status, discount_amount, coupon_code, cart_item_ids)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
+            [userId, paymentCode, finalTotal, shippingFee, shipping_name, shipping_phone, shipping_address,
+                notes || '', payment_method, discount, coupon ? coupon.code : null, itemIds.length > 0 ? itemIds.join(',') : null]
+        );
+        const orderId = orderResult.insertId;
+
+        for (const item of cartItems) {
+            await connection.query(
+                'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
+                [orderId, item.product_id, item.quantity, item.price]
             );
+        }
 
-            const order_id = orderResult.insertId;
+        // Lưu phiên mua ngay đến khi người dùng xác nhận thanh toán mô phỏng.
+        await connection.commit();
+        connection.release();
+        connection = null;
 
-                // Insert order items
-            for (const item of orderItems) {
-                await connection.query(
-                    'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
-                    [order_id, item.product_id, item.quantity, item.price]
-                );
-            }
-
-            // Clear buyNow session to prevent reuse
-            if (req.session.buyNow) {
-                delete req.session.buyNow;
-            }
-
-            await connection.commit();
-            connection.release();
-
-            res.json({
-                success: true,
-                order_id,
-                payment_code,
-                total: final_total
-            });
-        } catch (err) {
+        res.json({
+            success: true,
+            order_id: orderId,
+            payment_code: paymentCode,
+            subtotal,
+            shipping_fee: shippingFee,
+            discount_amount: discount,
+            total: finalTotal,
+            simulated: true
+        });
+    } catch (error) {
+        if (connection) {
             await connection.rollback();
             connection.release();
-            throw err;
         }
-    } catch (error) {
         console.error('Initiate order error:', error);
-        res.status(500).json({ error: 'Đã xảy ra lỗi: ' + error.message });
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Đã xảy ra lỗi: ' + error.message });
     }
 });
 
@@ -496,16 +497,16 @@ router.get('/:id/check-payment', async (req, res) => {
 
         const order = orders[0];
 
-        // Kiểm tra xem đã thanh toán chưa
-        // ⚠️ LƯU Ý: Đây là demo - thanh toán VNPay/MoMo cần tích hợp webhook/IPN thực tế
-        // Trong production, cần verify signature từ VNPay/MoMo server
-        const isPaid = order.payment_method === 'momo' || order.payment_method === 'vnpay';
+        // Đồ án mô phỏng: nút xác nhận của người dùng đóng vai trò kết quả thanh toán.
+        const canConfirmDemoPayment = ONLINE_PAYMENT_METHODS.includes(order.payment_method)
+            && order.status === 'pending';
         
         res.json({
             order_id: order.id,
             status: order.status,
-            paid: isPaid && order.status === 'pending',
-            payment_method: order.payment_method
+            paid: canConfirmDemoPayment,
+            payment_method: order.payment_method,
+            simulated: true
         });
     } catch (error) {
         console.error('Check payment error:', error);
@@ -515,6 +516,7 @@ router.get('/:id/check-payment', async (req, res) => {
 
 // Complete order after payment verification
 router.post('/:id/complete', async (req, res) => {
+    let connection;
     try {
         if (!req.session.user_id) {
             return res.status(401).json({ error: 'Vui lòng đăng nhập!' });
@@ -522,133 +524,83 @@ router.post('/:id/complete', async (req, res) => {
 
         const { id } = req.params;
 
-        const connection = await pool.getConnection();
+        connection = await pool.getConnection();
         await connection.beginTransaction();
 
-        try {
-            // Lấy đơn hàng
-            const [orders] = await connection.query(
-                'SELECT * FROM orders WHERE id = ? AND user_id = ?',
-                [id, req.session.user_id]
-            );
+        const [orders] = await connection.query(
+            'SELECT * FROM orders WHERE id = ? AND user_id = ? FOR UPDATE',
+            [id, req.session.user_id]
+        );
+        if (orders.length === 0) {
+            const error = new Error('Đơn hàng không tồn tại!');
+            error.status = 404;
+            throw error;
+        }
 
-            if (orders.length === 0) {
-                await connection.rollback();
-                connection.release();
-                return res.status(404).json({ error: 'Đơn hàng không tồn tại!' });
+        const order = orders[0];
+        if (order.status !== 'pending') {
+            const error = new Error('Đơn hàng không ở trạng thái chờ thanh toán!');
+            error.status = 400;
+            throw error;
+        }
+        if (!ONLINE_PAYMENT_METHODS.includes(order.payment_method)) {
+            const error = new Error('Chỉ đơn MoMo/VNPay mới dùng xác nhận thanh toán mô phỏng!');
+            error.status = 400;
+            throw error;
+        }
+
+        const [orderItems] = await connection.query(
+            `SELECT oi.product_id, oi.quantity, oi.price, p.name
+             FROM order_items oi JOIN products p ON p.id = oi.product_id
+             WHERE oi.order_id = ?`,
+            [id]
+        );
+        await decreaseStock(connection, orderItems);
+
+        if (order.coupon_code && Number(order.discount_amount) > 0) {
+            const [coupons] = await connection.query('SELECT * FROM coupons WHERE code = ?', [order.coupon_code]);
+            if (coupons.length === 0) {
+                const error = new Error('Mã giảm giá của đơn hàng không còn tồn tại!');
+                error.status = 400;
+                throw error;
             }
+            await useCoupon(connection, req.session.user_id, coupons[0], id, Number(order.discount_amount));
+        }
 
-            const order = orders[0];
+        await connection.query(
+            "UPDATE orders SET status = 'confirmed', paid_at = NOW() WHERE id = ?",
+            [id]
+        );
 
-            // Kiểm tra đơn hàng có phải đang chờ thanh toán không
-            if (order.status !== 'pending') {
-                await connection.rollback();
-                connection.release();
-                return res.status(400).json({ error: 'Đơn hàng không ở trạng thái chờ thanh toán!' });
+        if (order.cart_item_ids) {
+            const idsToDelete = parseItemIds(order.cart_item_ids.split(','));
+            if (idsToDelete.length > 0) {
+                await connection.query('DELETE FROM cart WHERE id IN (?) AND user_id = ?', [idsToDelete, req.session.user_id]);
             }
+        } else if (!req.session.buyNow) {
+            await connection.query('DELETE FROM cart WHERE user_id = ?', [req.session.user_id]);
+        }
+        delete req.session.buyNow;
 
-            // Xác nhận thanh toán và cập nhật trạng thái
-            await connection.query(
-                'UPDATE orders SET status = ?, paid_at = NOW() WHERE id = ?',
-                ['confirmed', id]
-            );
+        await connection.commit();
+        connection.release();
+        connection = null;
 
-            // Update stock - CHỈ cho COD orders vì online payments đã được confirm ngay khi tạo
-            if (order.payment_method === 'cod') {
-                const [orderItems] = await connection.query(
-                    'SELECT product_id, quantity FROM order_items WHERE order_id = ?',
-                    [id]
-                );
+        sendConfirmationEmail(id, req.session.user_id);
 
-                for (const item of orderItems) {
-                    await connection.query(
-                        'UPDATE products SET stock = stock - ? WHERE id = ?',
-                        [item.quantity, item.product_id]
-                    );
-                }
-            }
-
-            // Xử lý coupon
-            if (order.coupon_code && order.discount_amount > 0) {
-                try {
-                    const [coupons] = await connection.query(
-                        'SELECT id FROM coupons WHERE code = ?',
-                        [order.coupon_code]
-                    );
-                    if (coupons.length > 0) {
-                        await connection.query(
-                            'UPDATE coupons SET used_count = used_count + 1 WHERE id = ?',
-                            [coupons[0].id]
-                        );
-                        await connection.query(
-                            'INSERT INTO user_coupons (user_id, coupon_id, order_id, discount_amount) VALUES (?, ?, ?, ?)',
-                            [req.session.user_id, coupons[0].id, id, order.discount_amount]
-                        );
-                    }
-                } catch (e) {
-                    console.error('Coupon update error:', e);
-                }
-            }
-
-            // Clear cart - chỉ xóa những sản phẩm đã đặt trong order này
-            if (order.cart_item_ids) {
-                const idsToDelete = order.cart_item_ids.split(',').map(id => parseInt(id)).filter(id => !isNaN(id) && id > 0);
-                if (idsToDelete.length > 0) {
-                    await connection.query('DELETE FROM cart WHERE id IN (?) AND user_id = ?', [idsToDelete, req.session.user_id]);
-                }
-            } else {
-                // Backward compat: nếu order cũ không có cart_item_ids, xóa hết
-                await connection.query('DELETE FROM cart WHERE user_id = ?', [req.session.user_id]);
-            }
-
-            await connection.commit();
-            connection.release();
-
-            // Gửi email xác nhận đơn hàng (async, không block response)
-            (async () => {
-                try {
-                    const [userInfo] = await pool.query('SELECT * FROM users WHERE id = ?', [req.session.user_id]);
-                    const [orderItems] = await pool.query(
-                        `SELECT oi.*, p.name 
-                         FROM order_items oi 
-                         JOIN products p ON oi.product_id = p.id 
-                         WHERE oi.order_id = ?`,
-                        [id]
-                    );
-                    
-                    if (userInfo.length > 0) {
-                        const orderData = {
-                            id: id,
-                            payment_code: order.payment_code,
-                            total_price: order.total_price,
-                            shipping_fee: order.shipping_fee,
-                            discount_amount: order.discount_amount,
-                            shipping_name: order.shipping_name,
-                            shipping_phone: order.shipping_phone,
-                            shipping_address: order.shipping_address,
-                            created_at: order.created_at,
-                            status: 'confirmed'
-                        };
-                        await sendOrderEmail(orderData, userInfo[0], orderItems);
-                    }
-                } catch (emailError) {
-                    console.error('Lỗi gửi email xác nhận:', emailError.message);
-                }
-            })();
-
-            res.json({
-                success: true,
-                order_id: id,
-                message: 'Thanh toán thành công! Đơn hàng đã được xác nhận.'
-            });
-        } catch (err) {
+        res.json({
+            success: true,
+            order_id: id,
+            simulated: true,
+            message: 'Thanh toán mô phỏng thành công! Đơn hàng đã được xác nhận.'
+        });
+    } catch (error) {
+        if (connection) {
             await connection.rollback();
             connection.release();
-            throw err;
         }
-    } catch (error) {
         console.error('Complete order error:', error);
-        res.status(500).json({ error: 'Đã xảy ra lỗi: ' + error.message });
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Đã xảy ra lỗi: ' + error.message });
     }
 });
 

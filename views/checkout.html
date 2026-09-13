@@ -689,8 +689,34 @@
     </div>
 
     <!-- Footer -->
+    <!-- Footer -->
     <footer>
         <div class="container">
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px;">
+                <div>
+                    <div class="footer-brand">AnhTrai<span>Store</span></div>
+                    <p class="footer-desc">Chuỗi cửa hàng điện thoại & phụ kiện chính hãng uy tín toàn quốc.</p>
+                </div>
+                <div>
+                    <div class="footer-heading">Sản phẩm</div>
+                    <ul class="footer-links">
+                        <li><a href="/products">Tất cả sản phẩm</a></li>
+                        <li><a href="/promotions">Khuyến mãi</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-heading">Hỗ trợ</div>
+                    <ul class="footer-links">
+                        <li><a href="/policy">Chính sách</a></li>
+                        <li><a href="/contact">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-heading">Liên hệ</div>
+                    <div class="footer-contact-item"><i class="bi bi-telephone"></i><span>1800 2097</span></div>
+                    <div class="footer-contact-item"><i class="bi bi-envelope"></i><span>anhtraisstore@gmail.com</span></div>
+                </div>
+            </div>
             <div class="footer-bottom">
                 <span>&copy; 2026 AnhTraiStore. Tất cả quyền được bảo lưu.</span>
                 <span>Made with ❤️ by Trương Xuân Hoàng</span>
@@ -1055,16 +1081,16 @@
                                         <input type="radio" name="payment_method" value="vnpay">
                                         <div class="payment-icon"><i class="bi bi-credit-card-2-front"></i></div>
                                         <div class="payment-info">
-                                            <div class="payment-name">VNPay</div>
-                                            <div class="payment-desc">Thanh toán qua ví VNPay</div>
+                                            <div class="payment-name">VNPay (mô phỏng)</div>
+                                            <div class="payment-desc">Quét QR demo, không phát sinh giao dịch thật</div>
                                         </div>
                                     </label>
                                     <label class="payment-method" onclick="selectPayment(this, 'momo')" data-value="momo">
                                         <input type="radio" name="payment_method" value="momo">
                                         <div class="payment-icon"><i class="bi bi-phone"></i></div>
                                         <div class="payment-info">
-                                            <div class="payment-name">MoMo</div>
-                                            <div class="payment-desc">Thanh toán qua ví MoMo</div>
+                                            <div class="payment-name">MoMo (mô phỏng)</div>
+                                            <div class="payment-desc">Quét QR demo, không phát sinh giao dịch thật</div>
                                         </div>
                                     </label>
                                 </div>
@@ -1229,13 +1255,13 @@
                 } else {
                     buttonHtml = `
                         <button type="button" class="btn-primary" id="btnPlaceOrder" onclick="initiatePayment()">
-                            <i class="bi bi-credit-card"></i> Thanh toán ${currentPaymentMethod === 'vnpay' ? 'VNPay' : 'MoMo'}
+                            <i class="bi bi-credit-card"></i> Mô phỏng ${currentPaymentMethod === 'vnpay' ? 'VNPay' : 'MoMo'}
                         </button>
                         <div class="secure-note" style="margin-top: 12px;">
-                            <i class="bi bi-info-circle"></i> Sau khi thanh toán, nhấn "Xác nhận" bên dưới
+                            <i class="bi bi-info-circle"></i> Đây là demo; nhấn xác nhận để mô phỏng thanh toán thành công
                         </div>
                         <button type="button" class="btn-check-payment" id="btnCheckPayment" onclick="checkPaymentStatus()" style="display: none;">
-                            <i class="bi bi-check-circle"></i> Xác nhận đã thanh toán
+                            <i class="bi bi-check-circle"></i> Xác nhận thanh toán mô phỏng
                         </button>`;
                 }
             }
@@ -1378,7 +1404,6 @@
                 payment_method: currentPaymentMethod,
                 notes: shippingData.notes || '',
                 coupon_code: appliedCoupon ? appliedCoupon.code : null,
-                discount_amount: appliedCoupon ? appliedCoupon.discount_amount : 0,
                 item_ids: selectedItemIds
             };
 
@@ -1406,8 +1431,8 @@
                     paymentStatus.className = 'payment-status waiting';
                     paymentStatus.innerHTML = `
                         <div class="payment-status-icon"><i class="bi bi-hourglass-split"></i></div>
-                        <div class="payment-status-title">Đang chờ thanh toán</div>
-                        <div class="payment-status-desc">Vui lòng quét mã QR và thanh toán. Sau khi hoàn tất, nhấn "Xác nhận" bên dưới.</div>
+                        <div class="payment-status-title">Đang chờ xác nhận mô phỏng</div>
+                        <div class="payment-status-desc">Bạn có thể quét QR để minh họa, sau đó nhấn xác nhận. Không có giao dịch thật.</div>
                     `;
                 }
 
@@ -1419,7 +1444,7 @@
                 const btnPlace = document.getElementById('btnPlaceOrder');
                 if (btnPlace) btnPlace.style.display = 'none';
 
-                showToast('Đã tạo đơn hàng! Vui lòng thanh toán qua mã QR.', 'info');
+                showToast('Đã tạo đơn hàng mô phỏng. Hãy nhấn xác nhận để hoàn tất.', 'info');
 
             } catch (error) {
                 hideLoading();
@@ -1453,7 +1478,7 @@
                         paymentStatus.className = 'payment-status success';
                         paymentStatus.innerHTML = `
                             <div class="payment-status-icon"><i class="bi bi-check-circle-fill"></i></div>
-                            <div class="payment-status-title">Thanh toán thành công!</div>
+                            <div class="payment-status-title">Thanh toán mô phỏng thành công!</div>
                             <div class="payment-status-desc">Đang xử lý đơn hàng của bạn...</div>
                         `;
                     }
@@ -1467,12 +1492,12 @@
                         paymentStatus.className = 'payment-status error';
                         paymentStatus.innerHTML = `
                             <div class="payment-status-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                            <div class="payment-status-title">Chưa nhận được thanh toán</div>
-                            <div class="payment-status-desc">Vui lòng quét mã QR và thanh toán, sau đó nhấn "Xác nhận" lại.</div>
+                            <div class="payment-status-title">Chưa thể xác nhận</div>
+                            <div class="payment-status-desc">Vui lòng thử lại thao tác xác nhận thanh toán mô phỏng.</div>
                         `;
                     }
                     
-                    showToast('Chưa nhận được thanh toán! Vui lòng thanh toán và thử lại.', 'error');
+                    showToast('Chưa thể xác nhận thanh toán mô phỏng. Vui lòng thử lại.', 'error');
                 }
 
             } catch (error) {
@@ -1524,7 +1549,6 @@
                 payment_method: currentPaymentMethod,
                 notes: shippingData.notes || '',
                 coupon_code: appliedCoupon ? appliedCoupon.code : null,
-                discount_amount: appliedCoupon ? appliedCoupon.discount_amount : 0,
                 item_ids: selectedItemIds
             };
 

@@ -2,6 +2,38 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 
+function filterValues(value) {
+    const values = value === undefined ? [] : (Array.isArray(value) ? value : [value]);
+    if (values.some(v => typeof v !== 'string')) {
+        const error = new Error('Bộ lọc không hợp lệ!');
+        error.status = 400;
+        throw error;
+    }
+    return [...new Set(values.map(v => v.trim()).filter(v => v && v !== 'undefined' && v !== 'null'))];
+}
+
+function normalizeCapacity(value) {
+    const normalized = String(value || '').trim().toUpperCase().replace(/\s+/g, '');
+    return /^\d+$/.test(normalized) ? normalized + 'GB' : normalized;
+}
+
+function priceValue(value) {
+    const values = filterValues(value);
+    if (values.length === 0) return null;
+    const price = Number(values[0]);
+    if (values.length !== 1 || !/^\d+$/.test(values[0]) || !Number.isSafeInteger(price) || price < 0) {
+        const error = new Error('Khoảng giá phải là số nguyên không âm!');
+        error.status = 400;
+        throw error;
+    }
+    return price;
+}
+
+function positiveInteger(value, fallback, maximum = Number.MAX_SAFE_INTEGER) {
+    const number = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : NaN;
+    return Number.isSafeInteger(number) && number > 0 ? Math.min(number, maximum) : fallback;
+}
+
 // Get all products
 router.get('/', async (req, res) => {
     try {
@@ -11,61 +43,65 @@ router.get('/', async (req, res) => {
             page = 1, limit = 12
         } = req.query;
 
-        // Normalize: skip "undefined" string values
-        const catValue = (category && category !== 'undefined' && category !== '') ? category : null;
-        const brandValue = (brand && brand !== 'undefined' && brand !== '') ? brand : null;
+        const search = filterValues(q)[0];
+        const catValue = filterValues(category)[0];
+        const brandValues = filterValues(brand).map(value => value.toLowerCase());
+        const minPrice = priceValue(price_min);
+        const maxPrice = priceValue(price_max);
+        if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+            return res.status(400).json({ error: 'Giá từ không được lớn hơn giá đến!' });
+        }
+        const pageSize = positiveInteger(limit, 12, 200);
 
         let where = ['1=1'];
         let params = [];
 
-        if (q) {
+        if (search) {
             where.push('(p.name LIKE ? OR b.name LIKE ?)');
-            params.push(`%${q}%`, `%${q}%`);
+            params.push(`%${search}%`, `%${search}%`);
         }
         if (catValue) {
-            where.push('c.slug = ?');
-            params.push(catValue);
+            if (/^[1-9]\d*$/.test(catValue)) {
+                where.push('p.category_id = ?');
+                params.push(Number(catValue));
+            } else {
+                where.push('c.slug = ?');
+                params.push(catValue);
+            }
         }
         if (featured === '1') {
             where.push('p.is_featured = 1');
         }
-        if (brandValue) {
-            const brandId = parseInt(brandValue);
-            if (!isNaN(brandId) && brandId > 0) {
-                where.push('p.brand_id = ?');
-                params.push(brandId);
+        if (brandValues.length > 0) {
+            const brandIds = brandValues.filter(value => /^[1-9]\d*$/.test(value)).map(Number);
+            const brandSlugs = brandValues.filter(value => !/^[1-9]\d*$/.test(value));
+            const brandConditions = [];
+            if (brandIds.length > 0) {
+                brandConditions.push(`p.brand_id IN (${brandIds.map(() => '?').join(',')})`);
+                params.push(...brandIds);
             }
+            if (brandSlugs.length > 0) {
+                brandConditions.push(`b.slug IN (${brandSlugs.map(() => '?').join(',')})`);
+                params.push(...brandSlugs);
+            }
+            where.push('(' + brandConditions.join(' OR ') + ')');
         }
-        if (price_min) {
+        if (minPrice !== null) {
             where.push('p.price >= ?');
-            params.push(parseInt(price_min));
+            params.push(minPrice);
         }
-        if (price_max) {
+        if (maxPrice !== null) {
             where.push('p.price <= ?');
-            params.push(parseInt(price_max));
+            params.push(maxPrice);
         }
 
-        // Handle ram/storage as arrays (multi-select)
-        // ram/storage đã bị xóa khỏi bảng products, bỏ qua filter
-        if (false) {
-        if (ram) {
-            const ramArr = Array.isArray(ram) ? ram : [ram];
-            const validRam = ramArr.filter(r => r && r !== 'undefined');
-            if (validRam.length > 0) {
-                const placeholders = validRam.map(() => '?').join(',');
-                where.push(`p.ram IN (${placeholders})`);
-                params.push(...validRam);
+        // OR trong cùng nhóm, AND giữa các nhóm; nhận cả "8", "8GB" và "8 GB".
+        for (const [column, value] of [['ram', ram], ['storage', storage]]) {
+            const values = [...new Set(filterValues(value).map(normalizeCapacity).map(v => v.replace(/GB/g, '')))];
+            if (values.length > 0) {
+                where.push(`REPLACE(UPPER(REPLACE(TRIM(p.${column}), ' ', '')), 'GB', '') IN (${values.map(() => '?').join(',')})`);
+                params.push(...values);
             }
-        }
-        if (storage) {
-            const storageArr = Array.isArray(storage) ? storage : [storage];
-            const validStorage = storageArr.filter(s => s && s !== 'undefined');
-            if (validStorage.length > 0) {
-                const placeholders = validStorage.map(() => '?').join(',');
-                where.push(`p.storage IN (${placeholders})`);
-                params.push(...validStorage);
-            }
-        }
         }
 
         const whereSQL = where.join(' AND ');
@@ -80,6 +116,7 @@ router.get('/', async (req, res) => {
             case 'discount': orderSQL = 'p.discount_percent DESC'; break;
             default: orderSQL = 'p.created_at DESC';
         }
+        orderSQL += ', p.id DESC';
 
         // Count total
         const [countResult] = await pool.query(
@@ -92,7 +129,9 @@ router.get('/', async (req, res) => {
         const total = countResult[0].total;
 
         // Pagination
-        const offset = (parseInt(page) - 1) * parseInt(limit);
+        const totalPages = Math.ceil(total / pageSize);
+        const currentPage = Math.min(positiveInteger(page, 1), Math.max(1, totalPages));
+        const offset = (currentPage - 1) * pageSize;
 
         // Get products
         const [products] = await pool.query(
@@ -103,12 +142,12 @@ router.get('/', async (req, res) => {
              WHERE ${whereSQL}
              ORDER BY ${orderSQL}
              LIMIT ? OFFSET ?`,
-            [...params, parseInt(limit), offset]
+            [...params, pageSize, offset]
         );
 
         // Get filters data
         const [brands] = await pool.query(
-            'SELECT id, name FROM brands WHERE is_active = 1 ORDER BY name'
+            'SELECT id, name, slug FROM brands WHERE is_active = 1 ORDER BY name'
         );
         const [categories] = await pool.query('SELECT id, name, slug FROM categories WHERE is_active = 1 ORDER BY name');
         const [rams] = await pool.query(
@@ -121,16 +160,17 @@ router.get('/', async (req, res) => {
         res.json({
             products,
             total,
-            page: parseInt(page),
-            totalPages: Math.ceil(total / parseInt(limit)),
+            page: currentPage,
+            totalPages,
             filters: {
                 brands,
                 categories,
-                rams: rams.map(r => r.ram),
-                storages: storages.map(s => s.storage)
+                rams: [...new Set(rams.flatMap(r => filterValues(r.ram)).map(normalizeCapacity))],
+                storages: [...new Set(storages.flatMap(s => filterValues(s.storage)).map(normalizeCapacity))]
             }
         });
     } catch (error) {
+        if (error.status === 400) return res.status(400).json({ error: error.message });
         console.error('Get products error:', error);
         res.status(500).json({ error: 'Đã xảy ra lỗi!', details: error.message });
     }

@@ -71,7 +71,7 @@ Tạo file `.env` trong thư mục gốc với nội dung:
 # Database (XAMPP)
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=
+DB_PASS=
 DB_NAME=anhtraisstore
 
 # Server
@@ -129,7 +129,7 @@ Mở trình duyệt: **`http://localhost:3000`**
 | Tính năng | Mô tả |
 |------------|--------|
 | 🏠 Trang chủ | Banner, sản phẩm nổi bật, danh mục |
-| 🔍 Tìm kiếm & lọc | Theo danh mục, thương hiệu, giá, xếp theo |
+| 🔍 Tìm kiếm & lọc | Theo danh mục, nhiều thương hiệu, RAM, bộ nhớ, khoảng giá và sắp xếp |
 | 📱 Chi tiết sản phẩm | Hình ảnh gallery, mô tả, thông số kỹ thuật, đánh giá |
 | ❤️ Wishlist | Lưu sản phẩm yêu thích |
 | ⚖️ So sánh | So sánh tối đa 3 sản phẩm |
@@ -159,6 +159,18 @@ Mở trình duyệt: **`http://localhost:3000`**
 | 📬 Quản lý liên hệ | Xem và trả lời tin nhắn liên hệ |
 | 🖼️ Quản lý Banner | Thêm, sửa, xóa banner trang chủ |
 | 🎫 Quản lý Coupon | Tạo và quản lý mã giảm giá |
+
+### Quy tắc nghiệp vụ demo
+
+- Giá sản phẩm, phí vận chuyển và số tiền giảm được backend tính lại từ dữ liệu hiện có; frontend không quyết định số tiền của đơn hàng.
+- Số lượng mua phải là số nguyên dương và không vượt quá tồn kho.
+- Đơn COD được tạo ở trạng thái `pending` và trừ kho ngay khi đặt hàng.
+- MoMo/VNPay là thanh toán mô phỏng: đơn được tạo ở trạng thái `pending`; người dùng nhấn **Xác nhận đã thanh toán** để chuyển sang `confirmed` và trừ kho.
+- Trạng thái đơn đi theo luồng `pending → confirmed → shipping → delivered`; đơn chưa giao có thể chuyển sang `cancelled` và được hoàn kho nếu trước đó đã trừ kho.
+- Coupon được backend kiểm tra lại khi tạo hoặc xác nhận đơn. Mỗi tài khoản chỉ dùng một coupon một lần; `WELCOME10` và `NEWUSER` chỉ áp dụng cho đơn đầu tiên.
+- Chỉ khách đã nhận sản phẩm (`delivered`) mới có thể gửi đánh giá.
+- Chỉ xóa sản phẩm chưa có trong đơn hàng. Sản phẩm đã được đặt mua cùng hình ảnh được giữ lại để bảo toàn lịch sử đơn hàng.
+- Khôi phục mật khẩu dùng OTP qua email tại `/forgot-password`; trang này thực hiện đủ các bước nhập email, OTP và mật khẩu mới.
 
 ---
 
@@ -234,7 +246,6 @@ Website/
 │   ├── login.html
 │   ├── register.html
 │   ├── forgot-password.html
-│   ├── reset-password.html
 │   ├── contact.html
 │   ├── promotions.html
 │   ├── policy.html
@@ -414,7 +425,8 @@ taskkill /PID <process_id> /F
 ## 📝 Ghi chú
 
 - **Đồ án demo** - Phù hợp cho mục đích học tập
-- Thanh toán VNPay/MoMo chỉ mô phỏng giao diện (chưa tích hợp thực)
+- Thanh toán VNPay/MoMo là luồng mô phỏng phục vụ đồ án, không kết nối cổng thanh toán thật. Nút xác nhận thanh toán trên giao diện đóng vai trò kết quả giao dịch demo.
+- File `database/dt.sql` là schema và dữ liệu mẫu gốc; các chỉnh sửa nghiệp vụ trong mã nguồn không yêu cầu thay đổi file này.
 - Khuyến nghị bật HTTPS khi deploy thật
 - Nên sử dụng XAMPP phiên bản mới nhất
 

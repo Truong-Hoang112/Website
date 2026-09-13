@@ -29,25 +29,19 @@ router.get('/', async (req, res) => {
         }
 
         const [items] = await pool.query(
-            `SELECT c.id AS cart_id, c.quantity, c.variant_id,
+            `SELECT c.id, c.id AS cart_id, c.quantity,
                     p.id AS product_id, p.name, p.price, p.old_price,
                     p.discount_percent, p.thumbnail, p.stock,
-                    b.name AS brand_name,
-                    pv.ram, pv.storage, pv.price AS variant_price
+                    b.name AS brand_name
              FROM cart c
              JOIN products p ON c.product_id = p.id
              LEFT JOIN brands b ON p.brand_id = b.id
-             LEFT JOIN product_variants pv ON c.variant_id = pv.id
              WHERE c.user_id = ?
              ORDER BY c.id DESC`,
             [req.session.user_id]
         );
 
-        // Calculate total using variant price if available
-        const total = items.reduce((sum, item) => {
-            const price = item.variant_price || item.price;
-            return sum + price * item.quantity;
-        }, 0);
+        const total = items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 
         res.json({ items, total });
     } catch (error) {
@@ -63,59 +57,41 @@ router.post('/add', async (req, res) => {
             return res.status(401).json({ error: 'Vui lòng đăng nhập!' });
         }
 
-        const { product_id, qty = 1, variant_id = null } = req.body;
+        const productId = Number.parseInt(req.body.product_id, 10);
+        const quantity = Number(req.body.qty ?? 1);
         const user_id = req.session.user_id;
 
-        let price, stock, product_name;
-
-        // Check variant if provided
-        if (variant_id) {
-            const [variants] = await pool.query(
-                'SELECT id, price, old_price, stock, ram, storage FROM product_variants WHERE id = ? AND product_id = ?',
-                [variant_id, product_id]
-            );
-            
-            if (variants.length === 0) {
-                return res.status(400).json({ error: 'Phiên bản sản phẩm không tồn tại!' });
-            }
-            
-            const variant = variants[0];
-            price = variant.price;
-            stock = variant.stock;
-            product_name = variant.ram + ' / ' + variant.storage;
-        } else {
-            // Check product directly
-            const [products] = await pool.query(
-                'SELECT id, stock, name, price FROM products WHERE id = ?',
-                [product_id]
-            );
-
-            if (products.length === 0) {
-                return res.status(400).json({ error: 'Sản phẩm không tồn tại!' });
-            }
-
-            price = products[0].price;
-            stock = products[0].stock;
-            product_name = products[0].name;
+        if (!Number.isInteger(productId) || productId < 1 || !Number.isInteger(quantity) || quantity < 1) {
+            return res.status(400).json({ error: 'Sản phẩm hoặc số lượng không hợp lệ!' });
         }
+
+        const [products] = await pool.query(
+            'SELECT id, stock, name FROM products WHERE id = ?',
+            [productId]
+        );
+
+        if (products.length === 0) {
+            return res.status(400).json({ error: 'Sản phẩm không tồn tại!' });
+        }
+
+        const { stock } = products[0];
         
         if (stock < 1) {
             return res.status(400).json({ error: 'Sản phẩm đã hết hàng!' });
         }
 
-        if (qty > stock) {
+        if (quantity > stock) {
             return res.status(400).json({ error: 'Số lượng vượt quá kho (' + stock + '). Vui lòng nhập số lượng nhỏ hơn!' });
         }
 
-        // Check if already in cart (with same variant)
         const [existing] = await pool.query(
-            'SELECT id, quantity FROM cart WHERE user_id = ? AND product_id = ? AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))',
-            [user_id, product_id, variant_id, variant_id]
+            'SELECT id, quantity FROM cart WHERE user_id = ? AND product_id = ?',
+            [user_id, productId]
         );
 
         if (existing.length > 0) {
             const currentQty = existing[0].quantity;
-            const newQty = currentQty + qty;
+            const newQty = currentQty + quantity;
             
             if (newQty > stock) {
                 return res.status(400).json({ error: 'Tổng số lượng trong giỏ hàng (' + newQty + ') vượt quá kho (' + stock + '). Vui lòng giảm số lượng!' });
@@ -131,8 +107,8 @@ router.post('/add', async (req, res) => {
 
         // Insert new
         await pool.query(
-            'INSERT INTO cart (user_id, product_id, variant_id, quantity) VALUES (?, ?, ?, ?)',
-            [user_id, product_id, variant_id, qty]
+            'INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)',
+            [user_id, productId, quantity]
         );
 
         res.json({ success: true, message: 'Đã thêm vào giỏ hàng!' });
@@ -150,7 +126,11 @@ router.put('/:id', async (req, res) => {
         }
 
         const { id } = req.params;
-        const { quantity } = req.body;
+        const quantity = Number(req.body.quantity);
+
+        if (!Number.isInteger(quantity)) {
+            return res.status(400).json({ error: 'Số lượng phải là số nguyên!' });
+        }
 
         // Get cart item and product stock
         const [cartItems] = await pool.query(
@@ -234,15 +214,19 @@ router.post('/buy-now', async (req, res) => {
             return res.status(401).json({ error: 'Vui lòng đăng nhập!' });
         }
 
-        const { product_id, quantity, product_name, price, thumbnail } = req.body;
+        const productId = Number.parseInt(req.body.product_id, 10);
+        const quantity = Number(req.body.quantity);
 
         // Validate
-        if (!product_id || !quantity) {
+        if (!Number.isInteger(productId) || productId < 1 || !Number.isInteger(quantity) || quantity < 1) {
             return res.status(400).json({ error: 'Thông tin sản phẩm không hợp lệ!' });
         }
 
         // Check stock
-        const [products] = await pool.query('SELECT id, stock, name FROM products WHERE id = ?', [product_id]);
+        const [products] = await pool.query(
+            'SELECT id, stock, name, price, thumbnail FROM products WHERE id = ?',
+            [productId]
+        );
         if (products.length === 0) {
             return res.status(400).json({ error: 'Sản phẩm không tồn tại!' });
         }
@@ -257,11 +241,11 @@ router.post('/buy-now', async (req, res) => {
         // Lưu vào session
         req.session.buyNow = {
             token: token,
-            product_id: parseInt(product_id),
-            quantity: parseInt(quantity),
-            product_name: product_name || products[0].name,
-            price: parseFloat(price),
-            thumbnail: thumbnail,
+            product_id: productId,
+            quantity,
+            product_name: products[0].name,
+            price: Number(products[0].price),
+            thumbnail: products[0].thumbnail,
             stock: products[0].stock,
             created_at: Date.now()
         };

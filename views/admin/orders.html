@@ -247,7 +247,14 @@
         }
 
         function showOrderModal(order) {
-            const statusOptions = ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'];
+            const transitions = {
+                pending: ['confirmed', 'cancelled'],
+                confirmed: ['shipping', 'cancelled'],
+                shipping: ['delivered', 'cancelled'],
+                delivered: [],
+                cancelled: []
+            };
+            const statusOptions = [order.status, ...(transitions[order.status] || [])];
             const statusLabels = { pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', shipping: 'Đang giao', delivered: 'Đã giao', cancelled: 'Đã hủy' };
             
             let statusHtml = '<select class="form-control" id="orderStatus">';
@@ -255,6 +262,10 @@
                 statusHtml += `<option value="${s}" ${order.status === s ? 'selected' : ''}>${statusLabels[s]}</option>`;
             });
             statusHtml += '</select>';
+
+            const updateButton = document.getElementById('updateStatusBtn');
+            updateButton.disabled = statusOptions.length === 1;
+            updateButton.style.display = statusOptions.length === 1 ? 'none' : '';
 
             document.getElementById('orderDetail').innerHTML = `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">

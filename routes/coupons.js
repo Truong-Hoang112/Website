@@ -43,6 +43,30 @@ router.post('/validate', async (req, res) => {
             });
         }
 
+        if (req.session.user_id) {
+            const [used] = await pool.query(
+                'SELECT id FROM user_coupons WHERE user_id = ? AND coupon_id = ? LIMIT 1',
+                [req.session.user_id, coupon.id]
+            );
+            if (used.length > 0) {
+                return res.status(400).json({ error: 'Bạn đã sử dụng mã giảm giá này!' });
+            }
+
+            if (coupon.code === 'WELCOME10' || coupon.code === 'NEWUSER') {
+                const [orders] = await pool.query(
+                    `SELECT id FROM orders
+                     WHERE user_id = ?
+                       AND (status IN ('confirmed', 'shipping', 'delivered')
+                            OR (payment_method = 'cod' AND status = 'pending'))
+                     LIMIT 1`,
+                    [req.session.user_id]
+                );
+                if (orders.length > 0) {
+                    return res.status(400).json({ error: 'Mã này chỉ áp dụng cho đơn hàng đầu tiên!' });
+                }
+            }
+        }
+
         // Tính số tiền được giảm
         let discountAmount = 0;
         if (coupon.discount_type === 'percent') {
@@ -108,34 +132,6 @@ router.get('/available', async (req, res) => {
         res.json({ coupons });
     } catch (error) {
         console.error('Get available coupons error:', error);
-        res.status(500).json({ error: 'Đã xảy ra lỗi!' });
-    }
-});
-
-// Đánh dấu coupon đã sử dụng (gọi từ order sau khi tạo)
-router.post('/use', async (req, res) => {
-    try {
-        const { coupon_id, user_id, order_id, discount_amount } = req.body;
-
-        if (!coupon_id || !user_id || !discount_amount) {
-            return res.status(400).json({ error: 'Thiếu thông tin!' });
-        }
-
-        // Tăng used_count
-        await pool.query(
-            'UPDATE coupons SET used_count = used_count + 1 WHERE id = ?',
-            [coupon_id]
-        );
-
-        // Lưu vào lịch sử
-        await pool.query(
-            'INSERT INTO user_coupons (user_id, coupon_id, order_id, discount_amount) VALUES (?, ?, ?, ?)',
-            [user_id, coupon_id, order_id || null, discount_amount]
-        );
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Use coupon error:', error);
         res.status(500).json({ error: 'Đã xảy ra lỗi!' });
     }
 });

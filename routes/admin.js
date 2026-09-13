@@ -52,6 +52,21 @@ const uploadProductImage = multer({
     }
 });
 
+// Multer chạy trước handler nên lỗi file sẽ không đi qua try/catch bên dưới.
+// Trả về 400 rõ ràng để giao diện không hiển thị lỗi 500 mơ hồ.
+const productUpload = (req, res, next) => uploadProductImage.array('galleryFiles', 20)(req, res, (error) => {
+    if (!error) return next();
+    if (error instanceof multer.MulterError) {
+        const message = error.code === 'LIMIT_FILE_SIZE'
+            ? 'Mỗi ảnh sản phẩm không được vượt quá 5MB!'
+            : error.code === 'LIMIT_UNEXPECTED_FILE'
+                ? 'Bạn chỉ có thể tải tối đa 20 ảnh sản phẩm!'
+                : 'Dữ liệu ảnh tải lên không hợp lệ!';
+        return res.status(400).json({ error: message });
+    }
+    return res.status(400).json({ error: error.message || 'Ảnh sản phẩm không hợp lệ!' });
+});
+
 // Helper function to create URL-friendly slug
 function createSlug(text) {
     if (!text || typeof text !== 'string') return '';
@@ -414,8 +429,16 @@ router.get('/', (req, res) => {
 });
 
 // Products management
-router.get('/products', (req, res) => {
+router.get('/products', requireAdmin, (req, res) => {
     res.sendFile(require('path').join(__dirname, '..', 'views', 'admin', 'products.html'));
+});
+
+router.get('/categories', requireAdmin, (req, res) => {
+    res.sendFile(require('path').join(__dirname, '..', 'views', 'admin', 'categories.html'));
+});
+
+router.get('/brands', requireAdmin, (req, res) => {
+    res.sendFile(require('path').join(__dirname, '..', 'views', 'admin', 'brands.html'));
 });
 
 router.get('/products/:id', requireAdmin, async (req, res) => {
@@ -437,7 +460,7 @@ router.get('/products/:id', requireAdmin, async (req, res) => {
     }
 });
 
-router.post('/products', requireAdmin, uploadProductImage.array('galleryFiles', 20), async (req, res) => {
+router.post('/products', requireAdmin, productUpload, async (req, res) => {
     try {
         const {
             name, brand_id, category_id, price, old_price, discount_percent,
@@ -449,6 +472,21 @@ router.post('/products', requireAdmin, uploadProductImage.array('galleryFiles', 
         if (!name || !name.trim()) {
             return res.status(400).json({ error: 'Tên sản phẩm không được trống!' });
         }
+        const brandId = Number(brand_id);
+        const categoryId = Number(category_id);
+        const salePrice = Number(price);
+        const oldPrice = old_price === '' || old_price === undefined ? null : Number(old_price);
+        const stockValue = Number(stock);
+        const discountValue = Number(discount_percent || 0);
+        if (!Number.isInteger(brandId) || brandId < 1 || !Number.isInteger(categoryId) || categoryId < 1) {
+            return res.status(400).json({ error: 'Vui lòng chọn thương hiệu và danh mục hợp lệ!' });
+        }
+        if (!Number.isSafeInteger(salePrice) || salePrice <= 0 || (oldPrice !== null && (!Number.isSafeInteger(oldPrice) || oldPrice < 0))) {
+            return res.status(400).json({ error: 'Giá sản phẩm không hợp lệ!' });
+        }
+        if (!Number.isSafeInteger(stockValue) || stockValue < 0 || !Number.isSafeInteger(discountValue) || discountValue < 0 || discountValue > 100) {
+            return res.status(400).json({ error: 'Tồn kho hoặc phần trăm giảm giá không hợp lệ!' });
+        }
 
         // Use first uploaded file as thumbnail if exists
         const thumbnail = req.files && req.files.length > 0 ? req.files[0].filename : null;
@@ -459,14 +497,23 @@ router.post('/products', requireAdmin, uploadProductImage.array('galleryFiles', 
         // Get primary image index (default to 0 = first image)
         const primaryImageIndex = parseInt(req.body.primaryImageIndex) || 0;
 
-        // Insert product
-        const [result] = await pool.query(
+        // Kiểm tra FK trước để trả lỗi dễ hiểu thay vì lỗi 500 từ MySQL.
+        const [brandRows] = await pool.query('SELECT id FROM brands WHERE id = ? AND is_active = 1', [brandId]);
+        const [categoryRows] = await pool.query('SELECT id FROM categories WHERE id = ? AND is_active = 1', [categoryId]);
+        if (brandRows.length === 0) return res.status(400).json({ error: 'Thương hiệu không tồn tại hoặc đã bị ẩn!' });
+        if (categoryRows.length === 0) return res.status(400).json({ error: 'Danh mục không tồn tại hoặc đã bị ẩn!' });
+
+        const connection = await pool.getConnection();
+        let result;
+        try {
+            await connection.beginTransaction();
+            [result] = await connection.query(
             `INSERT INTO products (name, slug, brand_id, category_id, price, old_price, discount_percent, description, thumbnail, ram, storage, stock, is_featured, os, chipset, cpu, gpu, screen_size, screen_resolution)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [name, slug, brand_id, category_id, price, old_price, discount_percent, description, thumbnail, ram, storage, stock, is_featured ? 1 : 0, os || null, chipset || null, cpu || null, gpu || null, screen_size || null, screen_resolution || null]
-        );
+            [name.trim(), slug, brandId, categoryId, salePrice, oldPrice, discountValue, description === 'null' ? null : (description || null), thumbnail, ram === 'null' ? null : (ram || null), storage === 'null' ? null : (storage || null), stockValue, is_featured === 'true' || is_featured === '1' ? 1 : 0, os === 'null' ? null : (os || null), chipset === 'null' ? null : (chipset || null), cpu === 'null' ? null : (cpu || null), gpu === 'null' ? null : (gpu || null), screen_size === 'null' ? null : (screen_size || null), screen_resolution === 'null' ? null : (screen_resolution || null)]
+            );
 
-        const productId = result.insertId;
+            const productId = result.insertId;
 
         // Insert gallery images
         if (req.files && req.files.length > 0) {
@@ -478,21 +525,29 @@ router.post('/products', requireAdmin, uploadProductImage.array('galleryFiles', 
             ]);
             
             if (galleryValues.length > 0) {
-                await pool.query(
+                await connection.query(
                     `INSERT INTO product_images (product_id, image_url, is_primary, sort_order) VALUES ?`,
                     [galleryValues]
                 );
             }
+            }
+            await connection.commit();
+            res.json({ success: true, id: productId });
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
         }
-
-        res.json({ success: true, id: productId });
     } catch (error) {
         console.error('Create product error:', error);
-        res.status(500).json({ error: 'Đã xảy ra lỗi!' });
+        if (error.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Sản phẩm có dữ liệu trùng, vui lòng kiểm tra lại tên sản phẩm!' });
+        if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.errno === 1452) return res.status(400).json({ error: 'Thương hiệu hoặc danh mục không tồn tại!' });
+        res.status(500).json({ error: 'Không thể lưu sản phẩm!', details: error.message });
     }
 });
 
-router.put('/products/:id', requireAdmin, uploadProductImage.array('galleryFiles', 20), async (req, res) => {
+router.put('/products/:id', requireAdmin, productUpload, async (req, res) => {
     try {
         const { id } = req.params;
         const {
@@ -570,19 +625,27 @@ router.put('/products/:id', requireAdmin, uploadProductImage.array('galleryFiles
 
 router.delete('/products/:id', requireAdmin, async (req, res) => {
     try {
-        const { id } = req.params;
-        // Delete gallery images first
-        await pool.query('DELETE FROM product_images WHERE product_id = ?', [id]);
-        // Then delete product
-        await pool.query('DELETE FROM products WHERE id = ?', [id]);
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id < 1) {
+            return res.status(400).json({ error: 'ID sản phẩm không hợp lệ!' });
+        }
+        // Một lệnh DELETE: khóa ngoại giữ lịch sử đơn; gallery chỉ cascade khi xóa thành công.
+        const [result] = await pool.query('DELETE FROM products WHERE id = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Sản phẩm không tồn tại!' });
+        }
         res.json({ success: true });
     } catch (error) {
+        if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.errno === 1451) {
+            return res.status(409).json({ error: 'Không thể xóa sản phẩm đã có trong đơn hàng. Cần giữ sản phẩm và hình ảnh để bảo toàn lịch sử mua hàng.' });
+        }
+        console.error('Delete product error:', error);
         res.status(500).json({ error: 'Đã xảy ra lỗi!' });
     }
 });
 
 // Orders management
-router.get('/orders', (req, res) => {
+router.get('/orders', requireAdmin, (req, res) => {
     res.sendFile(require('path').join(__dirname, '..', 'views', 'admin', 'orders.html'));
 });
 
@@ -638,18 +701,140 @@ router.get('/orders/:id', requireAdmin, async (req, res) => {
 });
 
 router.put('/orders/:id/status', requireAdmin, async (req, res) => {
+    let connection;
     try {
         const { id } = req.params;
         const { status } = req.body;
-        await pool.query('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
+
+        const transitions = {
+            pending: ['confirmed', 'cancelled'],
+            confirmed: ['shipping', 'cancelled'],
+            shipping: ['delivered', 'cancelled'],
+            delivered: [],
+            cancelled: []
+        };
+
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+        const [orders] = await connection.query('SELECT * FROM orders WHERE id = ? FOR UPDATE', [id]);
+        if (orders.length === 0) {
+            await connection.rollback();
+            connection.release();
+            return res.status(404).json({ error: 'Đơn hàng không tồn tại!' });
+        }
+
+        const order = orders[0];
+        if (!transitions[order.status]?.includes(status)) {
+            await connection.rollback();
+            connection.release();
+            return res.status(400).json({ error: `Không thể chuyển đơn từ ${order.status} sang ${status}!` });
+        }
+
+        const [items] = await connection.query(
+            `SELECT oi.product_id, oi.quantity, p.name
+             FROM order_items oi JOIN products p ON p.id = oi.product_id
+             WHERE oi.order_id = ?`,
+            [id]
+        );
+
+        // Đơn online chỉ trừ kho khi được xác nhận; COD đã trừ kho lúc đặt hàng.
+        if (order.status === 'pending' && status === 'confirmed' && ['momo', 'vnpay'].includes(order.payment_method)) {
+            for (const item of items) {
+                const [updated] = await connection.query(
+                    'UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?',
+                    [item.quantity, item.product_id, item.quantity]
+                );
+                if (updated.affectedRows !== 1) {
+                    const error = new Error(`Sản phẩm "${item.name}" không đủ hàng!`);
+                    error.status = 400;
+                    throw error;
+                }
+            }
+
+            if (order.coupon_code && Number(order.discount_amount) > 0) {
+                const [coupons] = await connection.query('SELECT id FROM coupons WHERE code = ?', [order.coupon_code]);
+                if (coupons.length > 0) {
+                    const [used] = await connection.query(
+                        'SELECT id FROM user_coupons WHERE user_id = ? AND coupon_id = ? LIMIT 1',
+                        [order.user_id, coupons[0].id]
+                    );
+                    if (used.length > 0) {
+                        const error = new Error('Khách hàng đã sử dụng mã giảm giá này!');
+                        error.status = 400;
+                        throw error;
+                    }
+                    const [updatedCoupon] = await connection.query(
+                        `UPDATE coupons SET used_count = used_count + 1
+                         WHERE id = ? AND (usage_limit IS NULL OR used_count < usage_limit)`,
+                        [coupons[0].id]
+                    );
+                    if (updatedCoupon.affectedRows !== 1) {
+                        const error = new Error('Mã giảm giá đã hết lượt sử dụng!');
+                        error.status = 400;
+                        throw error;
+                    }
+                    await connection.query(
+                        'INSERT INTO user_coupons (user_id, coupon_id, order_id, discount_amount) VALUES (?, ?, ?, ?)',
+                        [order.user_id, coupons[0].id, id, order.discount_amount]
+                    );
+                }
+            }
+
+            if (order.cart_item_ids) {
+                const cartIds = order.cart_item_ids.split(',')
+                    .map(value => Number.parseInt(value, 10))
+                    .filter(value => Number.isInteger(value) && value > 0);
+                if (cartIds.length > 0) {
+                    await connection.query('DELETE FROM cart WHERE id IN (?) AND user_id = ?', [cartIds, order.user_id]);
+                }
+            }
+        }
+
+        // Pending online chưa giữ hàng; các trường hợp còn lại đã trừ kho.
+        const shouldRestoreStock = status === 'cancelled'
+            && (order.status !== 'pending' || order.payment_method === 'cod');
+        if (shouldRestoreStock) {
+            for (const item of items) {
+                await connection.query(
+                    'UPDATE products SET stock = stock + ? WHERE id = ?',
+                    [item.quantity, item.product_id]
+                );
+            }
+
+            if (order.coupon_code) {
+                const [deleted] = await connection.query('DELETE FROM user_coupons WHERE order_id = ?', [id]);
+                if (deleted.affectedRows > 0) {
+                    await connection.query(
+                        'UPDATE coupons SET used_count = GREATEST(used_count - 1, 0) WHERE code = ?',
+                        [order.coupon_code]
+                    );
+                }
+            }
+        }
+
+        await connection.query(
+            `UPDATE orders
+             SET status = ?,
+                 paid_at = CASE WHEN ? = 'confirmed' AND payment_method IN ('momo', 'vnpay') THEN NOW() ELSE paid_at END,
+                 cancelled_at = CASE WHEN ? = 'cancelled' THEN NOW() ELSE cancelled_at END
+             WHERE id = ?`,
+            [status, status, status, id]
+        );
+        await connection.commit();
+        connection.release();
+        connection = null;
         res.json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Đã xảy ra lỗi!' });
+        if (connection) {
+            await connection.rollback();
+            connection.release();
+        }
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Đã xảy ra lỗi!' });
     }
 });
 
 // Users management
-router.get('/users', (req, res) => {
+router.get('/users', requireAdmin, (req, res) => {
     res.sendFile(require('path').join(__dirname, '..', 'views', 'admin', 'users.html'));
 });
 
@@ -694,7 +879,7 @@ router.post('/users', requireAdmin, async (req, res) => {
 });
 
 // Reviews management
-router.get('/reviews', (req, res) => {
+router.get('/reviews', requireAdmin, (req, res) => {
     res.sendFile(require('path').join(__dirname, '..', 'views', 'admin', 'reviews.html'));
 });
 
@@ -724,7 +909,7 @@ router.delete('/reviews/:id', requireAdmin, async (req, res) => {
 });
 
 // Contacts management
-router.get('/contacts', (req, res) => {
+router.get('/contacts', requireAdmin, (req, res) => {
     res.sendFile(require('path').join(__dirname, '..', 'views', 'admin', 'contacts.html'));
 });
 
@@ -771,12 +956,12 @@ router.put('/contacts/:id/read', requireAdmin, async (req, res) => {
 });
 
         // ==================== BANNERS MANAGEMENT ====================
-router.get('/banners', (req, res) => {
+router.get('/banners', requireAdmin, (req, res) => {
     res.sendFile(require('path').join(__dirname, '..', 'views', 'admin', 'banners.html'));
 });
 
 // ==================== PROMOTIONS MANAGEMENT ====================
-router.get('/promotions', (req, res) => {
+router.get('/promotions', requireAdmin, (req, res) => {
     res.sendFile(require('path').join(__dirname, '..', 'views', 'admin', 'promotions.html'));
 });
 

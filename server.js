@@ -154,7 +154,6 @@ const couponsRoutes = require('./routes/coupons');
 const messagesRoutes = require('./routes/messages');
 
 app.use('/api/auth', authRoutes);
-app.use('/api', apiRoutes);
 app.use('/api/products', productsRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', ordersRoutes);
@@ -162,6 +161,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/coupons', couponsRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api', apiRoutes);
 app.use('/admin', adminRoutes);
 
 // Google OAuth Routes
@@ -210,10 +210,6 @@ app.get('/register', (req, res) => {
 
 app.get('/forgot-password', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'forgot-password.html'));
-});
-
-app.get('/reset-password', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'reset-password.html'));
 });
 
 app.get('/profile', (req, res) => {

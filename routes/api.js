@@ -5,6 +5,13 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+function requireAdmin(req, res, next) {
+    if (!req.session.user_id || req.session.role !== 'admin') {
+        return res.status(403).json({ error: 'Chỉ quản trị viên được thực hiện thao tác này!' });
+    }
+    next();
+}
+
 // Setup multer for image upload
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -20,7 +27,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } });
 
 // Upload image API
-router.post('/upload-image', upload.single('image'), (req, res) => {
+router.post('/upload-image', requireAdmin, upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'Không có file ảnh!' });
     }
@@ -53,50 +60,6 @@ router.get('/search', async (req, res) => {
     }
 });
 
-// Add to cart (for direct links like /api/add-to-cart?product_id=1)
-router.post('/add-to-cart', async (req, res) => {
-    try {
-        if (!req.session.user_id) {
-            return res.status(401).json({ error: 'Vui lòng đăng nhập!' });
-        }
-
-        const { product_id, qty = 1 } = req.body;
-        const user_id = req.session.user_id;
-
-        const [products] = await pool.query(
-            'SELECT id, stock FROM products WHERE id = ?',
-            [product_id]
-        );
-
-        if (products.length === 0 || products[0].stock < 1) {
-            return res.status(400).json({ error: 'Sản phẩm không hợp lệ!' });
-        }
-
-        const [existing] = await pool.query(
-            'SELECT id, quantity FROM cart WHERE user_id = ? AND product_id = ?',
-            [user_id, product_id]
-        );
-
-        if (existing.length > 0) {
-            const newQty = Math.min(existing[0].quantity + qty, products[0].stock);
-            await pool.query(
-                'UPDATE cart SET quantity = ? WHERE id = ?',
-                [newQty, existing[0].id]
-            );
-        } else {
-            await pool.query(
-                'INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)',
-                [user_id, product_id, qty]
-            );
-        }
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Add to cart error:', error);
-        res.status(500).json({ error: 'Đã xảy ra lỗi!' });
-    }
-});
-
 // Get cart count for navbar
 router.get('/cart-count', async (req, res) => {
     try {
@@ -114,68 +77,6 @@ router.get('/cart-count', async (req, res) => {
     } catch (error) {
         console.error('Get cart count error:', error);
         res.json({ count: 0 });
-    }
-});
-
-// Get cart items with product details
-router.get('/cart', async (req, res) => {
-    try {
-        if (!req.session.user_id) {
-            return res.json({ items: [] });
-        }
-
-        const [items] = await pool.query(`
-            SELECT c.id, c.quantity,
-                   p.id AS product_id, p.name, p.price, p.old_price, p.discount_percent, p.stock,
-                   p.thumbnail, p.slug
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = ?
-        `, [req.session.user_id]);
-
-        res.json({ items });
-    } catch (error) {
-        console.error('Get cart error:', error);
-        res.json({ items: [] });
-    }
-});
-
-// Add item to cart
-router.post('/cart/add', async (req, res) => {
-    try {
-        if (!req.session.user_id) {
-            return res.status(401).json({ error: 'Vui lòng đăng nhập!' });
-        }
-
-        const { product_id, qty = 1 } = req.body;
-        if (!product_id) {
-            return res.status(400).json({ error: 'Thiếu product_id!' });
-        }
-
-        // Check if already in cart
-        const [existing] = await pool.query(
-            'SELECT id, quantity FROM cart WHERE user_id = ? AND product_id = ?',
-            [req.session.user_id, product_id]
-        );
-
-        if (existing.length > 0) {
-            // Update quantity
-            await pool.query(
-                'UPDATE cart SET quantity = quantity + ? WHERE id = ?',
-                [qty, existing[0].id]
-            );
-        } else {
-            // Insert new
-            await pool.query(
-                'INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)',
-                [req.session.user_id, product_id, qty]
-            );
-        }
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Add to cart error:', error);
-        res.status(500).json({ error: 'Lỗi khi thêm vào giỏ hàng!' });
     }
 });
 
@@ -223,10 +124,12 @@ router.post('/review', async (req, res) => {
             return res.status(401).json({ error: 'Vui lòng đăng nhập!' });
         }
 
-        const { product_id, rating, comment } = req.body;
+        const productId = Number.parseInt(req.body.product_id, 10);
+        const rating = Number(req.body.rating);
+        const comment = String(req.body.comment || '').trim();
         const user_id = req.session.user_id;
 
-        if (!rating || rating < 1 || rating > 5) {
+        if (!Number.isInteger(productId) || productId < 1 || !Number.isInteger(rating) || rating < 1 || rating > 5) {
             return res.status(400).json({ error: 'Vui lòng chọn số sao!' });
         }
 
@@ -234,10 +137,22 @@ router.post('/review', async (req, res) => {
             return res.status(400).json({ error: 'Vui lòng nhập nội dung đánh giá!' });
         }
 
+        const [purchases] = await pool.query(
+            `SELECT o.id
+             FROM orders o
+             JOIN order_items oi ON oi.order_id = o.id
+             WHERE o.user_id = ? AND oi.product_id = ? AND o.status = 'delivered'
+             LIMIT 1`,
+            [user_id, productId]
+        );
+        if (purchases.length === 0) {
+            return res.status(403).json({ error: 'Bạn chỉ có thể đánh giá sản phẩm đã mua và nhận hàng!' });
+        }
+
         // Check if already reviewed
         const [existing] = await pool.query(
             'SELECT id FROM reviews WHERE product_id = ? AND user_id = ?',
-            [product_id, user_id]
+            [productId, user_id]
         );
 
         if (existing.length > 0) {
@@ -246,7 +161,7 @@ router.post('/review', async (req, res) => {
 
         await pool.query(
             'INSERT INTO reviews (product_id, user_id, rating, comment) VALUES (?, ?, ?, ?)',
-            [product_id, user_id, rating, comment]
+            [productId, user_id, rating, comment]
         );
 
         res.json({ success: true, message: 'Cảm ơn bạn đã đánh giá!' });
@@ -290,7 +205,7 @@ router.get('/categories/:id', async (req, res) => {
 });
 
 // Create category
-router.post('/categories', async (req, res) => {
+router.post('/categories', requireAdmin, async (req, res) => {
     try {
         const { name, slug, is_active = 1 } = req.body;
         
@@ -317,7 +232,7 @@ router.post('/categories', async (req, res) => {
 });
 
 // Update category
-router.put('/categories/:id', async (req, res) => {
+router.put('/categories/:id', requireAdmin, async (req, res) => {
     try {
         const { name, slug, is_active } = req.body;
         
@@ -340,7 +255,7 @@ router.put('/categories/:id', async (req, res) => {
 });
 
 // Delete category
-router.delete('/categories/:id', async (req, res) => {
+router.delete('/categories/:id', requireAdmin, async (req, res) => {
     try {
         // Check if category has products
         const [products] = await pool.query('SELECT id FROM products WHERE category_id = ? LIMIT 1', [req.params.id]);
@@ -390,7 +305,7 @@ router.get('/brands/:id', async (req, res) => {
 });
 
 // Create brand
-router.post('/brands', async (req, res) => {
+router.post('/brands', requireAdmin, async (req, res) => {
     try {
         const { name, slug, is_active = 1 } = req.body;
         
@@ -417,7 +332,7 @@ router.post('/brands', async (req, res) => {
 });
 
 // Update brand
-router.put('/brands/:id', async (req, res) => {
+router.put('/brands/:id', requireAdmin, async (req, res) => {
     try {
         const { name, slug, is_active } = req.body;
         
@@ -440,7 +355,7 @@ router.put('/brands/:id', async (req, res) => {
 });
 
 // Delete brand
-router.delete('/brands/:id', async (req, res) => {
+router.delete('/brands/:id', requireAdmin, async (req, res) => {
     try {
         // Check if brand has products
         const [products] = await pool.query('SELECT id FROM products WHERE brand_id = ? LIMIT 1', [req.params.id]);
@@ -494,7 +409,7 @@ router.get('/coupons/available', async (req, res) => {
 });
 
 // Seed demo coupons (admin only - call once to setup)
-router.post('/coupons/seed', async (req, res) => {
+router.post('/coupons/seed', requireAdmin, async (req, res) => {
     try {
         const demoCoupons = [
             ['WELCOME10', 'Giảm 10% cho đơn hàng đầu tiên', 'percent', 10, 1000000, 500000, 1, '2027-12-31 23:59:59'],
@@ -532,7 +447,7 @@ const aiResponses = {
     'đổi trả|doi tra|tra hang|return|refund|hoàn tiền': '🔄 **Chính sách đổi trả:**\n\n✅ **7 ngày đổi trả** - Miễn phí nếu sản phẩm lỗi\n✅ **Hoàn tiền 100%** - Nếu không hài lòng (trong 7 ngày)\n✅ **Bảo hành 12 tháng** - Cho sản phẩm chính hãng\n\n📋 **Quy trình đổi trả:**\n1. Liên hệ hotline/chat với Admin\n2. Gửi video/picture sản phẩm\n3. Đóng gói và gửi lại\n4. Hoàn tiền trong 3-5 ngày\n\n📞 Hotline: 1900-xxxx để được hỗ trợ nhanh nhất!',
 
     // Câu hỏi nhanh - Thanh toán
-    'thanh toán|thanh toan|payment|pay|trả tiền|cách trả|phương thức': '💳 **Phương thức thanh toán:**\n\n1️⃣ **COD (Nhận hàng trả tiền)**\n   - Trả tiền khi nhận được sản phẩm\n   - Phí COD: 15.000đ\n\n2️⃣ **Chuyển khoản ngân hàng**\n   - Vietcombank: xxxx-xxxx-xxxx\n   - Sacombank: xxxx-xxxx-xxxx\n\n3️⃣ **Ví điện tử**\n   - MoMo, ZaloPay, VNPay\n\n💡 Khuyến nghị: COD để an tâm nhận hàng trước khi trả tiền!',
+    'thanh toán|thanh toan|payment|pay|trả tiền|cách trả|phương thức': '💳 **Phương thức thanh toán:**\n\n1️⃣ **COD (Nhận hàng trả tiền)**\n   - Trả tiền khi nhận được sản phẩm\n\n2️⃣ **VNPay mô phỏng**\n   - Quét mã QR demo và nhấn xác nhận\n\n3️⃣ **MoMo mô phỏng**\n   - Quét mã QR demo và nhấn xác nhận\n\nℹ️ VNPay/MoMo trong đồ án không phát sinh giao dịch thật.',
 
     // Câu hỏi nhanh - Giao hàng
     'giao hàng|giao hang|ship|shipping|vận chuyển|deliver|bao lâu|mất bao lâu|thời gian': '🚚 **Chính sách giao hàng:**\n\n⏱️ **Thời gian giao:**\n• **Hà Nội & TP.HCM**: 1-2 ngày\n• **Miền Bắc/Miền Trung**: 2-3 ngày\n• **Miền Nam**: 3-5 ngày\n\n💰 **Phí vận chuyển:**\n• Đơn dưới 500K: 25.000đ\n• Đơn từ 500K trở lên: **MIỄN PHÍ**\n\n📦 **Theo dõi đơn hàng:**\nVào mục "Đơn hàng" trong tài khoản để xem trạng thái!\n\n⏰ Đơn hàng được xử lý từ 8h-18h hàng ngày.',

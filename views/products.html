@@ -252,7 +252,7 @@
         <div class="navbar-inner">
             <a href="/" class="navbar-brand">Anh<span>Trai</span>Store</a>
             <div class="search-wrap">
-                <button class="search-btn"><i class="bi bi-search"></i></button>
+                <button class="search-btn" onclick="applySearchFilter('searchInput')" aria-label="Tìm sản phẩm"><i class="bi bi-search"></i></button>
                 <input type="text" id="searchInput" placeholder="Bạn muốn tìm gì hôm nay?" autocomplete="off">
                 <div id="searchSuggest" class="search-suggest"></div>
             </div>
@@ -307,7 +307,7 @@
         <!-- Sidebar -->
         <aside class="filter-sidebar" id="filterSidebar">
             <button class="mobile-filter-btn" onclick="toggleMobileFilter()">
-                <i class="bi bi-sliders"></i> Bộ lọc
+                <i class="bi bi-x-lg"></i> Đóng bộ lọc
             </button>
 
             <form id="filterForm">
@@ -369,6 +369,7 @@
                     <div class="filter-body" id="storageFilters"></div>
                 </div>
 
+                <p id="filterError" role="alert" style="color:var(--danger);font-size:0.875rem" hidden></p>
                 <div class="filter-actions">
                     <button type="submit" class="btn-filter-apply">
                         <i class="bi bi-check-lg"></i> Áp dụng bộ lọc
@@ -382,6 +383,9 @@
 
         <!-- Products Main -->
         <div class="products-main">
+            <button type="button" class="mobile-filter-btn" id="openFilterButton" aria-controls="filterSidebar" aria-expanded="false" onclick="toggleMobileFilter()">
+                <i class="bi bi-sliders"></i> Mở bộ lọc
+            </button>
             <div class="products-toolbar">
                 <div class="products-count">Tìm thấy <strong id="totalProducts">0</strong> sản phẩm</div>
                 <div class="active-filters" id="activeFilters"></div>
@@ -539,38 +543,30 @@
     </script>
 
     <!-- Footer -->
+    <!-- Footer -->
     <footer>
         <div class="container">
             <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px;">
                 <div>
                     <div class="footer-brand">AnhTrai<span>Store</span></div>
                     <p class="footer-desc">Chuỗi cửa hàng điện thoại & phụ kiện chính hãng uy tín toàn quốc.</p>
-                    <div class="footer-badges">
-                        <span class="footer-badge"><i class="bi bi-shield-check"></i> Chính hãng</span>
-                        <span class="footer-badge"><i class="bi bi-award"></i> Bảo hành</span>
-                    </div>
                 </div>
                 <div>
                     <div class="footer-heading">Sản phẩm</div>
                     <ul class="footer-links">
-                        <li><a href="/products?category=apple">iPhone</a></li>
-                        <li><a href="/products?category=samsung">Samsung</a></li>
-                        <li><a href="/products?category=xiaomi">Xiaomi</a></li>
                         <li><a href="/products">Tất cả sản phẩm</a></li>
+                        <li><a href="/promotions">Khuyến mãi</a></li>
                     </ul>
                 </div>
                 <div>
-                    <div class="footer-heading">Chính sách</div>
+                    <div class="footer-heading">Hỗ trợ</div>
                     <ul class="footer-links">
-                        <li><a href="/policy">Đổi trả hàng</a></li>
-                        <li><a href="/policy#warranty">Bảo hành</a></li>
-                        <li><a href="/policy#shipping">Vận chuyển</a></li>
+                        <li><a href="/policy">Chính sách</a></li>
                         <li><a href="/contact">Liên hệ</a></li>
                     </ul>
                 </div>
                 <div>
                     <div class="footer-heading">Liên hệ</div>
-                    <div class="footer-contact-item"><i class="bi bi-geo-alt"></i><span>123 Nguyễn Huệ, Q.1, TP.HCM</span></div>
                     <div class="footer-contact-item"><i class="bi bi-telephone"></i><span>1800 2097</span></div>
                     <div class="footer-contact-item"><i class="bi bi-envelope"></i><span>anhtraisstore@gmail.com</span></div>
                 </div>
@@ -586,6 +582,8 @@
     <script>
         let currentPage = 1;
         let currentFilters = {};
+        let filterOptions = { brands: [], categories: [] };
+        const multiFilterKeys = ['brand', 'ram', 'storage'];
 
         document.addEventListener('DOMContentLoaded', async () => {
             await initApp();
@@ -597,15 +595,18 @@
         function parseURLParams() {
             const params = new URLSearchParams(window.location.search);
             currentFilters = {};
-            for (const [key, value] of params) {
-                if (value && value !== 'undefined') {
-                    currentFilters[key] = value;
-                }
+            for (const key of ['q', 'category', 'price_min', 'price_max', 'sort', 'featured', 'limit', ...multiFilterKeys]) {
+                const values = params.getAll(key).map(v => v.trim()).filter(v => v && v !== 'undefined' && v !== 'null');
+                if (values.length) currentFilters[key] = multiFilterKeys.includes(key) ? [...new Set(values)] : values[0];
             }
-            if (params.get('page')) {
-                currentPage = parseInt(params.get('page')) || 1;
+            currentPage = Math.max(1, parseInt(params.get('page')) || 1);
+            for (const key of ['ram', 'storage']) {
+                if (currentFilters[key]) currentFilters[key] = [...new Set(currentFilters[key].map(normalizeCapacity))];
             }
+            if (currentFilters.brand) currentFilters.brand = currentFilters.brand.map(v => v.toLowerCase());
             document.getElementById('searchQuery').value = currentFilters.q || '';
+            document.getElementById('searchInput').value = currentFilters.q || '';
+            document.getElementById('mobileSearchInput').value = currentFilters.q || '';
             document.getElementById('searchTerm').textContent = currentFilters.q ? ' - "' + currentFilters.q + '"' : '';
             if (currentFilters.price_min) {
                 document.getElementById('priceMin').value = formatNumber(currentFilters.price_min);
@@ -616,6 +617,11 @@
             if (currentFilters.sort) {
                 document.getElementById('sortSelect').value = currentFilters.sort;
             }
+        }
+
+        function normalizeCapacity(value) {
+            const normalized = String(value).trim().toUpperCase().replace(/\s+/g, '');
+            return /^\d+$/.test(normalized) ? normalized + 'GB' : normalized;
         }
 
         function formatNumber(n) {
@@ -635,6 +641,9 @@
             try {
                 const response = await fetch('/api/products?' + params.toString());
                 const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Không thể tải sản phẩm!');
+                currentPage = data.page;
+                filterOptions = data.filters;
                 renderFilters(data.filters);
                 renderProducts(data.products);
                 renderPagination(data.total, data.totalPages, currentPage);
@@ -642,6 +651,8 @@
                 document.getElementById('totalProducts').textContent = data.total.toLocaleString('vi-VN');
             } catch (error) {
                 console.error('Error loading products:', error);
+                showFilterError(error.message);
+                document.getElementById('productsGrid').innerHTML = '<p>Không thể tải sản phẩm. Hãy kiểm tra bộ lọc hoặc thử lại.</p>';
             }
         }
 
@@ -649,7 +660,7 @@
             const catContainer = document.getElementById('categoryFilters');
             let catHtml = '<label class="filter-check"><input type="radio" name="category" value="" ' + (!currentFilters.category ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>Tất cả</span></label>';
             filters.categories.forEach(cat => {
-                catHtml += '<label class="filter-check"><input type="radio" name="category" value="' + cat.slug + '" ' + (currentFilters.category === cat.slug ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>' + cat.name + '</span></label>';
+                catHtml += '<label class="filter-check"><input type="radio" name="category" value="' + escapeHtml(cat.slug) + '" ' + (currentFilters.category === cat.slug || currentFilters.category === String(cat.id) ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>' + escapeHtml(cat.name) + '</span></label>';
             });
             catContainer.innerHTML = catHtml;
 
@@ -658,8 +669,9 @@
             filters.brands.forEach(brand => {
                 const brandName = brand.name || brand;
                 const brandId = brand.id || brand;
-                const checked = currentFilters.brand == brandId ? 'checked' : '';
-                brandHtml += '<label class="filter-check"><input type="checkbox" name="brand" value="' + brandId + '" ' + checked + ' onchange="autoApplyFilter()"> <span>' + brandName + '</span></label>';
+                const selected = currentFilters.brand || [];
+                const checked = selected.includes(String(brandId)) || selected.includes(brand.slug) ? 'checked' : '';
+                brandHtml += '<label class="filter-check"><input type="checkbox" name="brand" value="' + escapeHtml(brandId) + '" ' + checked + ' onchange="autoApplyFilter()"> <span>' + escapeHtml(brandName) + '</span></label>';
             });
             brandContainer.innerHTML = brandHtml || '<div class="filter-empty">Không có dữ liệu</div>';
 
@@ -668,7 +680,7 @@
                 let ramHtml = '';
                 filters.rams.forEach(ram => {
                     const checked = Array.isArray(currentFilters.ram) ? currentFilters.ram.includes(ram) : currentFilters.ram === ram;
-                    ramHtml += '<label class="filter-check"><input type="checkbox" name="ram" value="' + ram + '" ' + (checked ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>RAM ' + ram + '</span></label>';
+                    ramHtml += '<label class="filter-check"><input type="checkbox" name="ram" value="' + escapeHtml(ram) + '" ' + (checked ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>RAM ' + escapeHtml(ram) + '</span></label>';
                 });
                 document.getElementById('ramFilters').innerHTML = ramHtml;
             }
@@ -678,7 +690,7 @@
                 let storageHtml = '';
                 filters.storages.forEach(storage => {
                     const checked = Array.isArray(currentFilters.storage) ? currentFilters.storage.includes(storage) : currentFilters.storage === storage;
-                    storageHtml += '<label class="filter-check"><input type="checkbox" name="storage" value="' + storage + '" ' + (checked ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>' + storage + '</span></label>';
+                    storageHtml += '<label class="filter-check"><input type="checkbox" name="storage" value="' + escapeHtml(storage) + '" ' + (checked ? 'checked' : '') + ' onchange="autoApplyFilter()"> <span>' + escapeHtml(storage) + '</span></label>';
                 });
                 document.getElementById('storageFilters').innerHTML = storageHtml;
             }
@@ -772,43 +784,44 @@
         }
 
         function goPage(page) {
-            currentPage = page;
-            applyFilters();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            navigateFilters(page);
         }
 
         function changeSort(value) {
-            // Cập nhật sort vào currentFilters rồi apply ngay
-            const params = new URLSearchParams(window.location.search);
-            params.set('sort', value);
-            params.delete('page');
-            window.location.href = '/products?' + params.toString();
+            currentFilters.sort = value;
+            applyFilters();
         }
 
         function setPrice(min, max) {
             document.getElementById('priceMin').value = min ? formatNumber(min) : '';
             document.getElementById('priceMax').value = max ? formatNumber(max) : '';
+            applyFilters();
         }
 
         function renderActiveFilters() {
             const container = document.getElementById('activeFilters');
-            let html = '';
-
+            container.replaceChildren();
+            const labels = { q: 'Tìm kiếm', category: 'Danh mục', brand: 'Hãng', ram: 'RAM', storage: 'Bộ nhớ', price_min: 'Giá từ', price_max: 'Giá đến', featured: 'Nổi bật' };
             for (const [key, value] of Object.entries(currentFilters)) {
-                if (key === 'page' || key === 'sort') continue;
-                if (key === 'brand' || key === 'ram' || key === 'storage') {
-                    const arr = Array.isArray(value) ? value : [value];
-                    arr.forEach(v => {
-                        if (v) {
-                            html += '<span class="filter-tag">' + key.toUpperCase() + ': ' + v + ' <button onclick="removeFilter(\'' + key + '\', \'' + v + '\')">&times;</button></span>';
-                        }
-                    });
-                } else if (value) {
-                    html += '<span class="filter-tag">' + key + ': ' + value + ' <button onclick="removeFilter(\'' + key + '\')">&times;</button></span>';
+                if (!labels[key]) continue;
+                for (const v of (Array.isArray(value) ? value : [value])) {
+                    if (!v) continue;
+                    let label = v;
+                    if (key === 'brand') label = filterOptions.brands.find(b => String(b.id) === v || b.slug === v)?.name || v;
+                    if (key === 'category') label = filterOptions.categories.find(c => c.slug === v || String(c.id) === v)?.name || v;
+                    if (key === 'price_min' || key === 'price_max') label = formatNumber(v) + 'đ';
+                    const tag = document.createElement('span');
+                    tag.className = 'filter-tag';
+                    tag.textContent = labels[key] + ': ' + label + ' ';
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.textContent = '×';
+                    button.setAttribute('aria-label', 'Bỏ lọc ' + labels[key] + ': ' + label);
+                    button.onclick = () => removeFilter(key, v);
+                    tag.appendChild(button);
+                    container.appendChild(tag);
                 }
             }
-
-            container.innerHTML = html;
         }
 
         function removeFilter(key, value) {
@@ -818,8 +831,8 @@
             } else {
                 delete currentFilters[key];
             }
-            currentPage = 1;
-            applyFilters();
+            // Dùng trạng thái vừa xóa, không đọc lại checkbox/ô giá cũ trong form.
+            navigateFilters(1);
         }
 
         function setupEventListeners() {
@@ -828,106 +841,66 @@
                 applyFilters();
             });
 
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    currentFilters.q = this.value;
-                    currentPage = 1;
-                    applyFilters();
-                }
-            });
+            for (const id of ['searchInput', 'mobileSearchInput']) {
+                document.getElementById(id).addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applySearchFilter(id);
+                    }
+                });
+            }
+        }
 
-            const priceMin = document.getElementById('priceMin');
-            const priceMax = document.getElementById('priceMax');
-            priceMin.addEventListener('input', function() {
-                currentFilters.price_min = parseNumber(this.value);
-            });
-            priceMax.addEventListener('input', function() {
-                currentFilters.price_max = parseNumber(this.value);
-            });
+        function applySearchFilter(inputId) {
+            document.getElementById('searchQuery').value = document.getElementById(inputId).value.trim();
+            applyFilters();
         }
 
         function autoApplyFilter() {
-            // Tự động lọc khi click vào checkbox/radio (không cần nhấn nút)
-            const form = document.getElementById('filterForm');
-            const formData = new FormData(form);
-            const params = new URLSearchParams();
-
-            // Lấy category từ radio
-            const category = formData.get('category') || '';
-            if (category) params.set('category', category);
-
-            // Lấy brands từ checkboxes
-            const selectedBrands = formData.getAll('brand');
-            selectedBrands.forEach(b => params.append('brand', b));
-
-            // Lấy rams từ checkboxes
-            const selectedRams = formData.getAll('ram');
-            selectedRams.forEach(r => params.append('ram', r));
-
-            // Lấy storages từ checkboxes
-            const selectedStorages = formData.getAll('storage');
-            selectedStorages.forEach(s => params.append('storage', s));
-
-            // Giữ nguyên sort hiện tại từ URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const sort = urlParams.get('sort');
-            if (sort) params.set('sort', sort);
-
-            // Giữ nguyên search
-            const q = urlParams.get('q');
-            if (q) params.set('q', q);
-
-            // Reset về trang 1
-            params.delete('page');
-
-            window.location.href = '/products?' + params.toString();
+            applyFilters();
         }
 
         function applyFilters() {
-            // Sync currentFilters với form trước khi apply
-            const form = document.getElementById('filterForm');
-            const formData = new FormData(form);
-
-            // Lấy category từ radio
+            const min = parseNumber(document.getElementById('priceMin').value.trim());
+            const max = parseNumber(document.getElementById('priceMax').value.trim());
+            if ([min, max].some(v => v !== '' && (!/^\d+$/.test(v) || !Number.isSafeInteger(Number(v))))) {
+                showFilterError('Khoảng giá phải là số nguyên không âm!');
+                return;
+            }
+            if (min !== '' && max !== '' && Number(min) > Number(max)) {
+                showFilterError('Giá từ không được lớn hơn giá đến!');
+                return;
+            }
+            const formData = new FormData(document.getElementById('filterForm'));
             currentFilters.category = formData.get('category') || '';
+            currentFilters.q = formData.get('q') || '';
+            for (const key of multiFilterKeys) currentFilters[key] = formData.getAll(key);
+            currentFilters.price_min = min;
+            currentFilters.price_max = max;
+            currentFilters.sort = document.getElementById('sortSelect').value || currentFilters.sort || 'newest';
+            navigateFilters(1);
+        }
 
-            // Lấy brands từ checkboxes
-            const selectedBrands = formData.getAll('brand');
-            currentFilters.brand = selectedBrands.length > 0 ? selectedBrands : '';
-
-            // Lấy rams từ checkboxes
-            const selectedRams = formData.getAll('ram');
-            currentFilters.ram = selectedRams.length > 0 ? selectedRams : '';
-
-            // Lấy storages từ checkboxes
-            const selectedStorages = formData.getAll('storage');
-            currentFilters.storage = selectedStorages.length > 0 ? selectedStorages : '';
-
-            // Lấy price từ inputs
-            currentFilters.price_min = parseNumber(document.getElementById('priceMin').value);
-            currentFilters.price_max = parseNumber(document.getElementById('priceMax').value);
-
+        function navigateFilters(page) {
             const params = new URLSearchParams();
-
-            // Thêm tất cả filters vào params
             for (const [key, value] of Object.entries(currentFilters)) {
-                if (key === 'page' || key === 'sort' || key === 'q') continue;
-                if (Array.isArray(value) && value.length > 0) {
-                    value.forEach(v => params.append(key, v));
-                } else if (value && value !== '') {
-                    params.set(key, value);
+                for (const v of (Array.isArray(value) ? value : [value])) {
+                    if (v !== '' && v !== undefined && v !== null) params.append(key, v);
                 }
             }
-
-            if (currentFilters.q) params.set('q', currentFilters.q);
-            params.set('page', currentPage);
-
+            if (page > 1) params.set('page', page);
             window.location.href = '/products?' + params.toString();
         }
 
+        function showFilterError(message) {
+            const error = document.getElementById('filterError');
+            error.textContent = message;
+            error.hidden = false;
+        }
+
         function toggleMobileFilter() {
-            document.getElementById('filterSidebar').classList.toggle('open');
+            const open = document.getElementById('filterSidebar').classList.toggle('open');
+            document.getElementById('openFilterButton').setAttribute('aria-expanded', String(open));
         }
 
         function toggleFilterCard(headerEl) {
