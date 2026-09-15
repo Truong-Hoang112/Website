@@ -419,6 +419,64 @@ test('admin can see reviewer identity and persist a review reply without a schem
     assert.equal(updated[0][1], 7);
 });
 
+test('admin review page defines HTML escaping and reports loading failures', () => {
+    const page = fs.readFileSync(path.join(root, 'views', 'admin', 'reviews.html'), 'utf8');
+    assert.match(page, /function escapeHtml\(value\)/);
+    assert.match(page, /if \(!res\.ok\) throw new Error\(data\.error/);
+    assert.match(page, /console\.error\('Load reviews error:', e\)/);
+});
+
+test('support chat reuses one conversation per account and persists the first message', async () => {
+    const calls = [];
+    let committed = false;
+    let released = false;
+    const connection = {
+        async beginTransaction() {},
+        async commit() { committed = true; },
+        async rollback() {},
+        release() { released = true; },
+        async query(sql, params) {
+            calls.push({ sql, params });
+            if (sql.includes('INSERT INTO contacts')) return [{ insertId: 50 }];
+            if (sql.includes('SELECT id FROM conversations')) return [[{ id: 7 }]];
+            if (sql.includes('UPDATE conversations')) return [{ affectedRows: 1 }];
+            if (sql.includes('INSERT INTO messages')) return [{ insertId: 90 }];
+            if (sql.includes('SELECT * FROM messages')) {
+                return [[{ id: 90, conversation_id: 7, sender_type: 'user', content: 'Cần hỗ trợ' }]];
+            }
+            throw new Error('Unexpected query: ' + sql);
+        }
+    };
+    const pool = { async getConnection() { return connection; } };
+    const route = loadRoute(path.join(root, 'src', 'routes', 'api.js'), '/contact', 'post', pool);
+    const response = jsonResponse();
+    const emitted = [];
+    await route.stack[0].handle({
+        session: { user_id: 5 },
+        body: { full_name: 'Khách', email: 'khach@example.com', phone: '', message: 'Cần hỗ trợ' },
+        app: { get() { return { to() { return { emit(event, data) { emitted.push({ event, data }); } }; } }; } }
+    }, response);
+
+    assert.equal(response.body.conversation_id, 7);
+    assert.equal(committed, true);
+    assert.equal(released, true);
+    assert.match(calls.find(call => call.sql.includes('SELECT id FROM conversations')).sql, /WHERE user_id = \?/);
+    assert.deepEqual(Array.from(calls.find(call => call.sql.includes('INSERT INTO messages')).params), [7, 5, 'Cần hỗ trợ']);
+    assert.equal(emitted[0].data.conversation_id, 7);
+});
+
+test('customer chat is session-scoped while admin history is grouped by account', () => {
+    const source = fs.readFileSync(path.join(root, 'src', 'routes', 'messages.js'), 'utf8');
+    assert.match(source, /support_chat_started_at/);
+    assert.match(source, /related\.user_id = \? AND m\.created_at >= \?/);
+    assert.match(source, /SELECT current\.\*[\s\S]*JOIN conversations current ON current\.user_id = requested\.user_id/);
+    assert.match(source, /WHERE c\.user_id IS NULL\s+OR NOT EXISTS/);
+    assert.match(source, /FROM \(\s+SELECT m\.id[\s\S]*WHERE related\.user_id = \?[\s\S]*UNION ALL[\s\S]*existing\.content = ct\.message/);
+    assert.match(source, /UPDATE conversations SET status = \? WHERE user_id = \?/);
+    const widget = fs.readFileSync(path.join(root, 'views', 'components', 'ai-chatbox.html'), 'utf8');
+    assert.match(widget, /currentConversationId = canonicalId/);
+});
+
 function loadRoute(filename, routePath, method, pool) {
     const localRequire = createRequire(filename);
     const context = vm.createContext({ module: { exports: {} }, __dirname: path.dirname(filename), console, URL,
@@ -549,6 +607,27 @@ test('main banner supports ten Cloudinary images and rotates every two seconds w
     assert.match(home, /object-fit:\s*contain/);
     assert.match(admin, /uploadBanner\.array\('images', 10\)|upload-many/);
     assert.match(admin, /files\.length > 10/);
+});
+
+test('main banner copy stays compact and admin orders has no online-only status filter', () => {
+    const home = fs.readFileSync(path.join(root, 'views', 'index.html'), 'utf8');
+    const orders = fs.readFileSync(path.join(root, 'views', 'admin', 'orders.html'), 'utf8');
+    assert.match(home, /\.banner-title\s*\{[\s\S]*?font-size:\s*2rem;/);
+    assert.match(home, /\.banner-title span\s*\{[^}]*font-size:\s*1rem;/);
+    assert.match(home, /\.btn-banner\s*\{[\s\S]*?padding:\s*10px 18px;[\s\S]*?font-size:\s*0\.82rem;/);
+    assert.match(home, /\.main-banner\s*\{[\s\S]*?align-items:\s*flex-start;[\s\S]*?justify-content:\s*flex-end;/);
+    assert.doesNotMatch(orders, /online_paid|>\s*✅ Online\s*</);
+});
+
+test('customer account pages use the shared flat light page header', () => {
+    for (const name of ['orders.html', 'checkout.html', 'profile.html']) {
+        const page = fs.readFileSync(path.join(root, 'views', name), 'utf8');
+        assert.match(page, /\.page-header\s*\{[^}]*background:\s*var\(--white\)/s);
+        assert.match(page, /\.page-title h1\s*\{[^}]*color:\s*var\(--dark\)/s);
+        assert.match(page, /\.page-header\s*\{[^}]*padding:\s*20px 0/s);
+        assert.doesNotMatch(page, /\.page-header \{ padding: 32px 0; \}/);
+        assert.doesNotMatch(page, /\.page-header\s*\{[^}]*#0f172a/s);
+    }
 });
 
 test('category and brand status remains internal and is hidden from admin pages', async () => {

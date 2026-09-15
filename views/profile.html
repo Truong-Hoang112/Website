@@ -14,8 +14,8 @@
     <style>
         /* ===== PAGE HEADER ===== */
         .page-header {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            padding: 48px 0;
+            background: var(--white);
+            padding: 20px 0;
             position: relative;
             overflow: hidden;
         }
@@ -23,7 +23,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(ellipse at 100% 0%, rgba(226,27,27,0.15) 0%, transparent 50%);
+            display: none;
         }
         .page-header-inner {
             max-width: 1280px;
@@ -38,7 +38,7 @@
             gap: 8px;
             font-size: 0.8rem;
             color: rgba(255,255,255,0.5);
-            margin-bottom: 16px;
+            margin-bottom: 10px;
         }
         .page-breadcrumb a { color: rgba(255,255,255,0.6); font-weight: 500; }
         .page-breadcrumb a:hover { color: #fff; }
@@ -51,23 +51,23 @@
         .page-title-icon {
             width: 56px;
             height: 56px;
-            background: rgba(226,27,27,0.15);
+            background: var(--primary-bg);
             border-radius: var(--radius-lg);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            color: #ff4444;
+            color: var(--primary);
         }
         .page-title h1 {
             font-size: 1.75rem;
             font-weight: 800;
-            color: #fff;
+            color: var(--dark);
             letter-spacing: -0.02em;
         }
         .page-title p {
             font-size: 0.875rem;
-            color: rgba(255,255,255,0.6);
+            color: var(--slate-500);
             margin-top: 4px;
         }
 
@@ -409,7 +409,7 @@
             .profile-card { position: static; }
         }
         @media (max-width: 640px) {
-            .page-header { padding: 32px 0; }
+            .page-header { padding: 20px 0; }
             .page-title h1 { font-size: 1.35rem; }
             .page-title-icon { width: 44px; height: 44px; font-size: 1.2rem; }
             .form-grid { grid-template-columns: 1fr; }

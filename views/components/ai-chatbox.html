@@ -563,6 +563,8 @@
             const res = await fetch(`/api/messages/${conversationId}`, { credentials: 'include' });
             if (res.ok) {
                 const data = await res.json();
+                const canonicalId = Number(data.conversation?.id || conversationId);
+                currentConversationId = canonicalId;
                 ucAdminMessages.innerHTML = '';
                 if (data.messages && data.messages.length > 0) {
                     data.messages.forEach(m => {
@@ -575,10 +577,10 @@
                 scrollToBottom(ucAdminMessages);
                 
                 // Join socket room
-                socket.emit('join_conversation', conversationId);
-                
+                getSocket().emit('join_conversation', canonicalId);
+
                 // Đánh dấu đã đọc
-                markAsRead(conversationId);
+                markAsRead(canonicalId);
             }
         } catch (e) {
             showWelcomeMessage();
@@ -641,12 +643,20 @@
                 }
             } else {
                 // Gửi tin nhắn vào conversation hiện tại
-                await fetch(`/api/messages/${conversationId}`, {
+                const res = await fetch(`/api/messages/${conversationId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({ content: text })
                 });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'Không thể gửi tin nhắn!');
+                const canonicalId = Number(data.message?.conversation_id || conversationId);
+                if (canonicalId !== Number(currentConversationId)) {
+                    getSocket().emit('leave_conversation', currentConversationId);
+                    currentConversationId = canonicalId;
+                    getSocket().emit('join_conversation', canonicalId);
+                }
             }
         } catch (e) {
             console.error('Send message error:', e);

@@ -644,13 +644,14 @@ input, select, textarea { font-family: inherit; }
 .main-banner {
     background: var(--gradient-primary);
     border-radius: var(--radius-2xl);
-    padding: 64px;
+    padding: 40px 40px 46px;
     min-height: 420px;
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-end;
     box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.4);
 }
 .main-banner::before {
@@ -669,34 +670,34 @@ input, select, textarea { font-family: inherit; }
     background: rgba(255,255,255,0.2);
     backdrop-filter: blur(8px);
     color: #fff;
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    padding: 8px 16px;
+    padding: 6px 11px;
     border-radius: var(--radius-full);
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     width: fit-content;
 }
 .banner-title {
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: 800;
     color: #fff;
-    line-height: 1.1;
-    margin-bottom: 24px;
+    line-height: 1.18;
+    margin-bottom: 16px;
     letter-spacing: -0.02em;
     position: relative;
     z-index: 1;
 }
-.banner-title span { display: block; font-size: 1.5rem; font-weight: 600; color: rgba(255,255,255,0.85); margin-top: 8px; }
+.banner-title span { display: block; font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.85); margin-top: 6px; }
 .btn-banner {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 7px;
     background: #fff;
     color: var(--primary);
-    padding: 16px 32px;
+    padding: 10px 18px;
     border-radius: var(--radius-lg);
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.82rem;
     transition: all var(--transition-base);
     width: fit-content;
     box-shadow: 0 4px 14px rgba(0,0,0,0.15);
@@ -904,9 +905,9 @@ select.form-input { cursor: pointer; }
     .navbar-inner { height: 64px; gap: 16px; }
     .search-wrap { display: none; }
     .hero-section { padding: 48px 0; }
-    .main-banner { min-height: 320px; padding: 40px; }
-    .banner-title { font-size: 2rem; }
-    .banner-title span { font-size: 1.2rem; }
+    .main-banner { min-height: 320px; padding: 24px 24px 42px; }
+    .banner-title { font-size: 1.55rem; }
+    .banner-title span { font-size: 0.9rem; }
     .section { padding: 48px 0; }
     .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
     .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
@@ -999,9 +1000,9 @@ select.form-input { cursor: pointer; }
     .header-actions { gap: 8px; }
     
     /* Banner mobile */
-    .main-banner { min-height: 240px; padding: 24px; }
-    .banner-title { font-size: 1.5rem; }
-    .banner-title span { font-size: 1rem; }
+    .main-banner { min-height: 240px; padding: 20px 20px 38px; }
+    .banner-title { font-size: 1.3rem; }
+    .banner-title span { font-size: 0.82rem; }
     
     /* Chatbox mobile small */
     .uc-window { width: calc(100vw - 16px) !important; right: 8px !important; bottom: 72px !important; }

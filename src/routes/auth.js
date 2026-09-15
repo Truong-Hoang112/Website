@@ -109,6 +109,7 @@ router.post('/login', loginRateLimit, async (req, res) => {
         req.session.user_id = user.id;
         req.session.full_name = user.full_name;
         req.session.role = user.role;
+        req.session.support_chat_started_at = new Date().toISOString();
 
         res.json({
             success: true,

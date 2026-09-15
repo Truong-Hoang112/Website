@@ -58,6 +58,7 @@ router.get('/cart-count', async (req, res) => {
 
 // Contact form (lưu user_id nếu đã đăng nhập để admin có thể reply chat 2 chiều)
 router.post('/contact', async (req, res) => {
+    let connection;
     try {
         const { full_name, email, phone, message } = req.body;
         const user_id = req.session?.user_id || null;
@@ -69,19 +70,58 @@ router.post('/contact', async (req, res) => {
             return res.status(400).json({ error: 'Nội dung liên hệ vượt quá độ dài cho phép!' });
         }
 
-        const [result] = await pool.query(
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        const [result] = await connection.query(
             'INSERT INTO contacts (user_id, full_name, email, phone, message) VALUES (?, ?, ?, ?, ?)',
             [user_id, full_name, email, phone || '', message]
         );
 
-        // Tự động tạo conversation cho user đã đăng nhập
+        // Mỗi tài khoản chỉ dùng một conversation đại diện. Các conversation cũ
+        // vẫn được giữ nguyên để admin có thể xem toàn bộ lịch sử.
         let conversation_id = null;
+        let savedMessage = null;
         if (user_id) {
-            const [conv] = await pool.query(
-                'INSERT INTO conversations (contact_id, user_id, status) VALUES (?, ?, ?)',
-                [result.insertId, user_id, 'open']
+            const [existing] = await connection.query(
+                `SELECT id FROM conversations
+                 WHERE user_id = ?
+                 ORDER BY COALESCE(last_message_at, created_at) DESC, id DESC
+                 LIMIT 1 FOR UPDATE`,
+                [user_id]
             );
-            conversation_id = conv.insertId;
+
+            if (existing.length) {
+                conversation_id = existing[0].id;
+                await connection.query(
+                    `UPDATE conversations
+                     SET contact_id = ?, status = 'open', last_message_at = NOW()
+                     WHERE id = ?`,
+                    [result.insertId, conversation_id]
+                );
+            } else {
+                const [conv] = await connection.query(
+                    `INSERT INTO conversations (contact_id, user_id, status, last_message_at)
+                     VALUES (?, ?, 'open', NOW())`,
+                    [result.insertId, user_id]
+                );
+                conversation_id = conv.insertId;
+            }
+
+            const [messageResult] = await connection.query(
+                `INSERT INTO messages (conversation_id, sender_type, sender_id, content)
+                 VALUES (?, 'user', ?, ?)`,
+                [conversation_id, user_id, String(message).trim()]
+            );
+            const [messages] = await connection.query('SELECT * FROM messages WHERE id = ?', [messageResult.insertId]);
+            savedMessage = messages[0] || null;
+        }
+
+        await connection.commit();
+
+        const io = req.app?.get?.('io');
+        if (io && savedMessage) {
+            io.to('admin_chat').emit('new_message', { conversation_id, message: savedMessage });
         }
 
         res.json({
@@ -90,8 +130,11 @@ router.post('/contact', async (req, res) => {
             conversation_id: conversation_id
         });
     } catch (error) {
+        if (connection) await connection.rollback().catch(() => {});
         console.error('Contact error:', error);
         res.status(500).json({ error: 'Đã xảy ra lỗi!' });
+    } finally {
+        if (connection) connection.release();
     }
 });
 

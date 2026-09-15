@@ -27,6 +27,9 @@ function createApp() {
         if (req.user?.id) {
             req.session.user_id = req.user.id;
             req.session.role = req.user.role || 'customer';
+            if (!req.session.support_chat_started_at) {
+                req.session.support_chat_started_at = new Date().toISOString();
+            }
         }
         next();
     });

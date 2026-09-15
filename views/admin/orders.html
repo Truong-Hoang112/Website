@@ -77,7 +77,6 @@
                     <button class="filter-btn active" onclick="filterOrders('all')">Tất cả</button>
                     <button class="filter-btn" onclick="filterOrders('pending')">Chờ xác nhận</button>
                     <button class="filter-btn" onclick="filterOrders('confirmed')">Đã xác nhận</button>
-                    <button class="filter-btn" onclick="filterOrders('online_paid')">✅ Online</button>
                     <button class="filter-btn" onclick="filterOrders('shipping')">Đang giao</button>
                     <button class="filter-btn" onclick="filterOrders('delivered')">Đã giao</button>
                     <button class="filter-btn" onclick="filterOrders('cancelled')">Đã hủy</button>
@@ -188,9 +187,7 @@
                 const data = await res.json();
                 let orders = data.orders || [];
 
-                if (currentFilter === 'online_paid') {
-                    orders = orders.filter(o => (o.payment_method === 'vnpay' || o.payment_method === 'momo') && o.status === 'confirmed');
-                } else if (currentFilter !== 'all') {
+                if (currentFilter !== 'all') {
                     orders = orders.filter(o => o.status === currentFilter);
                 }
 
