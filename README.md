@@ -1,451 +1,305 @@
-# AnhTraiStore - Website bán điện thoại
+# AnhTraiStore
 
-Đồ án demo website thương mại điện tử bán điện thoại và phụ kiện.
+AnhTraiStore là đồ án website thương mại điện tử bán điện thoại, máy tính, đồng hồ và phụ kiện công nghệ. Ứng dụng dùng Node.js/Express, MySQL và giao diện HTML/CSS/JavaScript thuần; có khu vực khách hàng, trang quản trị, chat hỗ trợ realtime và trợ lý mua sắm Gemini.
 
-## 🚀 Yêu cầu hệ thống
+> Đây là dự án phục vụ học tập. Luồng VNPay và MoMo chỉ mô phỏng kết quả thanh toán, không kết nối cổng thanh toán thật.
 
-- **Node.js** v20 hoặc cao hơn
-- **XAMPP** (có MySQL và phpMyAdmin)
-- **Trình duyệt** Chrome, Firefox, Edge
+## Chức năng hiện có
 
----
+### Khách hàng
 
-## 🗄️ Cài đặt Database với XAMPP
+- Đăng ký, đăng nhập bằng email/mật khẩu và đăng nhập Google OAuth (khi được cấu hình).
+- Quên mật khẩu bằng OTP email; cập nhật hồ sơ, đổi mật khẩu và ảnh đại diện.
+- Xem, tìm kiếm, phân trang, lọc và sắp xếp sản phẩm theo danh mục, thương hiệu, RAM, bộ nhớ và giá.
+- Xem gallery, thông số, đánh giá và sản phẩm liên quan; so sánh tối đa 4 sản phẩm.
+- Quản lý giỏ hàng, mua ngay, danh sách yêu thích và mã giảm giá.
+- Thanh toán COD hoặc chạy luồng VNPay/MoMo mô phỏng.
+- Xem lịch sử, chi tiết, trạng thái và hủy đơn đang chờ xác nhận.
+- Đánh giá sản phẩm đã mua và đã nhận hàng.
+- Gửi liên hệ và chat hai chiều với quản trị viên qua Socket.IO.
+- Chat với trợ lý AI để tìm/tư vấn sản phẩm, kiểm tra tồn kho, xem chính sách và tra cứu đơn của tài khoản đang đăng nhập.
 
-### Bước 1: Mở XAMPP và khởi động MySQL
+### Quản trị viên
 
-1. Mở **XAMPP Control Panel**
-2. Nhấn **Start** ở mục **MySQL**
-3. Đợi đến khi MySQL chuyển sang trạng thái **Running** (màu xanh)
+- Dashboard doanh thu, đơn hàng, khách hàng, cảnh báo tồn kho, biểu đồ và thông báo.
+- Quản lý sản phẩm và gallery ảnh, danh mục, thương hiệu.
+- Xem đơn hàng và cập nhật trạng thái theo đúng luồng nghiệp vụ.
+- Xem người dùng và tạo tài khoản người dùng mới.
+- Xem, phản hồi hoặc xóa đánh giá.
+- Tiếp nhận và trả lời hội thoại hỗ trợ realtime; đóng/mở lại hội thoại.
+- Quản lý coupon.
+- Quản lý banner trang chủ; banner chính hỗ trợ tối đa 10 ảnh.
 
-### Bước 2: Truy cập phpMyAdmin
+## Công nghệ
 
-1. Mở trình duyệt
-2. Truy cập: `http://localhost/phpmyadmin/`
-3. Hoặc nhấn nút **Admin** trong XAMPP Control Panel
+- Backend: Node.js 20+, Express 4, MySQL2, Express Session.
+- Xác thực: bcryptjs, Passport, Google OAuth 2.0.
+- Realtime: Socket.IO.
+- Email: Nodemailer qua SMTP.
+- Lưu ảnh: Multer và Cloudinary.
+- AI: Gemini `generateContent` API với function calling tới dữ liệu cửa hàng.
+- Frontend: HTML5, CSS3, JavaScript thuần và Bootstrap Icons.
+- Kiểm thử: Node.js `assert` và test runner tự xây dựng trong `tests/product-regressions.test.js`.
 
-### Bước 3: Tạo Database
+## Yêu cầu
 
-1. Trong phpMyAdmin, click **New** (mới) ở panel bên trái
-2. Tên database: `anhtraisstore`
-3. Collation: `utf8mb4_unicode_ci`
-4. Nhấn **Create**
+- Node.js `>= 20` (dịch vụ AI sử dụng `fetch` và `AbortController` có sẵn trong Node).
+- npm.
+- MySQL/MariaDB; có thể dùng MySQL trong XAMPP và phpMyAdmin.
+- Một database trống cho dữ liệu mẫu.
+- Tài khoản Cloudinary nếu cần tải ảnh mới.
+- Tài khoản SMTP, Google OAuth và Gemini chỉ khi muốn dùng các tính năng tương ứng.
 
-### Bước 4: Import Database
+## Cài đặt và chạy
 
-1. Chọn database `anhtraisstore` vừa tạo
-2. Click tab **Import**
-3. Click **Choose File** và chọn file: `database/dt.sql`
-4. Cuộn xuống và nhấn **Go** (Execute)
-5. Đợi import thành công
-
-### Thông tin kết nối Database (XAMPP mặc định)
-
-| Thông số | Giá trị |
-|----------|---------|
-| Host | `localhost` |
-| User | `root` |
-| Password | `""` (trống) |
-| Port | `3306` |
-| Database | `anhtraisstore` |
-
----
-
-## 📦 Cài đặt Project
-
-### Bước 1: Cài đặt Node.js dependencies
+### 1. Cài package
 
 ```bash
-# Mở terminal trong thư mục project
-cd e:\Website
-
-# Cài đặt các package cần thiết
 npm install
 ```
 
-### Bước 2: Cấu hình file `.env`
+### 2. Tạo và import database
 
-Sao chép `.env.example` thành `.env`, sau đó điền thông tin của môi trường chạy:
+Tạo database `anhtraisstore` với collation `utf8mb4_unicode_ci`, sau đó import file [`database/anhtraistore.sql`](database/anhtraistore.sql). File SQL không tự tạo hoặc tự chọn database, vì vậy cần chọn đúng database trước khi import.
+
+Với phpMyAdmin:
+
+1. Mở `http://localhost/phpmyadmin/`.
+2. Tạo database `anhtraisstore`.
+3. Chọn database vừa tạo, vào **Import**.
+4. Chọn `database/anhtraistore.sql` và chạy import.
+
+Hoặc dùng MySQL CLI trong Bash/cmd:
+
+```bash
+mysql -u root -p -e "CREATE DATABASE anhtraisstore CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -p anhtraisstore < database/anhtraistore.sql
+```
+
+#### Lưu ý tương thích schema liên hệ
+
+Mã nguồn hiện tại gắn form liên hệ với tài khoản đăng nhập qua `contacts.user_id`, trong khi snapshot `database/anhtraistore.sql` chưa khai báo cột này. Sau khi import, chạy một lần:
+
+```sql
+ALTER TABLE contacts
+    ADD COLUMN user_id INT NULL AFTER id,
+    ADD INDEX idx_contacts_user_id (user_id),
+    ADD CONSTRAINT fk_contacts_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
+```
+
+Nếu database đã có `contacts.user_id`, bỏ qua bước này.
+
+### 3. Cấu hình môi trường
+
+Sao chép `.env.example` thành `.env`:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Hoặc trên Bash:
+
+```bash
+cp .env.example .env
+```
+
+Cấu hình tối thiểu để chạy ứng dụng:
 
 ```env
-# Database (XAMPP)
+NODE_ENV=development
+PORT=3000
+SITE_NAME=AnhTraiStore
+SITE_URL=http://localhost:3000
+CORS_ORIGINS=http://localhost:3000
+SESSION_SECRET=replace-with-a-long-random-secret
+
 DB_HOST=localhost
+DB_PORT=3306
 DB_USER=root
 DB_PASS=
 DB_NAME=anhtraisstore
+```
 
-# Server
-NODE_ENV=development
-PORT=3000
-SESSION_SECRET=replace-with-a-random-secret-at-least-32-characters
-CORS_ORIGINS=http://localhost:3000
+Các tích hợp tùy chọn:
 
-# Email (tùy chọn - để gửi email thật)
+```env
+# Gmail hoặc SMTP tương thích: gửi OTP, xác nhận đơn và email chào mừng
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=xxxx xxxx xxxx xxxx
-SITE_NAME=AnhTraiStore
-SITE_URL=http://localhost:3000
+SMTP_USER=
+SMTP_PASS=
 
-# Google OAuth (tùy chọn)
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
+# Google OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 
-# Cloudinary (bắt buộc để tải ảnh sản phẩm, banner và ảnh đại diện)
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
+# Cloudinary: bắt buộc cho thao tác upload sản phẩm, banner và avatar
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 CLOUDINARY_PRODUCT_FOLDER=anhtraisstore/products
 CLOUDINARY_BANNER_FOLDER=anhtraisstore/banners
 CLOUDINARY_AVATAR_FOLDER=anhtraisstore/avatars
 
-# Gemini (bắt buộc để dùng trợ lý AI)
-GEMINI_API_KEY=your-gemini-api-key
+# Trợ lý AI Gemini
+GEMINI_API_KEY=
 GEMINI_MODEL=gemini-3.6-flash
 GEMINI_API_TIMEOUT_MS=25000
 ```
 
-### Bước 3: Chạy Server
+Không có cấu hình SMTP hoặc Google OAuth thì server vẫn chạy và tự vô hiệu hóa tính năng tương ứng. Không có Cloudinary thì vẫn xem được ảnh sẵn có, nhưng các API upload trả lỗi `503`. Không có `GEMINI_API_KEY` thì chat AI không hoạt động; chat hỗ trợ với admin vẫn dùng được.
+
+### 4. Khởi động
 
 ```bash
+# Chạy thông thường
 npm start
+
+# Tự khởi động lại khi sửa mã nguồn
+npm run dev
 ```
 
-### Bước 4: Truy cập Website
+Mở `http://localhost:3000`.
 
-Mở trình duyệt: **`http://localhost:3000`**
+## Tài khoản mẫu
 
----
+File SQL tạo sẵn tài khoản quản trị:
 
-## 📋 Tài khoản demo
+- Email: `adminanhtrai@gmail.com`
+- Mật khẩu: `admin123`
+- Trang quản trị: `http://localhost:3000/admin`
 
-### Admin (Quản trị viên)
+Đây là thông tin demo; hãy đổi mật khẩu trước khi đưa ứng dụng lên môi trường công khai.
 
-| Thông tin | Giá trị |
-|-----------|---------|
-| Email | `adminanhtrai@gmail.com` |
-| Password | `admin123` |
-| URL Admin | `http://localhost:3000/admin` |
+## Các URL chính
 
-### Khách hàng
+- `/`: trang chủ.
+- `/products`, `/product/:id`: danh sách và chi tiết sản phẩm.
+- `/cart`, `/checkout`: giỏ hàng và thanh toán.
+- `/wishlist`, `/compare`: yêu thích và so sánh.
+- `/orders`, `/order/:id`: danh sách và chi tiết đơn hàng.
+- `/profile`: hồ sơ người dùng.
+- `/promotions`, `/policy`, `/contact`: ưu đãi, chính sách và liên hệ.
+- `/admin`: dashboard quản trị.
+- `/health`: kiểm tra tiến trình web.
+- `/ready`: kiểm tra kết nối database; trả `503` nếu database chưa sẵn sàng.
 
-- Đăng ký tài khoản mới tại: `http://localhost:3000/register`
-- Hoặc đăng nhập bằng Google (nếu đã cấu hình OAuth)
+API được chia theo các prefix `/api/auth`, `/api/products`, `/api/cart`, `/api/orders`, `/api/wishlist`, `/api/coupons`, `/api/messages` và `/api/chat`. API quản trị sản phẩm, đơn hàng, người dùng, đánh giá, coupon và banner nằm dưới `/admin`.
 
----
+## Quy tắc nghiệp vụ đáng chú ý
 
-## ✨ Tính năng chính
+- Giá, tồn kho, phí vận chuyển và số tiền giảm được backend tính lại từ database.
+- Phí vận chuyển là `30.000đ`; đơn có tạm tính từ `500.000đ` được miễn phí.
+- Số lượng phải là số nguyên dương và không vượt quá tồn kho.
+- COD tạo đơn `pending`, trừ kho và ghi nhận coupon ngay khi đặt hàng.
+- VNPay/MoMo tạo đơn `pending` nhưng chưa trừ kho. Nút xác nhận thanh toán mô phỏng chuyển đơn sang `confirmed`, sau đó mới trừ kho và ghi nhận coupon.
+- Luồng trạng thái quản trị: `pending -> confirmed -> shipping -> delivered`; trạng thái hợp lệ có thể chuyển sang `cancelled` theo quy tắc trong backend.
+- Khách chỉ tự hủy được đơn `pending`. COD được hoàn kho khi hủy; coupon đã ghi nhận cũng được hoàn lượt.
+- Mỗi tài khoản chỉ dùng một coupon một lần. `WELCOME10` và `NEWUSER` chỉ dành cho đơn đầu tiên; `VIP20` yêu cầu tổng đơn đã giao từ 30 triệu đồng.
+- Chỉ tài khoản đã có đơn `delivered` chứa sản phẩm mới được đánh giá sản phẩm đó, và mỗi sản phẩm chỉ được đánh giá một lần trên mỗi tài khoản.
+- Sản phẩm đã xuất hiện trong đơn hàng không thể bị xóa, nhằm giữ lịch sử đơn.
+- Dữ liệu “Mua ngay” được giữ trong session tối đa 15 phút.
 
-### 👤 Khách hàng
+Các coupon mẫu gồm `WELCOME10`, `FREESHIP`, `VIP20`, `SALE5TR`, `PHONE15` và `NEWUSER`. Ngày hết hạn và giới hạn sử dụng nằm trong dữ liệu SQL, vì vậy giao diện chỉ hiển thị những mã còn hiệu lực tại thời điểm chạy.
 
-| Tính năng | Mô tả |
-|------------|--------|
-| 🏠 Trang chủ | Banner, sản phẩm nổi bật, danh mục |
-| 🔍 Tìm kiếm & lọc | Theo danh mục, nhiều thương hiệu, RAM, bộ nhớ, khoảng giá và sắp xếp |
-| 📱 Chi tiết sản phẩm | Hình ảnh gallery, mô tả, thông số kỹ thuật, đánh giá |
-| ❤️ Wishlist | Lưu sản phẩm yêu thích |
-| ⚖️ So sánh | So sánh tối đa 3 sản phẩm |
-| 🛒 Giỏ hàng | Thêm, bớt, xóa, cập nhật số lượng |
-| 💳 Thanh toán | COD, VNPay, MoMo (demo) |
-| 🎫 Mã giảm giá | Áp dụng coupon khi thanh toán |
-| 📦 Quản lý đơn hàng | Xem, theo dõi, hủy đơn |
-| ⭐ Đánh giá | Đánh giá và bình luận sản phẩm |
-| 💬 Chatbot AI | Hỏi đáp, tìm/tư vấn sản phẩm, kiểm tra tồn kho và tra cứu đơn bằng tool calling |
-| 👤 Tài khoản | Quản lý thông tin cá nhân |
-| 🔐 Đăng nhập Google | OAuth 2.0 qua Google |
-| 📧 Email xác nhận | Nhận email khi đặt hàng, đăng ký |
-| 🔑 Quên mật khẩu | Đặt lại bằng OTP qua email |
+## Cấu trúc dự án
 
-### 🔧 Admin (Quản trị)
-
-| Tính năng | Mô tả |
-|------------|--------|
-| 📊 Dashboard | Thống kê tổng quan |
-| 📦 CRUD Sản phẩm | Thêm, sửa, xóa, upload ảnh gallery |
-| 📁 CRUD Danh mục | Quản lý danh mục sản phẩm |
-| 🏷️ CRUD Thương hiệu | Quản lý thương hiệu |
-| 🛒 Quản lý đơn hàng | Xác nhận, cập nhật trạng thái |
-| 👥 Quản lý người dùng | Xem danh sách khách hàng |
-| ⭐ Duyệt đánh giá | Duyệt/xóa đánh giá sản phẩm |
-| 💬 Chat realtime | Nhắn tin với khách (Socket.IO) |
-| 📬 Quản lý liên hệ | Xem và trả lời tin nhắn liên hệ |
-| 🖼️ Quản lý Banner | Banner chính tối đa 10 ảnh, tự chuyển mỗi 2 giây; 2 banner phụ hiển thị trọn ảnh |
-| 🎫 Quản lý Coupon | Tạo và quản lý mã giảm giá |
-
-### Quy tắc nghiệp vụ demo
-
-- Giá sản phẩm, phí vận chuyển và số tiền giảm được backend tính lại từ dữ liệu hiện có; frontend không quyết định số tiền của đơn hàng.
-- Số lượng mua phải là số nguyên dương và không vượt quá tồn kho.
-- Đơn COD được tạo ở trạng thái `pending` và trừ kho ngay khi đặt hàng.
-- MoMo/VNPay là thanh toán mô phỏng: đơn được tạo ở trạng thái `pending`; người dùng nhấn **Xác nhận đã thanh toán** để chuyển sang `confirmed` và trừ kho.
-- Trạng thái đơn đi theo luồng `pending → confirmed → shipping → delivered`; đơn chưa giao có thể chuyển sang `cancelled` và được hoàn kho nếu trước đó đã trừ kho.
-- Coupon được backend kiểm tra lại khi tạo hoặc xác nhận đơn. Mỗi tài khoản chỉ dùng một coupon một lần; `WELCOME10` và `NEWUSER` chỉ áp dụng cho đơn đầu tiên. `VIP20` dành cho khách có tổng đơn đã giao từ 30 triệu.
-- Chỉ khách đã nhận sản phẩm (`delivered`) mới có thể gửi đánh giá.
-- Chỉ xóa sản phẩm chưa có trong đơn hàng. Sản phẩm đã được đặt mua cùng hình ảnh được giữ lại để bảo toàn lịch sử đơn hàng.
-- Khôi phục mật khẩu dùng OTP qua email tại `/forgot-password`; trang này thực hiện đủ các bước nhập email, OTP và mật khẩu mới.
-
----
-
-## 🎫 Mã giảm giá demo
-
-| Mã | Loại | Giảm | Điều kiện |
-|----|------|------|-----------|
-| `WELCOME10` | % | 10% | Đơn từ 1 triệu |
-| `FREESHIP` | Tiền | 30.000đ | Đơn từ 500K (giảm trực tiếp vào đơn) |
-| `VIP20` | % | 20% | Đã mua thành công từ 30 triệu; đơn mới từ 3 triệu |
-| `SALE5TR` | Tiền | 500.000đ | Đơn từ 30 triệu |
-
----
-
-## 🛠️ Công nghệ sử dụng
-
-### Backend
-| Công nghệ | Mô tả |
-|-----------|--------|
-| Node.js | JavaScript runtime |
-| Express.js | Web framework |
-| Socket.IO | Realtime communication |
-| Passport.js | Authentication (OAuth) |
-| Nodemailer | Gửi email SMTP |
-
-### Database
-| Công nghệ | Mô tả |
-|-----------|--------|
-| MySQL (XAMPP) | Hệ quản trị CSDL |
-| phpMyAdmin | Quản lý database |
-
-### Frontend
-| Công nghệ | Mô tả |
-|-----------|--------|
-| HTML5 | Cấu trúc trang |
-| CSS3 | Styling + Responsive |
-| Vanilla JS | Tương tác |
-| Bootstrap Icons | Icon |
-
----
-
-## 📁 Cấu trúc thư mục
-
-```
+```text
 Website/
-├── server.js              # Entry point tương thích hosting
-├── package.json
-├── .env.example           # Mẫu biến môi trường
-│
-├── src/                   # Mã nguồn backend
-│   ├── app.js             # Cấu hình Express
-│   ├── config/            # Database, SMTP, OAuth, runtime
-│   ├── core/              # Đường dẫn và hằng số dùng chung
-│   ├── middleware/        # Xác thực và xử lý lỗi
-│   ├── realtime/          # Socket.IO chat
-│   ├── services/          # Tích hợp Cloudinary và điều phối công cụ AI
-│   └── routes/            # API và page routes theo nghiệp vụ
-│
-├── views/                # HTML Pages (Customer)
-│   ├── index.html       # Trang chủ
-│   ├── products.html    # Danh sách sản phẩm
-│   ├── product-detail.html
-│   ├── cart.html
-│   ├── checkout.html
-│   ├── orders.html
-│   ├── order-detail.html
-│   ├── compare.html
-│   ├── wishlist.html
-│   ├── profile.html
-│   ├── login.html
-│   ├── register.html
-│   ├── forgot-password.html
-│   ├── contact.html
-│   ├── promotions.html
-│   ├── policy.html
-│   ├── components/
-│   │   └── ai-chatbox.html
-│   └── admin/           # Admin Dashboard
-│       ├── index.html   # Dashboard
-│       ├── products.html
-│       ├── categories.html
-│       ├── brands.html
-│       ├── orders.html
-│       ├── users.html
-│       ├── reviews.html
-│       ├── banners.html
-│       ├── promotions.html
-│       └── contacts.html
-│
-├── public/              # Static Files
-│   ├── css/
-│   │   ├── style.css
-│   │   ├── admin.css
-│   │   ├── filter.css
-│   │   └── chatbox.css
-│   ├── js/
-│   │   ├── app.js       # Logic giao diện dùng chung
-│   │   └── vietnam-address.js # Dữ liệu địa chỉ Việt Nam
-│   ├── images/
-│   │   └── no-image.svg
-│   └── assets/
-│       └── images/
-│           └── products/ # Ảnh sản phẩm
-│
+├── server.js                     # Entry point HTTP và Socket.IO
+├── package.json                  # Dependencies và npm scripts
+├── .env.example                  # Mẫu biến môi trường
 ├── database/
-│   └── dt.sql             # Schema và dữ liệu mẫu
+│   └── anhtraistore.sql          # Schema 18 bảng và dữ liệu demo
 ├── docs/
-│   ├── architecture.md    # Tài liệu kiến trúc
-│   └── security.md        # Kết quả rà soát API và bảo mật
-└── tests/                 # Kiểm tra hồi quy
+│   └── bao-cao-do-an.md          # Báo cáo, use case và tài liệu thiết kế
+├── public/
+│   ├── assets/images/products/   # Ảnh sản phẩm local
+│   ├── uploads/banners/          # Ảnh banner local
+│   ├── css/                      # CSS khách hàng, admin, bộ lọc, chatbox
+│   ├── images/                   # Fallback ảnh và QR demo
+│   └── js/                       # Logic giao diện dùng chung
+├── src/
+│   ├── app.js                    # Khởi tạo Express và middleware
+│   ├── config/                   # Database, runtime, SMTP, Google OAuth
+│   ├── core/                     # Path, upload validation, review helpers
+│   ├── middleware/               # Auth, rate limit, security, error handler
+│   ├── realtime/                 # Socket.IO cho chat hỗ trợ
+│   ├── routes/                   # Page routes và API nghiệp vụ
+│   └── services/                 # Cloudinary và trợ lý Gemini
+├── tests/
+│   └── product-regressions.test.js
+└── views/
+    ├── components/               # Chatbox dùng chung
+    ├── admin/                    # 10 trang quản trị
+    └── *.html                    # 16 trang khách hàng
 ```
 
----
+Database gồm 18 bảng: `users`, `reset_tokens`, `categories`, `brands`, `products`, `product_images`, `orders`, `order_items`, `cart`, `reviews`, `wishlists`, `coupons`, `user_coupons`, `contacts`, `conversations`, `messages`, `promotions` và `banners`.
 
-## 💬 Hệ thống Chat Admin ↔ Khách hàng
-
-### Tính năng
-- ✅ Tin nhắn **realtime** qua Socket.IO
-- ✅ **Typing indicator** - hiển thị "đang nhập..."
-- ✅ Widget chat nổi ở góc phải màn hình
-- ✅ Badge đếm tin nhắn chưa đọc
-- ✅ Xem lịch sử hội thoại
-- ✅ Đóng/mở hội thoại
-
-### Cách hoạt động
-1. Khách đăng nhập → Mở widget chat
-2. Gửi tin nhắn → Lưu vào database
-3. Admin vào `/admin/contacts` → Nhắn tin phản hồi
-4. Cả hai nhận tin realtime (không cần F5)
-
-### Socket.IO Events
-| Event | Mô tả |
-|-------|--------|
-| `join_conversation` | Tham gia phòng chat |
-| `typing` | Typing indicator |
-| `new_message` | Tin nhắn mới |
-| `admin_status` | Trạng thái online của admin |
-
----
-
-## 📧 Cấu hình Email (Gmail SMTP)
-
-### 1. Tạo Gmail App Password
-
-1. Truy cập [myaccount.google.com](https://myaccount.google.com) → **Bảo mật**
-2. Bật **Xác thực 2 bước**
-3. Vào **App Passwords** → Tạo mới
-4. Chọn App: "Mail", Device: "Other"
-5. Copy mật khẩu 16 ký tự
-
-### 2. Cập nhật file `.env`
-
-```env
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=xxxx xxxx xxxx xxxx  # App Password
-```
-
-### Tính năng Email
-
-| Tính năng | Mô tả |
-|-----------|--------|
-| 📧 Xác nhận đơn hàng | Gửi email khi đặt hàng thành công |
-| 🔑 OTP đặt lại mật khẩu | Mã 6 số, hết hạn sau 5 phút |
-| 👋 Email chào mừng | Gửi khi đăng ký qua Google |
-
----
-
-## 🔐 Google OAuth (Đăng nhập bằng Google)
-
-### 1. Tạo OAuth Client
-
-1. Truy cập [console.cloud.google.com](https://console.cloud.google.com/)
-2. Tạo Project mới
-3. **APIs & Services** → **Credentials** → **Create Credentials**
-4. Chọn **OAuth client ID**
-5. Application type: **Web application**
-6. Thêm Authorized redirect URI:
-   - `http://localhost:3000/auth/google/callback`
-
-### 2. Cập nhật file `.env`
-
-```env
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
-```
-
----
-
-## 🗃️ Database Schema (18 bảng)
-
-| Bảng | Mô tả |
-|------|--------|
-| `users` | Người dùng (khách + admin) |
-| `reset_tokens` | Token đặt lại mật khẩu |
-| `categories` | Danh mục sản phẩm |
-| `brands` | Thương hiệu |
-| `products` | Sản phẩm |
-| `product_images` | Gallery ảnh sản phẩm |
-| `orders` | Đơn hàng |
-| `order_items` | Chi tiết đơn hàng |
-| `cart` | Giỏ hàng tạm |
-| `reviews` | Đánh giá sản phẩm |
-| `wishlists` | Sản phẩm yêu thích |
-| `coupons` | Mã giảm giá |
-| `user_coupons` | Lịch sử dùng coupon |
-| `contacts` | Form liên hệ |
-| `conversations` | Hội thoại chat |
-| `messages` | Tin nhắn chat |
-| `promotions` | Khuyến mãi |
-| `banners` | Banner trang chủ |
-
----
-
-## ❓ Giải quyết sự cố
-
-### Lỗi "Can't connect to MySQL server"
-
-1. Kiểm tra XAMPP đã Start MySQL chưa
-2. Kiểm tra port 3306 có bị chiếm dụng không
-3. Thử restart MySQL trong XAMPP
-
-### Lỗi "Database 'anhtraisstore' doesn't exist"
-
-1. Truy cập phpMyAdmin: `http://localhost/phpmyadmin/`
-2. Tạo database `anhtraisstore`
-3. Import lại file `database/dt.sql`
-
-### Lỗi "Port 3000 already in use"
+## Kiểm tra dự án
 
 ```bash
-# Tìm và kill process sử dụng port 3000
-netstat -ano | findstr :3000
-taskkill /PID <process_id> /F
+# Chạy 42 bài kiểm tra hồi quy
+npm test
+
+# Kiểm tra cú pháp entry point rồi chạy test
+npm run check
 ```
 
-### Lỗi khi import SQL
+Test hiện bao phủ các luồng quan trọng như lọc sản phẩm, giỏ hàng, đặt/hủy đơn, coupon, banner, upload Cloudinary, phân quyền, giới hạn request, bảo mật lỗi API và function calling của trợ lý AI.
 
-1. Kiểm tra file `dt.sql` có tồn tại không
-2. Tăng `max_execution_time` trong php.ini nếu file lớn
-3. Thử import từng phần nhỏ
+## Ghi chú triển khai
 
----
+- Khi `NODE_ENV=production`, `SESSION_SECRET` bắt buộc dài ít nhất 32 ký tự, cookie session bật `secure`, Express tin proxy cấp đầu tiên và HSTS được bật. Vì vậy production cần HTTPS và cấu hình reverse proxy đúng.
+- `CORS_ORIGINS` nhận một hoặc nhiều origin, phân cách bằng dấu phẩy. Hãy khai báo origin frontend thật khi chạy production.
+- Session hiện dùng MemoryStore mặc định của `express-session`; phù hợp demo/local nhưng cần thay bằng Redis hoặc persistent store khi chạy nhiều tiến trình hay triển khai production lâu dài.
+- API có rate limit trong bộ nhớ: toàn bộ `/api` tối đa 300 request/15 phút/IP; đăng nhập tối đa 10 lần/15 phút/IP; yêu cầu/kiểm tra OTP tối đa 5 lần/15 phút/IP.
+- Upload chấp nhận `jpg`, `jpeg`, `png`, `gif`, `webp`. Avatar tối đa 2 MB; mỗi ảnh sản phẩm/banner tối đa 5 MB.
+- Không commit `.env` hoặc khóa SMTP, Google, Cloudinary, Gemini vào repository.
 
-## 📝 Ghi chú
+## Xử lý lỗi thường gặp
 
-- **Đồ án demo** - Phù hợp cho mục đích học tập
-- Thanh toán VNPay/MoMo là luồng mô phỏng phục vụ đồ án, không kết nối cổng thanh toán thật. Nút xác nhận thanh toán trên giao diện đóng vai trò kết quả giao dịch demo.
-- File `database/dt.sql` là schema và dữ liệu mẫu gốc; các chỉnh sửa nghiệp vụ trong mã nguồn không yêu cầu thay đổi file này.
-- Xem [docs/security.md](docs/security.md) để biết các cơ chế bảo vệ API và yêu cầu khi triển khai.
-- Các quyết định và hướng nâng cấp đã thống nhất được lưu tại [docs/project-memory.md](docs/project-memory.md).
-- Khuyến nghị bật HTTPS khi deploy thật
-- Nên sử dụng XAMPP phiên bản mới nhất
+### Không kết nối được MySQL
 
----
+- Kiểm tra MySQL đã chạy và đúng host/port.
+- Kiểm tra `DB_USER`, `DB_PASS`, `DB_NAME` trong `.env`.
+- Mở `/ready` để phân biệt lỗi database với lỗi web server.
 
-## 👨‍💻 Tác giả
+### `Unknown column 'user_id' in 'contacts'`
 
-Đồ án được phát triển bởi [Tên Sinh viên]
+Chạy câu lệnh `ALTER TABLE contacts` ở phần **Lưu ý tương thích schema liên hệ**.
 
-**Liên hệ hỗ trợ:** [Email]
+### Google OAuth quay lại trang đăng nhập
+
+- Kiểm tra đủ `GOOGLE_CLIENT_ID` và `GOOGLE_CLIENT_SECRET`.
+- Authorized redirect URI trên Google Cloud phải khớp chính xác `GOOGLE_CALLBACK_URL`.
+
+### Không upload được ảnh
+
+- Kiểm tra ba biến `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
+- Kiểm tra định dạng và giới hạn dung lượng file.
+
+### AI báo chưa được cấu hình
+
+Điền `GEMINI_API_KEY`; đồng thời kiểm tra `GEMINI_MODEL` là model mà API key có quyền sử dụng.
+
+### Port 3000 đang được dùng trên Windows
+
+```powershell
+Get-NetTCPConnection -LocalPort 3000
+Stop-Process -Id <PID>
+```
+
+Hoặc đổi `PORT` trong `.env`.
+
+## Tài liệu
+
+- [Báo cáo đồ án](docs/bao-cao-do-an.md)
+
+## Giấy phép
+
+Dự án khai báo giấy phép MIT trong `package.json`.
