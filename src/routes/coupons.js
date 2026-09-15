@@ -3,18 +3,72 @@ const router = express.Router();
 const pool = require('../config/database');
 
 const VIP_MIN_DELIVERED_SPEND = 30000000;
+const FIRST_ORDER_COUPONS = new Set(['WELCOME10', 'NEWUSER']);
 
 function couponDescription(coupon) {
     return coupon.code === 'FREESHIP' ? 'Giảm 30K cho đơn từ 500K' : coupon.description;
 }
 
-async function isVipCustomer(db, userId) {
-    if (!userId) return false;
-    const [rows] = await db.query(
-        "SELECT COALESCE(SUM(total_price), 0) AS total FROM orders WHERE user_id = ? AND status = 'delivered'",
-        [userId]
-    );
-    return Number(rows[0]?.total || 0) >= VIP_MIN_DELIVERED_SPEND;
+async function getCouponContext(db, userId, coupons) {
+    const context = {
+        usedCouponIds: new Set(),
+        hasPriorOrder: false,
+        deliveredSpend: 0
+    };
+    if (!userId) return context;
+
+    const needsFirstOrderCheck = coupons.some(coupon => FIRST_ORDER_COUPONS.has(coupon.code));
+    const needsVipCheck = coupons.some(coupon => coupon.code === 'VIP20');
+    const queries = [
+        db.query('SELECT coupon_id FROM user_coupons WHERE user_id = ?', [userId]),
+        needsFirstOrderCheck
+            ? db.query(
+                `SELECT id FROM orders
+                 WHERE user_id = ?
+                   AND (status IN ('confirmed', 'shipping', 'delivered')
+                        OR (payment_method = 'cod' AND status = 'pending'))
+                 LIMIT 1`,
+                [userId]
+            )
+            : Promise.resolve([[]]),
+        needsVipCheck
+            ? db.query(
+                "SELECT COALESCE(SUM(total_price), 0) AS total FROM orders WHERE user_id = ? AND status = 'delivered'",
+                [userId]
+            )
+            : Promise.resolve([[{ total: 0 }]])
+    ];
+
+    const [[usedRows], [orderRows], [vipRows]] = await Promise.all(queries);
+    context.usedCouponIds = new Set(usedRows.map(row => Number(row.coupon_id)));
+    context.hasPriorOrder = orderRows.length > 0;
+    context.deliveredSpend = Number(vipRows[0]?.total || 0);
+    return context;
+}
+
+function getCouponRestriction(coupon, total, userId, context) {
+    if (coupon.usage_limit != null && Number(coupon.used_count) >= Number(coupon.usage_limit)) {
+        return { status: 400, error: 'Mã giảm giá đã hết lượt sử dụng!' };
+    }
+
+    const minimum = Number(coupon.min_order_value || 0);
+    if (total < minimum) {
+        return {
+            status: 400,
+            error: `Đơn hàng tối thiểu ${minimum.toLocaleString('vi-VN')}đ để dùng mã này!`
+        };
+    }
+
+    if (userId && context.usedCouponIds.has(Number(coupon.id))) {
+        return { status: 400, error: 'Bạn đã sử dụng mã giảm giá này!' };
+    }
+    if (userId && FIRST_ORDER_COUPONS.has(coupon.code) && context.hasPriorOrder) {
+        return { status: 400, error: 'Mã này chỉ áp dụng cho đơn hàng đầu tiên!' };
+    }
+    if (coupon.code === 'VIP20' && context.deliveredSpend < VIP_MIN_DELIVERED_SPEND) {
+        return { status: 403, error: 'VIP20 dành cho khách đã có tổng đơn giao thành công từ 30 triệu!' };
+    }
+    return null;
 }
 
 // ===========================================
@@ -44,47 +98,11 @@ router.post('/validate', async (req, res) => {
 
         const coupon = coupons[0];
 
-        // Kiểm tra số lượng đã dùng
-        if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
-            return res.status(400).json({ error: 'Mã giảm giá đã hết lượt sử dụng!' });
-        }
-
-        // Kiểm tra giá trị đơn hàng tối thiểu
         const total = parseFloat(order_total) || 0;
-        if (total < parseFloat(coupon.min_order_value)) {
-            const minVal = parseFloat(coupon.min_order_value);
-            return res.status(400).json({
-                error: `Đơn hàng tối thiểu ${minVal.toLocaleString('vi-VN')}đ để dùng mã này!`
-            });
-        }
-
-        if (req.session.user_id) {
-            const [used] = await pool.query(
-                'SELECT id FROM user_coupons WHERE user_id = ? AND coupon_id = ? LIMIT 1',
-                [req.session.user_id, coupon.id]
-            );
-            if (used.length > 0) {
-                return res.status(400).json({ error: 'Bạn đã sử dụng mã giảm giá này!' });
-            }
-
-            if (coupon.code === 'WELCOME10' || coupon.code === 'NEWUSER') {
-                const [orders] = await pool.query(
-                    `SELECT id FROM orders
-                     WHERE user_id = ?
-                       AND (status IN ('confirmed', 'shipping', 'delivered')
-                            OR (payment_method = 'cod' AND status = 'pending'))
-                     LIMIT 1`,
-                    [req.session.user_id]
-                );
-                if (orders.length > 0) {
-                    return res.status(400).json({ error: 'Mã này chỉ áp dụng cho đơn hàng đầu tiên!' });
-                }
-            }
-        }
-
-        if (coupon.code === 'VIP20' && !(await isVipCustomer(pool, req.session.user_id))) {
-            return res.status(403).json({ error: 'VIP20 dành cho khách đã có tổng đơn giao thành công từ 30 triệu!' });
-        }
+        const userId = req.session?.user_id;
+        const context = await getCouponContext(pool, userId, [coupon]);
+        const restriction = getCouponRestriction(coupon, total, userId, context);
+        if (restriction) return res.status(restriction.status).json({ error: restriction.error });
 
         // Tính số tiền được giảm
         let discountAmount = 0;
@@ -136,19 +154,35 @@ router.get('/active', async (req, res) => {
     }
 });
 
-// Alias cho /active (frontend gọi /available)
+// Chỉ trả về mã thực sự dùng được với giỏ hàng và tài khoản hiện tại.
 router.get('/available', async (req, res) => {
     try {
+        const total = Math.max(0, Number(req.query.order_total) || 0);
         const [coupons] = await pool.query(
             `SELECT id, code, description, discount_type, discount_value,
-                    min_order_value, max_discount, expires_at
+                    min_order_value, max_discount, usage_limit, used_count, expires_at
              FROM coupons
              WHERE is_active = 1
              AND (start_date IS NULL OR start_date <= NOW())
              AND (expires_at IS NULL OR expires_at >= NOW())
+             AND (usage_limit IS NULL OR used_count < usage_limit)
+             AND COALESCE(min_order_value, 0) <= ?
              ORDER BY created_at DESC`
+            , [total]
         );
-        res.json({ coupons: coupons.map(coupon => ({ ...coupon, description: couponDescription(coupon) })) });
+        const userId = req.session?.user_id;
+        const context = await getCouponContext(pool, userId, coupons);
+        const available = coupons.filter(coupon => !getCouponRestriction(coupon, total, userId, context));
+        res.json({ coupons: available.map(coupon => ({
+            id: coupon.id,
+            code: coupon.code,
+            description: couponDescription(coupon),
+            discount_type: coupon.discount_type,
+            discount_value: coupon.discount_value,
+            min_order_value: coupon.min_order_value,
+            max_discount: coupon.max_discount,
+            expires_at: coupon.expires_at
+        })) });
     } catch (error) {
         console.error('Get available coupons error:', error);
         res.status(500).json({ error: 'Đã xảy ra lỗi!' });

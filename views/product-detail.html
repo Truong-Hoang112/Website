@@ -542,6 +542,9 @@
         .review-date { font-size: 0.8rem; color: var(--slate-400); }
         .review-stars { color: var(--warning); font-size: 0.9rem; }
         .review-content { color: var(--slate-600); line-height: 1.7; }
+        .review-admin-reply { margin: 14px 0 0 52px; padding: 14px 16px; background: var(--primary-bg); border-left: 3px solid var(--primary); border-radius: 4px 12px 12px 4px; }
+        .review-admin-reply-title { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; color: var(--primary); font-size: 0.82rem; font-weight: 800; }
+        .review-admin-reply-content { color: var(--slate-700); font-size: 0.9rem; line-height: 1.6; }
 
         .related-section h2 {
             font-size: 1.25rem;
@@ -1643,6 +1646,7 @@
                     stars += '<i class="bi bi-star' + (i <= r.rating ? '-fill' : '') + '"></i>';
                 }
                 const initial = escapeHtml(r.full_name ? r.full_name.charAt(0).toUpperCase() : 'U');
+                const adminReply = r.admin_reply ? '<div class="review-admin-reply"><div class="review-admin-reply-title"><i class="bi bi-shop"></i> Phản hồi từ AnhTraiStore</div><div class="review-admin-reply-content">' + escapeHtml(r.admin_reply) + '</div></div>' : '';
                 html += '<div class="review-card">' +
                     '<div class="review-header">' +
                         '<div class="review-user">' +
@@ -1652,7 +1656,7 @@
                         '</div>' +
                         '<div class="review-stars">' + stars + '</div>' +
                     '</div>' +
-                    '<div class="review-content">' + escapeHtml(r.comment) + '</div>' +
+                    '<div class="review-content">' + escapeHtml(r.comment) + '</div>' + adminReply +
                 '</div>';
             });
 

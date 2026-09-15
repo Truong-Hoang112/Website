@@ -8,6 +8,32 @@ const { createRequire } = require('node:module');
 
 const root = path.join(__dirname, '..');
 const plain = value => JSON.parse(JSON.stringify(value));
+const cloudStorageStub = {
+    productCloudinaryStorage: { _handleFile() {}, _removeFile() {} },
+    bannerCloudinaryStorage: { _handleFile() {}, _removeFile() {} },
+    avatarCloudinaryStorage: { _handleFile() {}, _removeFile() {} },
+    async destroyCloudinaryUrls() {},
+    async destroyUploadedFiles() {},
+    async destroyUploadedProductFiles() {}
+};
+
+test('every admin page uses only the rebuilt shared admin interface', () => {
+    const adminDir = path.join(root, 'views', 'admin');
+    const pages = fs.readdirSync(adminDir).filter(name => name.endsWith('.html'));
+    assert.equal(pages.length, 10);
+    for (const page of pages) {
+        const html = fs.readFileSync(path.join(adminDir, page), 'utf8');
+        assert.match(html, /<link rel="stylesheet" href="\/css\/admin\.css(?:\?[^\"]*)?">/);
+        assert.match(html, /<script src="\/js\/admin-ui\.js(?:\?[^\"]*)?"><\/script>/);
+        assert.match(html, /<body class="[^"]*\badmin-shell\b[^"]*">/);
+        assert.doesNotMatch(html, /<style[\s>]/);
+        assert.doesNotMatch(html, /admin-v3\.css/);
+        assert.ok(html.indexOf('/css/admin.css') < html.indexOf('</head>'));
+        assert.ok(html.indexOf('/js/admin-ui.js') < html.indexOf('</body>'));
+    }
+    const sharedScript = fs.readFileSync(path.join(root, 'public', 'js', 'admin-ui.js'), 'utf8');
+    assert.doesNotThrow(() => new vm.Script(sharedScript));
+});
 
 function loadPage(name, search = '') {
     const html = fs.readFileSync(path.join(root, 'views', name + '.html'), 'utf8');
@@ -153,7 +179,11 @@ function adminDelete(query) {
     const filename = path.join(root, 'src', 'routes', 'admin.js');
     const localRequire = createRequire(filename);
     const context = vm.createContext({ module: { exports: {} }, __dirname: path.dirname(filename), console,
-        require(name) { return name === '../config/database' ? { query } : localRequire(name); }
+        require(name) {
+            if (name === '../config/database') return { query };
+            if (name === '../services/cloud-storage') return cloudStorageStub;
+            return localRequire(name);
+        }
     });
     vm.runInContext(fs.readFileSync(filename, 'utf8'), context);
     return context.module.exports.stack.find(layer => layer.route?.path === '/products/:id' && layer.route.methods.delete).route;
@@ -172,6 +202,7 @@ test('ordered product deletion preserves gallery and returns a clear conflict', 
     const calls = [];
     const route = adminDelete(async sql => {
         calls.push(sql);
+        if (sql.startsWith('SELECT image_url')) return [[]];
         const error = new Error('Referenced by order_items');
         error.code = 'ER_ROW_IS_REFERENCED_2';
         error.errno = 1451;
@@ -180,12 +211,15 @@ test('ordered product deletion preserves gallery and returns a clear conflict', 
     const res = await callDelete(route, '1');
     assert.equal(res.statusCode, 409);
     assert.match(res.body.error, /đơn hàng/);
-    assert.deepEqual(calls, ['DELETE FROM products WHERE id = ?']);
+    assert.deepEqual(calls, [
+        'SELECT image_url FROM product_images WHERE product_id = ?',
+        'DELETE FROM products WHERE id = ?'
+    ]);
 });
 
 test('unreferenced product deletion succeeds; missing products return 404', async () => {
     for (const [affectedRows, status] of [[1, 200], [0, 404]]) {
-        const route = adminDelete(async () => [{ affectedRows }]);
+        const route = adminDelete(async sql => sql.startsWith('SELECT image_url') ? [[]] : [{ affectedRows }]);
         assert.equal((await callDelete(route, '1')).statusCode, status);
     }
 });
@@ -235,7 +269,11 @@ test('product update keeps selected old images, adds new files and stores unchec
         async getConnection() { return connection; }
     };
     const context = vm.createContext({ module: { exports: {} }, __dirname: path.dirname(filename), console,
-        require(name) { return name === '../config/database' ? pool : localRequire(name); }
+        require(name) {
+            if (name === '../config/database') return pool;
+            if (name === '../services/cloud-storage') return cloudStorageStub;
+            return localRequire(name);
+        }
     });
     vm.runInContext(fs.readFileSync(filename, 'utf8'), context);
     const route = context.module.exports.stack.find(layer => layer.route?.path === '/products/:id' && layer.route.methods.put).route;
@@ -248,7 +286,11 @@ test('product update keeps selected old images, adds new files and stores unchec
             galleryManifest: JSON.stringify([{ type: 'existing', id: 10 }, { type: 'new', uploadIndex: 0 }]),
             primaryImageIndex: '1'
         },
-        files: [{ filename: 'new.png', path: path.join(root, 'does-not-exist.png') }]
+        files: [{
+            filename: 'anhtraisstore/products/new',
+            path: 'https://res.cloudinary.com/demo/image/upload/v1/anhtraisstore/products/new.png',
+            cloudinaryPublicId: 'anhtraisstore/products/new'
+        }]
     };
     const res = {
         statusCode: 200,
@@ -260,12 +302,20 @@ test('product update keeps selected old images, adds new files and stores unchec
 
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.success, true);
-    assert.equal(updateParams[7], 'new.png');
+    assert.equal(updateParams[7], 'https://res.cloudinary.com/demo/image/upload/v1/anhtraisstore/products/new.png');
     assert.equal(updateParams[9], 0);
     assert.deepEqual(plain(galleryValues), [
         [1, 'old-a.jpg', 0, 1],
-        [1, 'new.png', 1, 2]
+        [1, 'https://res.cloudinary.com/demo/image/upload/v1/anhtraisstore/products/new.png', 1, 2]
     ]);
+});
+
+test('admin product gallery compares database image IDs consistently and supports legacy thumbnails', () => {
+    const html = fs.readFileSync(path.join(root, 'views', 'admin', 'products.html'), 'utf8');
+    assert.match(html, /String\(img\.id\) !== String\(id\)/);
+    assert.match(html, /String\(img\.id\) === String\(id\)/);
+    assert.match(html, /type: 'current_thumbnail'/);
+    assert.match(html, /hasStoredPrimary \? img\.is_primary == 1 : index === 0/);
 });
 
 test('all inline page scripts have valid JavaScript syntax', () => {
@@ -289,10 +339,94 @@ test('all inline page scripts have valid JavaScript syntax', () => {
     assert.ok(scriptCount > 0);
 });
 
+test('admin keeps the original palette and banner toast starts hidden', () => {
+    const css = fs.readFileSync(path.join(root, 'public', 'css', 'admin.css'), 'utf8');
+    const banners = fs.readFileSync(path.join(root, 'views', 'admin', 'banners.html'), 'utf8');
+    const dashboard = fs.readFileSync(path.join(root, 'views', 'admin', 'index.html'), 'utf8');
+    assert.match(css, /--primary:\s*#6366F1/i);
+    assert.match(css, /--primary-dark:\s*#4F46E5/i);
+    assert.match(css, /--primary-light:\s*#818CF8/i);
+    assert.match(css, /--success:\s*#10B981/i);
+    assert.match(css, /--warning:\s*#F59E0B/i);
+    assert.match(css, /--danger:\s*#EF4444/i);
+    assert.match(css, /\.stat-card:nth-child\(n\)[^{]*\{[^}]*background:\s*#fff;/s);
+    assert.match(css, /\.toast\s*\{[^}]*opacity:\s*0[^}]*visibility:\s*hidden/s);
+    assert.match(banners, /let toastTimer = null/);
+    assert.match(banners, /clearTimeout\(toastTimer\)/);
+    assert.match(dashboard, /class="low-stock-alert collapsed"/);
+    assert.match(dashboard, /message\.textContent = `\$\{totalItems\} mục cần xử lý`/);
+    assert.doesNotMatch(dashboard, /message\.innerHTML = allParts\.join/);
+    assert.match(dashboard, /id="operationsGrid"/);
+    assert.match(dashboard, /id="primaryCharts"/);
+    assert.match(dashboard, /id="topCustomersSection"/);
+    assert.match(dashboard, /\^https:\\\/\\\/res\\\.cloudinary\\\.com/);
+    assert.match(css, /#operationsGrid\s*\{\s*order:\s*4/);
+    assert.match(css, /#topCustomersSection\s*\{\s*order:\s*7/);
+    assert.match(dashboard, />\s*Top 5 sản phẩm bán chạy\s*</);
+    assert.doesNotMatch(dashboard, />\s*Top sản phẩm\s*</);
+    assert.doesNotMatch(dashboard, /id="topProductsList"/);
+    assert.match(dashboard, /id="operationsGrid" class="dashboard-grid dashboard-grid-operations"/);
+    assert.ok(dashboard.indexOf('id="operationsGrid"') < dashboard.indexOf('id="topCustomersSection"'));
+    assert.match(dashboard, /orders\.slice\(0, 5\)/);
+    assert.match(css, /\.dashboard-page \.stat-card \{ min-height: 122px/);
+    assert.equal((dashboard.match(/document\.addEventListener\('DOMContentLoaded'/g) || []).length, 1);
+});
+
+test('review comments keep customer text separate from the admin reply', () => {
+    const { parseReviewComment, serializeReviewComment } = require('../src/core/review-comment');
+    const stored = serializeReviewComment('Sản phẩm tốt', 'Cảm ơn bạn đã đánh giá!');
+    assert.deepEqual(parseReviewComment(stored), {
+        comment: 'Sản phẩm tốt',
+        admin_reply: 'Cảm ơn bạn đã đánh giá!'
+    });
+    assert.equal(serializeReviewComment(stored, 'Phản hồi đã sửa').match(/ANHTRAISTORE_ADMIN_REPLY/g).length, 1);
+});
+
+test('admin can see reviewer identity and persist a review reply without a schema change', async () => {
+    const selected = [];
+    const updated = [];
+    const pool = {
+        async query(sql, params) {
+            if (sql.includes('LEFT JOIN users')) {
+                selected.push(sql);
+                return [[{
+                    id: 7, user_name: 'Nguyễn Văn An', user_email: 'an@example.com',
+                    product_name: 'Điện thoại A', comment: 'Rất tốt\n\n[[ANHTRAISTORE_ADMIN_REPLY]]\nCảm ơn bạn'
+                }]];
+            }
+            if (sql.startsWith('SELECT comment FROM reviews')) return [[{ comment: 'Rất tốt' }]];
+            if (sql.startsWith('UPDATE reviews SET comment')) {
+                updated.push(params);
+                return [{ affectedRows: 1 }];
+            }
+            throw new Error('Unexpected query: ' + sql);
+        }
+    };
+    const listRoute = loadRoute(path.join(root, 'src', 'routes', 'admin.js'), '/reviews/list', 'get', pool);
+    const listResponse = jsonResponse();
+    await listRoute.stack[1].handle({}, listResponse);
+    assert.match(selected[0], /u\.full_name AS user_name/);
+    assert.equal(listResponse.body.reviews[0].user_name, 'Nguyễn Văn An');
+    assert.equal(listResponse.body.reviews[0].admin_reply, 'Cảm ơn bạn');
+    assert.equal(listResponse.body.reviews[0].comment, 'Rất tốt');
+
+    const replyRoute = loadRoute(path.join(root, 'src', 'routes', 'admin.js'), '/reviews/:id/reply', 'put', pool);
+    const replyResponse = jsonResponse();
+    await replyRoute.stack[1].handle({ params: { id: '7' }, body: { reply: 'Shop cảm ơn bạn!' } }, replyResponse);
+    assert.equal(replyResponse.body.success, true);
+    assert.match(updated[0][0], /\[\[ANHTRAISTORE_ADMIN_REPLY\]\]/);
+    assert.match(updated[0][0], /Shop cảm ơn bạn!/);
+    assert.equal(updated[0][1], 7);
+});
+
 function loadRoute(filename, routePath, method, pool) {
     const localRequire = createRequire(filename);
     const context = vm.createContext({ module: { exports: {} }, __dirname: path.dirname(filename), console, URL,
-        require(name) { return name === '../config/database' ? pool : localRequire(name); }
+        require(name) {
+            if (name === '../config/database') return pool;
+            if (name === '../services/cloud-storage') return cloudStorageStub;
+            return localRequire(name);
+        }
     });
     vm.runInContext(fs.readFileSync(filename, 'utf8'), context);
     return context.module.exports.stack.find(layer => layer.route?.path === routePath && layer.route.methods[method]).route;
@@ -340,6 +474,38 @@ test('FREESHIP is consistently presented as a 30K order discount', async () => {
     assert.equal(res.body.coupon.description, 'Giảm 30K cho đơn từ 500K');
 });
 
+test('available coupons exclude used, first-order-only and ineligible VIP codes', async () => {
+    const pool = { async query(sql, params) {
+        if (sql.includes('FROM coupons')) {
+            assert.equal(params[0], 5000000);
+            assert.match(sql, /used_count < usage_limit/);
+            assert.match(sql, /min_order_value, 0\) <= \?/);
+            return [[
+                { id: 1, code: 'PHONE15', discount_type: 'percent', discount_value: 15, min_order_value: 5000000, usage_limit: 50, used_count: 2 },
+                { id: 2, code: 'WELCOME10', discount_type: 'percent', discount_value: 10, min_order_value: 1000000, usage_limit: 100, used_count: 3 },
+                { id: 3, code: 'VIP20', discount_type: 'percent', discount_value: 20, min_order_value: 3000000, usage_limit: 100, used_count: 1 },
+                { id: 4, code: 'FREESHIP', discount_type: 'fixed', discount_value: 30000, min_order_value: 500000, usage_limit: null, used_count: 8 }
+            ]];
+        }
+        if (sql.includes('FROM user_coupons')) return [[{ coupon_id: 1 }]];
+        if (sql.includes('SELECT id FROM orders')) return [[{ id: 9 }]];
+        if (sql.includes('COALESCE(SUM(total_price)')) return [[{ total: 10000000 }]];
+        throw new Error('Unexpected query: ' + sql);
+    } };
+    const route = loadRoute(path.join(root, 'src', 'routes', 'coupons.js'), '/available', 'get', pool);
+    const res = jsonResponse();
+    await route.stack[0].handle({ query: { order_total: '5000000' }, session: { user_id: 7 } }, res);
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(plain(res.body.coupons.map(coupon => coupon.code)), ['FREESHIP']);
+});
+
+test('checkout requests eligible coupons and validates minimum value from product subtotal', () => {
+    const html = fs.readFileSync(path.join(root, 'views', 'checkout.html'), 'utf8');
+    assert.match(html, /coupons\/available\?order_total=' \+ encodeURIComponent\(subtotal\)/);
+    assert.match(html, /JSON\.stringify\(\{ code, order_total: subtotal \}\)/);
+    assert.doesNotMatch(html, /order_total: totalBeforeDiscount/);
+});
+
 test('banner API normalizes numeric positions and localhost links', async () => {
     const pool = { async query() { return [[{
         id: 1, position: '0', link: 'http://localhost:3000/product/53', image_url: '/banner.jpg'
@@ -349,6 +515,85 @@ test('banner API normalizes numeric positions and localhost links', async () => 
     await route.stack[0].handle({ session: {} }, res);
     assert.equal(res.body.banners[0].position, 'hero');
     assert.equal(res.body.banners[0].link, '/product/53');
+});
+
+test('main banner supports ten Cloudinary images and rotates every two seconds without cropping', async () => {
+    let insertedValues;
+    const connection = {
+        async beginTransaction() {}, async commit() {}, async rollback() {}, release() {},
+        async query(sql, params) {
+            if (sql.startsWith('SELECT image_url FROM banners')) return [[{ image_url: '/uploads/banners/old.jpg' }]];
+            if (sql.startsWith('DELETE FROM banners')) return [{ affectedRows: 1 }];
+            if (sql.startsWith('INSERT INTO banners')) {
+                insertedValues = params[0];
+                return [{ affectedRows: insertedValues.length }];
+            }
+            throw new Error('Unexpected query: ' + sql);
+        }
+    };
+    const pool = { async getConnection() { return connection; } };
+    const route = loadRoute(path.join(root, 'src', 'routes', 'admin.js'), '/banners/hero-set', 'put', pool);
+    const res = jsonResponse();
+    const urls = Array.from({ length: 10 }, (_, index) => `https://res.cloudinary.com/demo/image/upload/v1/banner-${index}.jpg`);
+    await route.stack[1].handle({ body: {
+        image_urls: urls, title: 'Khuyến mãi', subtitle: 'Banner', link: '/products', is_active: true
+    } }, res);
+    assert.equal(res.body.count, 10);
+    assert.equal(insertedValues.length, 10);
+    assert.deepEqual(plain(insertedValues.map(row => row[6])), [0,1,2,3,4,5,6,7,8,9]);
+
+    const home = fs.readFileSync(path.join(root, 'views', 'index.html'), 'utf8');
+    const admin = fs.readFileSync(path.join(root, 'views', 'admin', 'banners.html'), 'utf8');
+    assert.match(home, /setInterval\([\s\S]*?,\s*2000\)/);
+    assert.match(home, /\.filter\([\s\S]*?position[\s\S]*?\)\.slice\(0, 10\)/);
+    assert.match(home, /object-fit:\s*contain/);
+    assert.match(admin, /uploadBanner\.array\('images', 10\)|upload-many/);
+    assert.match(admin, /files\.length > 10/);
+});
+
+test('category and brand status remains internal and is hidden from admin pages', async () => {
+    for (const entity of ['categories', 'brands']) {
+        let updateParams;
+        const pool = { async query(sql, params) {
+            if (sql.includes('WHERE slug = ? AND id != ?')) return [[]];
+            if (sql.startsWith(`UPDATE ${entity} SET`)) {
+                updateParams = params;
+                return [{ affectedRows: 1 }];
+            }
+            throw new Error('Unexpected query: ' + sql);
+        } };
+        const route = loadRoute(path.join(root, 'src', 'routes', 'api.js'), `/${entity}/:id`, 'put', pool);
+        const res = jsonResponse();
+        await route.stack[1].handle({
+            params: { id: '5' },
+            body: { name: 'Tên kiểm tra', slug: 'ten-kiem-tra', is_active: 0 },
+            session: { user_id: 1, role: 'admin' }
+        }, res);
+        assert.equal(res.statusCode, 200);
+        assert.equal(updateParams[2], 0);
+
+        const page = fs.readFileSync(path.join(root, 'views', 'admin', `${entity}.html`), 'utf8');
+        assert.doesNotMatch(page, /<th>Trạng thái<\/th>/);
+        assert.doesNotMatch(page, /entity-status-control|Active"|toggle(?:Category|Brand)Status/);
+        assert.match(page, /Number\(current(?:Category|Brand)\.is_active\) === 0 \? 0 : 1/);
+    }
+});
+
+test('admin destructive actions use the shared website confirmation dialog', () => {
+    const adminUi = fs.readFileSync(path.join(root, 'public', 'js', 'admin-ui.js'), 'utf8');
+    assert.match(adminUi, /function adminConfirm\(options\)/);
+    assert.match(adminUi, /role', 'alertdialog'/);
+    assert.match(adminUi, /window\.showConfirm/);
+
+    for (const name of fs.readdirSync(path.join(root, 'views', 'admin'))) {
+        if (!name.endsWith('.html')) continue;
+        const page = fs.readFileSync(path.join(root, 'views', 'admin', name), 'utf8');
+        assert.doesNotMatch(page, /\bconfirm\(/, `${name} still uses the browser confirm dialog`);
+        assert.doesNotMatch(page, /function showConfirm\(/, `${name} still duplicates the confirmation dialog`);
+    }
+
+    const orders = fs.readFileSync(path.join(root, 'views', 'admin', 'orders.html'), 'utf8');
+    assert.match(orders, /newStatus === 'cancelled'[\s\S]*await adminConfirm/);
 });
 
 test('admin product creation accepts uploaded images and commits valid numeric data', async () => {
@@ -388,8 +633,16 @@ test('admin product creation accepts uploaded images and commits valid numeric d
             is_featured: 'false', primaryImageIndex: '1'
         },
         files: [
-            { filename: 'front.png', path: path.join(root, 'missing-front.png') },
-            { filename: 'back.webp', path: path.join(root, 'missing-back.webp') }
+            {
+                filename: 'anhtraisstore/products/front',
+                path: 'https://res.cloudinary.com/demo/image/upload/v1/anhtraisstore/products/front.png',
+                cloudinaryPublicId: 'anhtraisstore/products/front'
+            },
+            {
+                filename: 'anhtraisstore/products/back',
+                path: 'https://res.cloudinary.com/demo/image/upload/v1/anhtraisstore/products/back.webp',
+                cloudinaryPublicId: 'anhtraisstore/products/back'
+            }
         ]
     };
     const res = jsonResponse();
@@ -397,12 +650,43 @@ test('admin product creation accepts uploaded images and commits valid numeric d
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.id, 99);
     assert.equal(committed, true);
-    assert.equal(insertedProduct[8], 'back.webp');
+    assert.equal(insertedProduct[8], 'https://res.cloudinary.com/demo/image/upload/v1/anhtraisstore/products/back.webp');
     assert.equal(insertedProduct[12], 0);
     assert.deepEqual(plain(insertedGallery), [
-        [99, 'front.png', 0, 1],
-        [99, 'back.webp', 1, 2]
+        [99, 'https://res.cloudinary.com/demo/image/upload/v1/anhtraisstore/products/front.png', 0, 1],
+        [99, 'https://res.cloudinary.com/demo/image/upload/v1/anhtraisstore/products/back.webp', 1, 2]
     ]);
+});
+
+test('Cloudinary product URLs retain their folder public ID', () => {
+    const { publicIdFromCloudinaryUrl } = require('../src/services/cloud-storage');
+    assert.equal(
+        publicIdFromCloudinaryUrl('https://res.cloudinary.com/demo/image/upload/v1789000000/anhtraisstore/products/phone-front.webp'),
+        'anhtraisstore/products/phone-front'
+    );
+    assert.equal(publicIdFromCloudinaryUrl('/assets/images/products/phone.jpg'), null);
+    assert.equal(publicIdFromCloudinaryUrl('https://example.com/phone.jpg'), null);
+});
+
+test('admin order list includes product names and passes detail items to the modal', async () => {
+    let selectedSql = '';
+    const pool = {
+        async query(sql) {
+            selectedSql = sql;
+            return [[{ id: 29, items: 'Điện thoại A ×2, Tai nghe B ×1' }]];
+        }
+    };
+    const route = loadRoute(path.join(root, 'src', 'routes', 'admin.js'), '/orders/list', 'get', pool);
+    const res = jsonResponse();
+    await route.stack[1].handle({ query: {}, session: { user_id: 1, role: 'admin' } }, res);
+
+    assert.match(selectedSql, /GROUP_CONCAT\(CONCAT\(p\.name/);
+    assert.equal(res.body.orders[0].items, 'Điện thoại A ×2, Tai nghe B ×1');
+
+    const page = fs.readFileSync(path.join(root, 'views', 'admin', 'orders.html'), 'utf8');
+    assert.match(page, /showOrderModal\(data\.order, data\.items \|\| \[\]\)/);
+    assert.match(page, /escapeHtml\(productSummary\)/);
+    assert.match(page, /item\.product_name/);
 });
 
 test('API error handler does not expose internal error details', () => {
@@ -445,4 +729,81 @@ test('image upload validation requires a matching safe extension and MIME type',
     assert.equal(isAllowedImage({ originalname: 'payload.html', mimetype: 'image/png' }), false);
     assert.equal(isAllowedImage({ originalname: 'payload.jpg.exe', mimetype: 'image/jpeg' }), false);
     assert.equal(isAllowedImage({ originalname: 'photo.png', mimetype: 'text/html' }), false);
+});
+
+test('AI product search queries only a bounded result set instead of loading the catalog into the prompt', async () => {
+    const { executeStoreTool } = require('../src/services/store-ai');
+    let capturedSql = '';
+    let capturedParams = [];
+    const db = {
+        async query(sql, params) {
+            capturedSql = sql;
+            capturedParams = params;
+            return [[{ id: 1, name: 'Phone A', price: 9000000, stock: 3 }]];
+        }
+    };
+    const result = await executeStoreTool('search_products', {
+        query: 'Phone', brand: null, min_price: null, max_price: 10000000,
+        ram: null, storage: null, in_stock: true, sort: 'price_asc', limit: 99
+    }, { db });
+    assert.match(capturedSql, /LIMIT \?/);
+    assert.doesNotMatch(capturedSql, /SELECT\s+\*/i);
+    assert.equal(capturedParams.at(-1), 6);
+    assert.equal(result.products.length, 1);
+});
+
+test('AI order lookup requires login and never accepts a model-provided user id', async () => {
+    const { executeStoreTool } = require('../src/services/store-ai');
+    let databaseCalled = false;
+    const result = await executeStoreTool('get_order_status', {
+        order_id: 5, payment_code: null, latest: false, user_id: 999
+    }, { db: { async query() { databaseCalled = true; return [[]]; } } });
+    assert.equal(result.requires_login, true);
+    assert.equal(databaseCalled, false);
+});
+
+test('AI assistant calls a product function before answering and sends no catalog in its initial prompt', async () => {
+    const { runStoreAssistant } = require('../src/services/store-ai');
+    const requests = [];
+    const requestAI = async body => {
+        requests.push(body);
+        if (requests.length === 1) {
+            return { candidates: [{ content: { role: 'model', parts: [{ functionCall: {
+                name: 'search_products', id: 'call_1',
+                args: { query: 'Samsung', brand: 'Samsung', min_price: null, max_price: 15000000, ram: null, storage: null, in_stock: true, sort: 'relevance', limit: 4 }
+            } }] } }] };
+        }
+        return { candidates: [{ content: { role: 'model', parts: [{ text: 'Tôi tìm thấy một mẫu phù hợp.' }] } }] };
+    };
+    const db = { async query() { return [[{ id: 7, name: 'Samsung A', price: 12000000, stock: 2 }]]; } };
+    const result = await runStoreAssistant({ message: 'Tìm Samsung dưới 15 triệu', db, requestAI });
+    assert.equal(requests.length, 2);
+    assert.equal(requests[0].contents.length, 1);
+    assert.equal(requests[0].contents[0].parts[0].text, 'Tìm Samsung dưới 15 triệu');
+    assert.equal(requests[0].tools[0].functionDeclarations[0].parameters.additionalProperties, undefined);
+    assert.ok(requests[1].contents.some(item => item.parts?.some(part => part.functionResponse)));
+    assert.equal(result.products[0].id, 7);
+    assert.deepEqual(result.tools_used, ['search_products']);
+});
+
+test('AI product thumbnails use the public product image route', () => {
+    const { normalizeProductThumbnail } = require('../src/services/store-ai');
+    assert.equal(normalizeProductThumbnail('product-123.jpg'), '/assets/images/products/product-123.jpg');
+    assert.equal(normalizeProductThumbnail('/uploads/products/product-123.jpg'), '/uploads/products/product-123.jpg');
+    assert.equal(normalizeProductThumbnail('https://cdn.example.com/product.jpg'), 'https://cdn.example.com/product.jpg');
+});
+
+test('AI chat history is retained in the current Express session', () => {
+    const { sessionHistory, productsForHistory } = require('../src/routes/ai-chat');
+    const history = sessionHistory({ ai_chat_history: [
+        { role: 'user', content: '  Xin chào  ' },
+        { role: 'assistant', content: 'Chào bạn', products: [{ id: 1 }] },
+        { role: 'system', content: 'not allowed' }
+    ] });
+    assert.equal(history.length, 2);
+    assert.equal(history[0].content, 'Xin chào');
+    assert.equal(history[1].products[0].id, 1);
+    assert.deepEqual(productsForHistory([{ id: '2', name: 'Phone', price: '1000', thumbnail: '/phone.jpg' }]), [{
+        id: 2, name: 'Phone', price: 1000, old_price: null, thumbnail: '/phone.jpg'
+    }]);
 });

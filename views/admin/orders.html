@@ -8,9 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin.css?v=20260914-5">
 </head>
-<body>
+<body class="admin-shell">
     <div class="admin-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -135,14 +135,6 @@
             })[char]);
         }
 
-        function showConfirm(title, message, onConfirm) {
-            const overlay = document.createElement('div');
-            overlay.className = 'confirm-overlay';
-            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
-            document.body.appendChild(overlay);
-            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
-            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-        }
         async function adminLogout() {
             showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', async () => {
                 await fetch('/api/auth/logout', { method: 'POST' });
@@ -211,13 +203,16 @@
                 let html = '';
                 orders.forEach(o => {
                     const paymentBadge = getPaymentBadge(o.payment_method);
+                    const productSummary = o.items
+                        ? (o.items.length > 70 ? o.items.substring(0, 70) + '…' : o.items)
+                        : '-';
                     html += `<tr>
                         <td><span class="order-code">${o.payment_code || o.id}</span></td>
                         <td>
                             <strong>${escapeHtml(o.customer_name || 'Khách')}</strong><br>
                             <span style="color: var(--gray-500); font-size: 0.8rem;">${escapeHtml(o.shipping_phone || '')}</span>
                         </td>
-                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${o.items ? o.items.substring(0, 50) + '...' : '-'}</td>
+                        <td style="max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(o.items || 'Không có sản phẩm')}">${escapeHtml(productSummary)}</td>
                         <td style="font-weight: 700; color: var(--primary);">${formatPrice(o.total_price)}đ</td>
                         <td>${paymentBadge}</td>
                         <td><span class="status-badge ${o.status}">${getStatusLabel(o.status)}</span></td>
@@ -245,14 +240,14 @@
                 const data = await res.json();
                 if (data.order) {
                     currentOrder = data.order;
-                    showOrderModal(data.order);
+                    showOrderModal(data.order, data.items || []);
                 }
             } catch (e) {
                 showAlert('Lỗi tải thông tin đơn hàng!', 'error');
             }
         }
 
-        function showOrderModal(order) {
+        function showOrderModal(order, items = []) {
             const transitions = {
                 pending: ['confirmed', 'cancelled'],
                 confirmed: ['shipping', 'cancelled'],
@@ -273,6 +268,21 @@
             updateButton.disabled = statusOptions.length === 1;
             updateButton.style.display = statusOptions.length === 1 ? 'none' : '';
 
+            const itemsHtml = items.length > 0
+                ? items.map(item => {
+                    const imageUrl = item.product_image
+                        ? (item.product_image.startsWith('http') ? item.product_image : '/assets/images/products/' + item.product_image)
+                        : '/images/no-image.svg';
+                    return `<tr>
+                        <td><img src="${escapeHtml(imageUrl)}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" onerror="this.src='/images/no-image.svg'"></td>
+                        <td><strong>${escapeHtml(item.product_name || 'Sản phẩm')}</strong></td>
+                        <td style="text-align:center;">${Number(item.quantity) || 0}</td>
+                        <td style="text-align:right;">${formatPrice(item.price)}đ</td>
+                        <td style="text-align:right;font-weight:700;">${formatPrice(Number(item.price) * Number(item.quantity))}đ</td>
+                    </tr>`;
+                }).join('')
+                : '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);">Không có dữ liệu sản phẩm</td></tr>';
+
             document.getElementById('orderDetail').innerHTML = `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
@@ -287,6 +297,15 @@
                         <p><strong>Ngày đặt:</strong> ${new Date(order.created_at).toLocaleDateString('vi-VN')}</p>
                         <p><strong>Tổng tiền:</strong> <span style="color: var(--primary); font-weight: 700;">${formatPrice(order.total_price)}đ</span></p>
                         <p><strong>Thanh toán:</strong> ${getPaymentBadge(order.payment_method)}</p>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 12px; color: var(--gray-500); font-size: 0.8rem; text-transform: uppercase;">Sản phẩm trong đơn</h4>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Ảnh</th><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+                            <tbody>${itemsHtml}</tbody>
+                        </table>
                     </div>
                 </div>
                 <div style="margin-top: 20px;">
@@ -306,6 +325,17 @@
         async function updateOrderStatus() {
             if (!currentOrder) return;
             const newStatus = document.getElementById('orderStatus').value;
+
+            if (newStatus === 'cancelled' && currentOrder.status !== 'cancelled') {
+                const confirmed = await adminConfirm({
+                    title: 'Hủy đơn hàng?',
+                    message: 'Đơn hàng sẽ chuyển sang trạng thái đã hủy và kho hàng sẽ được cập nhật theo nghiệp vụ hiện tại.',
+                    confirmText: 'Hủy đơn hàng',
+                    icon: 'fa-ban',
+                    tone: 'warning'
+                });
+                if (!confirmed) return;
+            }
 
             try {
                 const res = await fetch(`/admin/orders/${currentOrder.id}/status`, {
@@ -349,13 +379,6 @@
             if (e.target === this) closeOrderModal();
         });
     </script>
-    <style>
-        .filter-btn { padding: 10px 18px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-md); background: var(--white); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        .filter-btn:hover, .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-        .payment-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px; }
-        .payment-badge.vnpay { background: #e3f2fd; color: #1565c0; }
-        .payment-badge.momo { background: #fce4ec; color: #c2185b; }
-        .payment-badge.cod { background: #f3e5f5; color: #7b1fa2; }
-    </style>
+    <script src="/js/admin-ui.js?v=20260914-4"></script>
 </body>
 </html>

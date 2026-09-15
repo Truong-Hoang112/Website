@@ -8,9 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin.css?v=20260914-5">
 </head>
-<body>
+<body class="admin-shell">
     <div class="admin-wrapper">
         <aside class="sidebar">
             <div class="sidebar-logo">
@@ -77,12 +77,11 @@
                                     <th style="width: 60px;">#</th>
                                     <th>Tên thương hiệu</th>
                                     <th>Slug</th>
-                                    <th>Trạng thái</th>
                                     <th style="width: 150px;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="brandsBody">
-                                <tr><td colspan="5" style="text-align: center; padding: 48px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--gray-400);"></i></td></tr>
+                                <tr><td colspan="4" style="text-align: center; padding: 48px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--gray-400);"></i></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -119,15 +118,14 @@
 
     <script>
         let editingId = null;
+        let brandsCache = [];
 
-        function showConfirm(title, message, onConfirm) {
-            const overlay = document.createElement('div');
-            overlay.className = 'confirm-overlay';
-            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
-            document.body.appendChild(overlay);
-            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
-            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
         }
+
         async function adminLogout() {
             showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', async () => {
                 await fetch('/api/auth/logout', { method: 'POST' });
@@ -157,10 +155,11 @@
                 const res = await fetch('/api/brands', { credentials: 'include' });
                 const data = await res.json();
                 const brands = data.brands || [];
+                brandsCache = brands;
                 const tbody = document.getElementById('brandsBody');
 
                 if (brands.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-tag"></i><h3>Chưa có thương hiệu nào</h3></div></td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><i class="fas fa-tag"></i><h3>Chưa có thương hiệu nào</h3></div></td></tr>`;
                     return;
                 }
 
@@ -168,18 +167,17 @@
                 brands.forEach((b, i) => {
                     html += `<tr>
                         <td>${i + 1}</td>
-                        <td><strong>${b.name}</strong></td>
-                        <td><code style="font-size: 0.8rem;">${b.slug}</code></td>
-                        <td><span class="badge ${b.is_active == 1 ? 'badge-success' : 'badge-danger'}">${b.is_active == 1 ? 'Hoạt động' : 'Không hoạt động'}</span></td>
+                        <td><strong>${escapeHtml(b.name)}</strong></td>
+                        <td><code style="font-size: 0.8rem;">${escapeHtml(b.slug)}</code></td>
                         <td>
-                            <button class="btn btn-sm btn-secondary" onclick="editBrand(${b.id}, '${b.name}', '${b.slug}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-secondary" onclick="editBrand(${b.id})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-sm btn-danger" onclick="deleteBrand(${b.id})"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>`;
                 });
                 tbody.innerHTML = html;
             } catch (e) {
-                document.getElementById('brandsBody').innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Lỗi tải dữ liệu</h3></div></td></tr>`;
+                document.getElementById('brandsBody').innerHTML = `<tr><td colspan="4"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Lỗi tải dữ liệu</h3></div></td></tr>`;
             }
         }
 
@@ -196,18 +194,22 @@
             editingId = null;
         }
 
-        function editBrand(id, name, slug) {
+        function editBrand(id) {
+            const brand = brandsCache.find(item => Number(item.id) === Number(id));
+            if (!brand) return;
             editingId = id;
             document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Sửa thương hiệu';
             document.getElementById('brandId').value = id;
-            document.getElementById('brandName').value = name;
-            document.getElementById('brandSlug').value = slug;
+            document.getElementById('brandName').value = brand.name;
+            document.getElementById('brandSlug').value = brand.slug;
             document.getElementById('brandModal').classList.add('show');
         }
 
         async function saveBrand() {
             const name = document.getElementById('brandName').value.trim();
             const slug = document.getElementById('brandSlug').value.trim() || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const currentBrand = brandsCache.find(item => Number(item.id) === Number(editingId));
+            const is_active = currentBrand ? (Number(currentBrand.is_active) === 0 ? 0 : 1) : 1;
 
             if (!name) {
                 showAlert('Vui lòng nhập tên thương hiệu!', 'error');
@@ -221,15 +223,17 @@
                     method,
                     headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     credentials: 'include',
-                    body: JSON.stringify({ name, slug, is_active: 1 })
+                    body: JSON.stringify({ name, slug, is_active })
                 });
+
+                const data = await res.json();
 
                 if (res.ok) {
                     showAlert(editingId ? 'Cập nhật thành công!' : 'Thêm thành công!', 'success');
                     closeModal();
                     loadBrands();
                 } else {
-                    showAlert('Có lỗi xảy ra!', 'error');
+                    showAlert(data.error || 'Có lỗi xảy ra!', 'error');
                 }
             } catch (e) {
                 showAlert('Lỗi khi lưu!', 'error');
@@ -237,16 +241,25 @@
         }
 
         async function deleteBrand(id) {
-            if (!confirm('Xóa thương hiệu này?')) return;
+            const confirmed = await adminConfirm({
+                title: 'Xóa thương hiệu?',
+                message: 'Thương hiệu chỉ được xóa khi không còn sản phẩm tham chiếu.',
+                confirmText: 'Xóa thương hiệu',
+                icon: 'fa-trash-alt'
+            });
+            if (!confirmed) return;
             try {
                 const res = await fetch(`/api/brands/${id}`, {
                     method: 'DELETE',
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     credentials: 'include'
                 });
+                const data = await res.json();
                 if (res.ok) {
                     showAlert('Xóa thành công!', 'success');
                     loadBrands();
+                } else {
+                    showAlert(data.error || 'Không thể xóa thương hiệu!', 'error');
                 }
             } catch (e) {
                 showAlert('Lỗi khi xóa!', 'error');
@@ -263,5 +276,6 @@
             if (e.target === this) closeModal();
         });
     </script>
+    <script src="/js/admin-ui.js?v=20260914-4"></script>
 </body>
 </html>

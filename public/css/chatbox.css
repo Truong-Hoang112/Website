@@ -525,7 +525,8 @@
 .uc-product-card img {
     width: 100%;
     height: 80px;
-    object-fit: cover;
+    object-fit: contain;
+    background: #fff;
 }
 
 .uc-product-info {

@@ -757,12 +757,15 @@
         // Load available coupons
         async function loadAvailableCoupons() {
             try {
-                const res = await fetch('/api/coupons/available');
+                const subtotal = Number(cartData?.total || 0);
+                const res = await fetch('/api/coupons/available?order_total=' + encodeURIComponent(subtotal), {
+                    credentials: 'include'
+                });
                 const data = await res.json();
-                if (data.coupons) {
-                    availableCoupons = data.coupons;
-                }
+                availableCoupons = res.ok && Array.isArray(data.coupons) ? data.coupons : [];
+                renderOrderSummary();
             } catch (e) {
+                availableCoupons = [];
                 console.error('Load coupons error:', e);
             }
         }
@@ -1336,13 +1339,12 @@
 
             try {
                 const subtotal = cartData.total;
-                const shippingFee = subtotal >= 500000 ? 0 : 30000;
-                const totalBeforeDiscount = subtotal + shippingFee;
 
                 const res = await fetch('/api/coupons/validate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, order_total: totalBeforeDiscount })
+                    credentials: 'include',
+                    body: JSON.stringify({ code, order_total: subtotal })
                 });
                 const data = await res.json();
 

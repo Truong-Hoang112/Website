@@ -7,7 +7,14 @@ const path = require('path');
 const fs = require('fs');
 const { projectRoot, viewsDir } = require('../core/paths');
 const { isAllowedImage } = require('../core/image-upload');
+const { parseReviewComment, serializeReviewComment } = require('../core/review-comment');
 const { requireAdmin } = require('../middleware/auth');
+const {
+    productCloudinaryStorage,
+    bannerCloudinaryStorage,
+    destroyCloudinaryUrls,
+    destroyUploadedProductFiles
+} = require('../services/cloud-storage');
 
 function normalizeBannerPosition(position) {
     const positions = { '0': 'hero', '1': 'side', '2': 'quick', hero: 'hero', side: 'side', quick: 'quick' };
@@ -25,20 +32,19 @@ function normalizeInternalLink(link) {
     return link;
 }
 
-// Setup multer for banner image upload
-const bannerStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const dir = path.join(projectRoot, 'public', 'uploads', 'banners');
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = 'banner-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
-        cb(null, uniqueName);
+async function removeStoredBanner(imageUrl) {
+    if (!imageUrl) return;
+    if (/^https:\/\/res\.cloudinary\.com\//i.test(String(imageUrl))) {
+        await destroyCloudinaryUrls([imageUrl]);
+        return;
     }
-});
+    if (!String(imageUrl).startsWith('/uploads/banners/')) return;
+    const filePath = path.join(projectRoot, 'public', 'uploads', 'banners', path.basename(imageUrl));
+    try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (error) {}
+}
+
 const uploadBanner = multer({ 
-    storage: bannerStorage, 
+    storage: bannerCloudinaryStorage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     fileFilter: (req, file, cb) => {
         if (isAllowedImage(file)) cb(null, true);
@@ -51,23 +57,21 @@ const bannerUpload = (req, res, next) => uploadBanner.single('image')(req, res, 
     const message = error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE'
         ? 'Ảnh banner không được vượt quá 5MB!'
         : error.message || 'Ảnh banner không hợp lệ!';
-    return res.status(400).json({ error: message });
+    return res.status(error.status === 503 ? 503 : error.status === 502 ? 502 : 400).json({ error: message });
 });
 
-// Setup multer for product image upload
-const productStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const dir = path.join(projectRoot, 'public', 'assets', 'images', 'products');
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = 'product-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
-        cb(null, uniqueName);
-    }
+const bannerUploads = (req, res, next) => uploadBanner.array('images', 10)(req, res, error => {
+    if (!error) return next();
+    const message = error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE'
+        ? 'Mỗi ảnh banner không được vượt quá 5MB!'
+        : error instanceof multer.MulterError && error.code === 'LIMIT_UNEXPECTED_FILE'
+            ? 'Banner chính chỉ được tải tối đa 10 ảnh!'
+            : error.message || 'Ảnh banner không hợp lệ!';
+    return res.status(error.status === 503 ? 503 : error.status === 502 ? 502 : 400).json({ error: message });
 });
+
 const uploadProductImage = multer({ 
-    storage: productStorage, 
+    storage: productCloudinaryStorage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     fileFilter: (req, file, cb) => {
         if (isAllowedImage(file)) cb(null, true);
@@ -75,19 +79,8 @@ const uploadProductImage = multer({
     }
 });
 
-function removeUploadedFiles(files = []) {
-    for (const file of files) {
-        if (!file || !file.path) continue;
-        try {
-            if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-        } catch (error) {
-            console.error('Cleanup uploaded file error:', error.message);
-        }
-    }
-}
-
-function productValidationError(req, res, message) {
-    removeUploadedFiles(req.files);
+async function productValidationError(req, res, message) {
+    await destroyUploadedProductFiles(req.files);
     return res.status(400).json({ error: message });
 }
 
@@ -127,7 +120,9 @@ const productUpload = (req, res, next) => uploadProductImage.array('galleryFiles
                 : 'Dữ liệu ảnh tải lên không hợp lệ!';
         return res.status(400).json({ error: message });
     }
-    return res.status(400).json({ error: error.message || 'Ảnh sản phẩm không hợp lệ!' });
+    const status = error.status === 503 ? 503 : 502;
+    const message = status === 503 ? error.message : 'Không thể tải ảnh sản phẩm lên cloud!';
+    return res.status(status).json({ error: message });
 });
 
 // Helper function to create URL-friendly slug
@@ -286,7 +281,7 @@ router.get('/notifications', requireAdmin, async (req, res) => {
             // Cảnh báo
             low_stock_products: lowStockProducts,
             unread_contacts: unreadContacts,
-            new_reviews: newReviews,
+            new_reviews: newReviews.map(review => ({ ...review, ...parseReviewComment(review.comment) })),
             // Tổng hợp
             total_alerts: totalAlerts,
             has_critical: totalAlerts > 0,
@@ -529,7 +524,7 @@ router.post('/products', requireAdmin, productUpload, async (req, res) => {
         const requestedPrimary = Number.parseInt(req.body.primaryImageIndex, 10);
         const primaryImageIndex = Number.isInteger(requestedPrimary) && requestedPrimary >= 0 && requestedPrimary < (req.files || []).length
             ? requestedPrimary : 0;
-        const thumbnail = req.files && req.files.length > 0 ? req.files[primaryImageIndex].filename : null;
+        const thumbnail = req.files && req.files.length > 0 ? req.files[primaryImageIndex].path : null;
 
         // Kiểm tra FK trước để trả lỗi dễ hiểu thay vì lỗi 500 từ MySQL.
         const [brandRows] = await pool.query('SELECT id FROM brands WHERE id = ? AND is_active = 1', [brandId]);
@@ -553,7 +548,7 @@ router.post('/products', requireAdmin, productUpload, async (req, res) => {
         if (req.files && req.files.length > 0) {
             const galleryValues = req.files.map((file, index) => [
                 productId,
-                file.filename,
+                file.path,
                 index === primaryImageIndex ? 1 : 0, // is_primary
                 index + 1 // sort_order
             ]);
@@ -574,7 +569,7 @@ router.post('/products', requireAdmin, productUpload, async (req, res) => {
             connection.release();
         }
     } catch (error) {
-        removeUploadedFiles(req.files);
+        await destroyUploadedProductFiles(req.files);
         console.error('Create product error:', error);
         if (error.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Sản phẩm có dữ liệu trùng, vui lòng kiểm tra lại tên sản phẩm!' });
         if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.errno === 1452) return res.status(400).json({ error: 'Thương hiệu hoặc danh mục không tồn tại!' });
@@ -624,7 +619,7 @@ router.put('/products/:id', requireAdmin, productUpload, async (req, res) => {
             await connection.rollback();
             connection.release();
             connection = null;
-            removeUploadedFiles(req.files);
+            await destroyUploadedProductFiles(req.files);
             return res.status(404).json({ error: 'Sản phẩm không tồn tại!' });
         }
         const [oldImages] = await connection.query(
@@ -634,6 +629,7 @@ router.put('/products/:id', requireAdmin, productUpload, async (req, res) => {
         const oldById = new Map(oldImages.map(image => [Number(image.id), image]));
         const usedExistingIds = new Set();
         const usedUploadIndexes = new Set();
+        let usedCurrentThumbnail = false;
         const finalGallery = [];
         for (const item of manifest) {
             if (item && item.type === 'existing') {
@@ -649,7 +645,13 @@ router.put('/products/:id', requireAdmin, productUpload, async (req, res) => {
                     throw Object.assign(new Error('Danh sách ảnh mới không hợp lệ!'), { status: 400 });
                 }
                 usedUploadIndexes.add(uploadIndex);
-                finalGallery.push(req.files[uploadIndex].filename);
+                finalGallery.push(req.files[uploadIndex].path);
+            } else if (item && item.type === 'current_thumbnail') {
+                if (usedCurrentThumbnail || !current[0].thumbnail) {
+                    throw Object.assign(new Error('Ảnh đại diện cũ không hợp lệ!'), { status: 400 });
+                }
+                usedCurrentThumbnail = true;
+                finalGallery.push(current[0].thumbnail);
             } else {
                 throw Object.assign(new Error('Danh sách ảnh sản phẩm không hợp lệ!'), { status: 400 });
             }
@@ -695,18 +697,28 @@ router.put('/products/:id', requireAdmin, productUpload, async (req, res) => {
         connection = null;
 
         const retainedUrls = new Set(finalGallery);
-        for (const image of oldImages) {
-            if (retainedUrls.has(image.image_url) || /^https?:\/\//i.test(image.image_url)) continue;
-            const oldPath = path.join(projectRoot, 'public', 'assets', 'images', 'products', path.basename(image.image_url));
+        const previousImageUrls = new Set([
+            current[0].thumbnail,
+            ...oldImages.map(image => image.image_url)
+        ].filter(Boolean));
+        const removedCloudUrls = [];
+        for (const imageUrl of previousImageUrls) {
+            if (retainedUrls.has(imageUrl)) continue;
+            if (/^https?:\/\//i.test(imageUrl)) {
+                removedCloudUrls.push(imageUrl);
+                continue;
+            }
+            const oldPath = path.join(projectRoot, 'public', 'assets', 'images', 'products', path.basename(imageUrl));
             try { if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath); } catch (error) {}
         }
+        await destroyCloudinaryUrls(removedCloudUrls);
         res.json({ success: true });
     } catch (error) {
         if (connection) {
             try { await connection.rollback(); } catch (rollbackError) {}
             connection.release();
         }
-        removeUploadedFiles(req.files);
+        await destroyUploadedProductFiles(req.files);
         console.error('Update product error:', error);
         if (error.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Sản phẩm có dữ liệu trùng!' });
         if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.errno === 1452) return res.status(400).json({ error: 'Thương hiệu hoặc danh mục không tồn tại!' });
@@ -720,11 +732,16 @@ router.delete('/products/:id', requireAdmin, async (req, res) => {
         if (!Number.isSafeInteger(id) || id < 1) {
             return res.status(400).json({ error: 'ID sản phẩm không hợp lệ!' });
         }
-        // Một lệnh DELETE: khóa ngoại giữ lịch sử đơn; gallery chỉ cascade khi xóa thành công.
+        const [images] = await pool.query(
+            'SELECT image_url FROM product_images WHERE product_id = ?',
+            [id]
+        );
         const [result] = await pool.query('DELETE FROM products WHERE id = ?', [id]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Sản phẩm không tồn tại!' });
         }
+        const cloudUrls = images.map(image => image.image_url).filter(url => /^https?:\/\//i.test(url));
+        await destroyCloudinaryUrls(cloudUrls);
         res.json({ success: true });
     } catch (error) {
         if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.errno === 1451) {
@@ -743,7 +760,15 @@ router.get('/orders', requireAdmin, (req, res) => {
 router.get('/orders/list', requireAdmin, async (req, res) => {
     try {
         const { status } = req.query;
-        let query = `SELECT o.*, u.full_name AS customer_name FROM orders o LEFT JOIN users u ON o.user_id = u.id`;
+        let query = `SELECT o.*, u.full_name AS customer_name,
+                    COALESCE((
+                        SELECT GROUP_CONCAT(CONCAT(p.name, ' ×', oi.quantity) ORDER BY oi.id SEPARATOR ', ')
+                        FROM order_items oi
+                        LEFT JOIN products p ON p.id = oi.product_id
+                        WHERE oi.order_id = o.id
+                    ), '') AS items
+                    FROM orders o
+                    LEFT JOIN users u ON o.user_id = u.id`;
         let params = [];
 
         if (status) {
@@ -990,14 +1015,37 @@ router.get('/reviews', requireAdmin, (req, res) => {
 router.get('/reviews/list', requireAdmin, async (req, res) => {
     try {
         const [reviews] = await pool.query(
-            `SELECT r.*, u.full_name, p.name AS product_name
+            `SELECT r.*, u.full_name AS user_name, u.email AS user_email, p.name AS product_name
              FROM reviews r
              LEFT JOIN users u ON r.user_id = u.id
              LEFT JOIN products p ON r.product_id = p.id
              ORDER BY r.created_at DESC`
         );
-        res.json({ reviews });
+        res.json({ reviews: reviews.map(review => ({ ...review, ...parseReviewComment(review.comment) })) });
     } catch (error) {
+        res.status(500).json({ error: 'Đã xảy ra lỗi!' });
+    }
+});
+
+router.put('/reviews/:id/reply', requireAdmin, async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const reply = typeof req.body.reply === 'string' ? req.body.reply.trim() : '';
+        if (!Number.isSafeInteger(id) || id < 1) {
+            return res.status(400).json({ error: 'Mã đánh giá không hợp lệ!' });
+        }
+        if (!reply || reply.length > 2000) {
+            return res.status(400).json({ error: 'Phản hồi phải có từ 1 đến 2000 ký tự!' });
+        }
+
+        const [reviews] = await pool.query('SELECT comment FROM reviews WHERE id = ?', [id]);
+        if (!reviews.length) return res.status(404).json({ error: 'Không tìm thấy đánh giá!' });
+
+        const storedComment = serializeReviewComment(reviews[0].comment, reply);
+        await pool.query('UPDATE reviews SET comment = ? WHERE id = ?', [storedComment, id]);
+        res.json({ success: true, reply });
+    } catch (error) {
+        console.error('Reply review error:', error);
         res.status(500).json({ error: 'Đã xảy ra lỗi!' });
     }
 });
@@ -1221,11 +1269,63 @@ router.post('/banners/upload', requireAdmin, bannerUpload, (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: 'Không có file ảnh!' });
         }
-        const url = '/uploads/banners/' + req.file.filename;
-        res.json({ success: true, url });
+        res.json({ success: true, url: req.file.path });
     } catch (error) {
         console.error('Upload banner error:', error);
         res.status(500).json({ error: 'Lỗi khi upload ảnh!' });
+    }
+});
+
+// Upload tối đa 10 ảnh cho carousel banner chính.
+router.post('/banners/upload-many', requireAdmin, bannerUploads, (req, res) => {
+    if (!req.files?.length) {
+        return res.status(400).json({ error: 'Không có file ảnh!' });
+    }
+    res.json({ success: true, urls: req.files.map(file => file.path) });
+});
+
+// Thay toàn bộ tập ảnh banner chính bằng một transaction.
+router.put('/banners/hero-set', requireAdmin, async (req, res) => {
+    const imageUrls = Array.isArray(req.body.image_urls)
+        ? req.body.image_urls.map(value => String(value || '').trim()).filter(Boolean)
+        : [];
+    if (imageUrls.length < 1 || imageUrls.length > 10 || imageUrls.some(url => url.length > 500)) {
+        return res.status(400).json({ error: 'Banner chính cần từ 1 đến 10 ảnh hợp lệ!' });
+    }
+
+    const { title, subtitle, link, is_active } = req.body;
+    let connection;
+    let oldBanners = [];
+    try {
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+        [oldBanners] = await connection.query(
+            "SELECT image_url FROM banners WHERE position IN ('hero', '0') FOR UPDATE"
+        );
+        await connection.query("DELETE FROM banners WHERE position IN ('hero', '0')");
+        const values = imageUrls.map((imageUrl, index) => [
+            'hero', title || '', subtitle || '', normalizeInternalLink(link), imageUrl, is_active ? 1 : 0, index
+        ]);
+        await connection.query(
+            `INSERT INTO banners (position, title, subtitle, link, image_url, is_active, sort_order) VALUES ?`,
+            [values]
+        );
+        await connection.commit();
+        connection.release();
+        connection = null;
+
+        const retained = new Set(imageUrls);
+        for (const banner of oldBanners) {
+            if (!retained.has(banner.image_url)) await removeStoredBanner(banner.image_url);
+        }
+        res.json({ success: true, count: imageUrls.length });
+    } catch (error) {
+        if (connection) {
+            try { await connection.rollback(); } catch (rollbackError) {}
+            connection.release();
+        }
+        console.error('Update hero banners error:', error);
+        res.status(500).json({ error: 'Lỗi khi cập nhật banner chính!' });
     }
 });
 
@@ -1234,11 +1334,21 @@ router.put('/banners/:id', requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { title, subtitle, link, image_url, is_active, sort_order } = req.body;
-        
+
+        if (!image_url) {
+            return res.status(400).json({ error: 'Vui lòng cung cấp ảnh banner!' });
+        }
+        const [banners] = await pool.query('SELECT image_url FROM banners WHERE id = ?', [id]);
+        if (banners.length === 0) {
+            return res.status(404).json({ error: 'Banner không tồn tại!' });
+        }
         await pool.query(
             `UPDATE banners SET title=?, subtitle=?, link=?, image_url=?, is_active=?, sort_order=? WHERE id=?`,
             [title, subtitle, normalizeInternalLink(link), image_url, is_active ? 1 : 0, sort_order || 0, id]
         );
+        if (banners[0].image_url && banners[0].image_url !== image_url) {
+            await removeStoredBanner(banners[0].image_url);
+        }
         res.json({ success: true });
     } catch (error) {
         console.error('Update banner error:', error);

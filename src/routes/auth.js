@@ -6,6 +6,11 @@ const pool = require('../config/database');
 const { sendPasswordResetOTP } = require('../config/mail');
 const { projectRoot } = require('../core/paths');
 const { isAllowedImage } = require('../core/image-upload');
+const {
+    avatarCloudinaryStorage,
+    destroyCloudinaryUrls,
+    destroyUploadedFiles
+} = require('../services/cloud-storage');
 const { loginRateLimit, passwordResetRateLimit } = require('../middleware/rate-limit');
 
 // Store OTPs temporarily (in production, use Redis or database)
@@ -394,22 +399,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Tạo folder uploads/avatars nếu chưa có
+// Chỉ giữ đường dẫn này để dọn các avatar local được tạo bởi phiên bản cũ.
 const avatarDir = path.join(projectRoot, 'public', 'uploads', 'avatars');
-if (!fs.existsSync(avatarDir)) {
-    fs.mkdirSync(avatarDir, { recursive: true });
-}
-
-const avatarStorage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, avatarDir),
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname).toLowerCase();
-        cb(null, 'avatar-' + req.session.user_id + '-' + Date.now() + ext);
-    }
-});
 
 const avatarUpload = multer({
-    storage: avatarStorage,
+    storage: avatarCloudinaryStorage,
     limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
     fileFilter: (req, file, cb) => {
         if (isAllowedImage(file)) cb(null, true);
@@ -427,11 +421,16 @@ const handleAvatarUpload = (req, res, next) => avatarUpload.single('avatar')(req
     const message = error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE'
         ? 'Ảnh đại diện không được vượt quá 2MB!'
         : error.message || 'Ảnh đại diện không hợp lệ!';
-    return res.status(400).json({ error: message });
+    return res.status(error.status === 503 ? 503 : error.status === 502 ? 502 : 400).json({ error: message });
 });
 
-function removeAvatarFile(avatarPath) {
-    if (!avatarPath || !String(avatarPath).startsWith('/uploads/avatars/')) return;
+async function removeStoredAvatar(avatarPath) {
+    if (!avatarPath) return;
+    if (/^https:\/\/res\.cloudinary\.com\//i.test(String(avatarPath))) {
+        await destroyCloudinaryUrls([avatarPath]);
+        return;
+    }
+    if (!String(avatarPath).startsWith('/uploads/avatars/')) return;
     const filePath = path.join(avatarDir, path.basename(avatarPath));
     try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (error) {}
 }
@@ -444,12 +443,12 @@ router.post('/upload-avatar', requireLogin, handleAvatarUpload, async (req, res)
 
         const [users] = await pool.query('SELECT avatar FROM users WHERE id = ?', [req.session.user_id]);
         if (users.length === 0) {
-            removeAvatarFile('/uploads/avatars/' + req.file.filename);
+            await destroyUploadedFiles([req.file]);
             return res.status(404).json({ error: 'Tài khoản không tồn tại!' });
         }
-        const avatarUrl = '/uploads/avatars/' + req.file.filename;
+        const avatarUrl = req.file.path;
         await pool.query('UPDATE users SET avatar = ? WHERE id = ?', [avatarUrl, req.session.user_id]);
-        removeAvatarFile(users[0].avatar);
+        await removeStoredAvatar(users[0].avatar);
 
         res.json({
             success: true,
@@ -457,7 +456,7 @@ router.post('/upload-avatar', requireLogin, handleAvatarUpload, async (req, res)
             avatar_url: avatarUrl
         });
     } catch (error) {
-        if (req.file) removeAvatarFile('/uploads/avatars/' + req.file.filename);
+        if (req.file) await destroyUploadedFiles([req.file]);
         console.error('Upload avatar error:', error);
         res.status(500).json({ error: 'Đã xảy ra lỗi!' });
     }
@@ -472,7 +471,7 @@ router.delete('/avatar', async (req, res) => {
 
         const [users] = await pool.query('SELECT avatar FROM users WHERE id = ?', [req.session.user_id]);
         await pool.query('UPDATE users SET avatar = NULL WHERE id = ?', [req.session.user_id]);
-        if (users.length > 0) removeAvatarFile(users[0].avatar);
+        if (users.length > 0) await removeStoredAvatar(users[0].avatar);
 
         res.json({ success: true, message: 'Đã xóa avatar!' });
     } catch (error) {

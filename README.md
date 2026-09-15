@@ -4,7 +4,7 @@
 
 ## 🚀 Yêu cầu hệ thống
 
-- **Node.js** v16 hoặc cao hơn
+- **Node.js** v20 hoặc cao hơn
 - **XAMPP** (có MySQL và phpMyAdmin)
 - **Trình duyệt** Chrome, Firefox, Edge
 
@@ -77,7 +77,7 @@ DB_NAME=anhtraisstore
 # Server
 NODE_ENV=development
 PORT=3000
-SESSION_SECRET=anhtraisstore_secret_key_2024
+SESSION_SECRET=replace-with-a-random-secret-at-least-32-characters
 CORS_ORIGINS=http://localhost:3000
 
 # Email (tùy chọn - để gửi email thật)
@@ -93,6 +93,19 @@ SITE_URL=http://localhost:3000
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
 GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+
+# Cloudinary (bắt buộc để tải ảnh sản phẩm, banner và ảnh đại diện)
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+CLOUDINARY_PRODUCT_FOLDER=anhtraisstore/products
+CLOUDINARY_BANNER_FOLDER=anhtraisstore/banners
+CLOUDINARY_AVATAR_FOLDER=anhtraisstore/avatars
+
+# Gemini (bắt buộc để dùng trợ lý AI)
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-3.6-flash
+GEMINI_API_TIMEOUT_MS=25000
 ```
 
 ### Bước 3: Chạy Server
@@ -140,7 +153,7 @@ Mở trình duyệt: **`http://localhost:3000`**
 | 🎫 Mã giảm giá | Áp dụng coupon khi thanh toán |
 | 📦 Quản lý đơn hàng | Xem, theo dõi, hủy đơn |
 | ⭐ Đánh giá | Đánh giá và bình luận sản phẩm |
-| 💬 Chatbot AI | Tự động tư vấn sản phẩm |
+| 💬 Chatbot AI | Hỏi đáp, tìm/tư vấn sản phẩm, kiểm tra tồn kho và tra cứu đơn bằng tool calling |
 | 👤 Tài khoản | Quản lý thông tin cá nhân |
 | 🔐 Đăng nhập Google | OAuth 2.0 qua Google |
 | 📧 Email xác nhận | Nhận email khi đặt hàng, đăng ký |
@@ -159,7 +172,7 @@ Mở trình duyệt: **`http://localhost:3000`**
 | ⭐ Duyệt đánh giá | Duyệt/xóa đánh giá sản phẩm |
 | 💬 Chat realtime | Nhắn tin với khách (Socket.IO) |
 | 📬 Quản lý liên hệ | Xem và trả lời tin nhắn liên hệ |
-| 🖼️ Quản lý Banner | Thêm, sửa, xóa banner trang chủ |
+| 🖼️ Quản lý Banner | Banner chính tối đa 10 ảnh, tự chuyển mỗi 2 giây; 2 banner phụ hiển thị trọn ảnh |
 | 🎫 Quản lý Coupon | Tạo và quản lý mã giảm giá |
 
 ### Quy tắc nghiệp vụ demo
@@ -224,11 +237,11 @@ Website/
 │
 ├── src/                   # Mã nguồn backend
 │   ├── app.js             # Cấu hình Express
-│   ├── server.js          # HTTP server và graceful shutdown
 │   ├── config/            # Database, SMTP, OAuth, runtime
 │   ├── core/              # Đường dẫn và hằng số dùng chung
 │   ├── middleware/        # Xác thực và xử lý lỗi
 │   ├── realtime/          # Socket.IO chat
+│   ├── services/          # Tích hợp Cloudinary và điều phối công cụ AI
 │   └── routes/            # API và page routes theo nghiệp vụ
 │
 ├── views/                # HTML Pages (Customer)

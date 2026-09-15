@@ -8,9 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin.css?v=20260914-5">
 </head>
-<body>
+<body class="admin-shell">
     <div class="admin-wrapper">
         <aside class="sidebar">
             <div class="sidebar-logo">
@@ -87,14 +87,6 @@
     </div>
 
     <script>
-        function showConfirm(title, message, onConfirm) {
-            const overlay = document.createElement('div');
-            overlay.className = 'confirm-overlay';
-            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
-            document.body.appendChild(overlay);
-            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
-            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-        }
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, char => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -176,5 +168,6 @@
             }
         }
     </script>
+    <script src="/js/admin-ui.js?v=20260914-4"></script>
 </body>
 </html>

@@ -8,6 +8,7 @@ const wishlistRoutes = require('./wishlist');
 const couponsRoutes = require('./coupons');
 const messagesRoutes = require('./messages');
 const healthRoutes = require('./health');
+const aiChatRoutes = require('./ai-chat');
 
 function registerRoutes(app) {
     app.use(healthRoutes);
@@ -18,6 +19,7 @@ function registerRoutes(app) {
     app.use('/api/wishlist', wishlistRoutes);
     app.use('/api/coupons', couponsRoutes);
     app.use('/api/messages', messagesRoutes);
+    app.use('/api/chat', aiChatRoutes);
     app.use('/api', apiRoutes);
     app.use('/admin', adminRoutes);
 }

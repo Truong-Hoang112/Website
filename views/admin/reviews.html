@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin.css?v=20260914-5">
     <script>
         function showToast(message, type = 'info') {
             const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', info: 'bi-info-circle-fill' };
@@ -20,7 +20,7 @@
         }
     </script>
 </head>
-<body>
+<body class="admin-shell">
     <div class="admin-wrapper">
         <aside class="sidebar">
             <div class="sidebar-logo">
@@ -83,12 +83,13 @@
                                     <th>Khách hàng</th>
                                     <th>Đánh giá</th>
                                     <th>Nội dung</th>
+                                    <th>Phản hồi cửa hàng</th>
                                     <th>Ngày</th>
-                                    <th style="width: 80px;">Xóa</th>
+                                    <th style="width: 130px;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="reviewsBody">
-                                <tr><td colspan="6" style="text-align: center; padding: 48px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--gray-400);"></i></td></tr>
+                                <tr><td colspan="7" style="text-align: center; padding: 48px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--gray-400);"></i></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -97,21 +98,29 @@
         </main>
     </div>
 
-    <script>
-        function showConfirm(title, message, onConfirm) {
-            const overlay = document.createElement('div');
-            overlay.className = 'confirm-overlay';
-            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
-            document.body.appendChild(overlay);
-            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
-            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-        }
+    <div class="modal-overlay" id="replyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fas fa-reply"></i> Phản hồi đánh giá</h2>
+                <button class="modal-close" type="button" onclick="closeReplyModal()" aria-label="Đóng"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="replyReviewId">
+                <div class="review-reply-context" id="replyContext"></div>
+                <div class="form-group">
+                    <label class="form-label" for="replyContent">Nội dung phản hồi</label>
+                    <textarea class="form-control" id="replyContent" maxlength="2000" rows="5" placeholder="Nhập lời cảm ơn hoặc giải đáp cho khách hàng..."></textarea>
+                    <div class="form-hint">Phản hồi này sẽ hiển thị công khai dưới đánh giá sản phẩm.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" onclick="closeReplyModal()">Hủy</button>
+                <button class="btn btn-primary" type="button" id="saveReplyBtn" onclick="saveReply()"><i class="fas fa-paper-plane"></i> Gửi phản hồi</button>
+            </div>
+        </div>
+    </div>
 
-        function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, char => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-            })[char]);
-        }
+    <script>
         async function adminLogout() {
             showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', async () => {
                 await fetch('/api/auth/logout', { method: 'POST' });
@@ -153,15 +162,17 @@
             } catch (e) {}
         }
 
+        let loadedReviews = [];
         async function loadReviews() {
             try {
                 const res = await fetch('/admin/reviews/list', { credentials: 'include' });
                 const data = await res.json();
                 const reviews = data.reviews || [];
+                loadedReviews = reviews;
                 const tbody = document.getElementById('reviewsBody');
 
                 if (reviews.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-star"></i><h3>Chưa có đánh giá nào</h3></div></td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-star"></i><h3>Chưa có đánh giá nào</h3></div></td></tr>`;
                     return;
                 }
 
@@ -170,23 +181,77 @@
                     const stars = '★'.repeat(r.rating || 5) + '☆'.repeat(5 - (r.rating || 5));
                     html += `<tr>
                         <td><strong>${escapeHtml(r.product_name || 'N/A')}</strong></td>
-                        <td>${escapeHtml(r.user_name || 'Khách')}</td>
+                        <td>
+                            <div class="review-customer">
+                                <div class="review-customer-avatar">${escapeHtml((r.user_name || 'K').charAt(0).toUpperCase())}</div>
+                                <div><strong>${escapeHtml(r.user_name || 'Khách hàng')}</strong><small>${escapeHtml(r.user_email || '')}</small></div>
+                            </div>
+                        </td>
                         <td><span style="color: #F59E0B;">${stars}</span></td>
                         <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(r.comment || '-')}</td>
+                        <td>${r.admin_reply ? `<div class="review-reply-preview"><i class="fas fa-store"></i><span>${escapeHtml(r.admin_reply)}</span></div>` : '<span class="review-no-reply">Chưa phản hồi</span>'}</td>
                         <td>${r.created_at ? new Date(r.created_at).toLocaleDateString('vi-VN') : '-'}</td>
                         <td>
-                            <button class="btn btn-sm btn-danger" onclick="deleteReview(${r.id})"><i class="fas fa-trash"></i></button>
+                            <div class="review-actions">
+                                <button class="btn btn-sm btn-secondary" onclick="openReplyModal(${r.id})" title="${r.admin_reply ? 'Sửa phản hồi' : 'Phản hồi'}"><i class="fas fa-reply"></i></button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteReview(${r.id})" title="Xóa đánh giá"><i class="fas fa-trash"></i></button>
+                            </div>
                         </td>
                     </tr>`;
                 });
                 tbody.innerHTML = html;
             } catch (e) {
-                document.getElementById('reviewsBody').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Lỗi tải dữ liệu</h3></div></td></tr>`;
+                document.getElementById('reviewsBody').innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Lỗi tải dữ liệu</h3></div></td></tr>`;
+            }
+        }
+
+        function openReplyModal(id) {
+            const review = loadedReviews.find(item => Number(item.id) === Number(id));
+            if (!review) return showToast('Không tìm thấy đánh giá!', 'error');
+            document.getElementById('replyReviewId').value = id;
+            document.getElementById('replyContent').value = review.admin_reply || '';
+            document.getElementById('replyContext').innerHTML = `<strong>${escapeHtml(review.user_name || 'Khách hàng')}</strong><p>${escapeHtml(review.comment || 'Không có nội dung')}</p>`;
+            document.getElementById('replyModal').classList.add('show');
+            setTimeout(() => document.getElementById('replyContent').focus(), 50);
+        }
+
+        function closeReplyModal() {
+            document.getElementById('replyModal').classList.remove('show');
+        }
+
+        async function saveReply() {
+            const id = document.getElementById('replyReviewId').value;
+            const reply = document.getElementById('replyContent').value.trim();
+            if (!reply) return showToast('Vui lòng nhập nội dung phản hồi!', 'error');
+            const button = document.getElementById('saveReplyBtn');
+            button.disabled = true;
+            try {
+                const res = await fetch(`/admin/reviews/${id}/reply`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'include',
+                    body: JSON.stringify({ reply })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || 'Không thể lưu phản hồi!');
+                closeReplyModal();
+                showToast('Đã gửi phản hồi cho khách hàng!', 'success');
+                await loadReviews();
+            } catch (error) {
+                showToast(error.message || 'Lỗi khi gửi phản hồi!', 'error');
+            } finally {
+                button.disabled = false;
             }
         }
 
         async function deleteReview(id) {
-            if (!confirm('Xóa đánh giá này?')) return;
+            const confirmed = await adminConfirm({
+                title: 'Xóa đánh giá?',
+                message: 'Đánh giá và phản hồi của quản trị viên sẽ bị xóa khỏi sản phẩm.',
+                confirmText: 'Xóa đánh giá',
+                icon: 'fa-trash-alt'
+            });
+            if (!confirmed) return;
             try {
                 const res = await fetch(`/admin/reviews/${id}`, {
                     method: 'DELETE',
@@ -204,5 +269,6 @@
             }
         }
     </script>
+    <script src="/js/admin-ui.js?v=20260914-4"></script>
 </body>
 </html>

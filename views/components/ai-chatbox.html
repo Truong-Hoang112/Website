@@ -67,22 +67,21 @@
                     <div class="uc-msg-content">
                         <p>Xin chào! 👋 Tôi là trợ lý AI của cửa hàng. Tôi có thể giúp bạn:</p>
                         <ul>
-                            <li>Tìm kiếm sản phẩm theo nhu cầu</li>
-                            <li>Tư vấn về sản phẩm, giá cả</li>
-                            <li>Hướng dẫn đặt hàng, thanh toán</li>
-                            <li>Giải đáp thắc mắc về chính sách</li>
+                            <li>Tìm và tư vấn điện thoại theo nhu cầu</li>
+                            <li>Xem thông tin, giá và tồn kho thực tế</li>
+                            <li>Hướng dẫn mua hàng, thanh toán</li>
+                            <li>Tra cứu đơn hàng của bạn</li>
                     </ul>
                         <p>Bạn cần tôi hỗ trợ gì?</p>
                     </div>
                 </div>
         <!-- Các câu hỏi mặc định -->
                 <div class="uc-quick-questions" id="ucQuickQuestions" style="display:flex;flex-wrap:wrap;gap:8px;padding:16px;border-top:1px solid #f1f5f9;background:linear-gradient(180deg,#fafafa 0%,#fff 100%);">
-                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Cách đặt hàng như thế nào?')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🛒</span> Cách đặt hàng</button>
-                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Có mã giảm giá nào không?')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🎫</span> Mã giảm giá</button>
-                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Chính sách đổi trả thế nào?')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🔄</span> Đổi trả hàng</button>
-                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Thanh toán bằng cách nào?')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>💳</span> Thanh toán</button>
-                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Giao hàng trong bao lâu?')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🚚</span> Giao hàng</button>
-                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Tôi cần tư vấn sản phẩm')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>✨</span> Tư vấn sản phẩm</button>
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Tìm điện thoại dưới 10 triệu còn hàng')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🔎</span> Tìm điện thoại</button>
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Tư vấn điện thoại chụp ảnh tốt')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>✨</span> Tư vấn sản phẩm</button>
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Kiểm tra tồn kho iPhone 16')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>📦</span> Kiểm tra tồn kho</button>
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Tra cứu đơn hàng gần nhất của tôi')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🚚</span> Tra cứu đơn</button>
+                    <button class="uc-quick-btn" onclick="sendQuickQuestion('Hướng dẫn tôi mua hàng')" style="background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:10px 16px;font-size:13px;color:#475569;cursor:pointer;transition:all 0.25s ease;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.08);"><span>🛒</span> Mua hàng</button>
                 </div>
             </div>
             <div class="uc-input-area">
@@ -211,6 +210,8 @@
     let adminConnected = false;
     let currentConversationId = null;
     let isLoggedIn = false;
+    let aiHistory = [];
+    let aiHistoryLoadPromise = null;
 
     // ===== SOCKET =====
     let socket = null;
@@ -393,28 +394,41 @@
     // Re-export for use in other functions
 
     // ===== AI CHAT =====
-    function sendAIMessage() {
+    async function sendAIMessage() {
         const text = ucInput.value.trim();
         if (!text || isTyping) return;
+
+        isTyping = true;
+        await loadAIHistory();
 
         addMessage('user', text, ucMessages);
         ucInput.value = '';
         autoResize();
 
-        isTyping = true;
         const typingEl = addTypingIndicator(ucMessages);
 
         fetch('/api/chat/ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text })
+            credentials: 'include',
+            body: JSON.stringify({ message: text, history: aiHistory.slice(-8) })
         })
-        .then(r => r.json())
+        .then(async r => {
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(data.error || 'AI_UNAVAILABLE');
+            return data;
+        })
         .then(data => {
             removeTypingIndicator(typingEl);
             isTyping = false;
             if (data.success) {
                 addMessage('bot', data.reply, ucMessages);
+                addProductCards(data.products || []);
+                aiHistory.push(
+                    { role: 'user', content: text },
+                    { role: 'assistant', content: data.reply, products: data.products || [] }
+                );
+                aiHistory = aiHistory.slice(-100);
             } else {
                 addMessage('bot', 'Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau.', ucMessages);
             }
@@ -424,9 +438,77 @@
             console.error('AI Chat Error:', err);
             removeTypingIndicator(typingEl);
             isTyping = false;
-            addMessage('bot', 'Xin lỗi, đã xảy ra lỗi: ' + err.message, ucMessages);
+            addMessage('bot', err.message === 'AI_UNAVAILABLE'
+                ? 'Trợ lý AI đang tạm gián đoạn. Vui lòng thử lại sau.'
+                : err.message, ucMessages);
             scrollToBottom(ucMessages);
         });
+    }
+
+    function loadAIHistory() {
+        if (aiHistoryLoadPromise) return aiHistoryLoadPromise;
+        aiHistoryLoadPromise = fetch('/api/chat/ai/history', { credentials: 'include' })
+            .then(async response => {
+                if (!response.ok) return;
+                const data = await response.json();
+                if (!Array.isArray(data.history) || !data.history.length) return;
+
+                aiHistory = data.history;
+                ucMessages.innerHTML = '';
+                data.history.forEach(item => {
+                    addMessage(item.role === 'assistant' ? 'bot' : 'user', item.content, ucMessages);
+                    if (item.role === 'assistant') addProductCards(item.products || []);
+                });
+                scrollToBottom(ucMessages);
+            })
+            .catch(error => console.error('Load AI history error:', error));
+        return aiHistoryLoadPromise;
+    }
+
+    function resolveProductImageUrl(value) {
+        const thumbnail = String(value || '').trim();
+        if (!thumbnail) return '/images/no-image.svg';
+        if (/^(?:https?:)?\/\//i.test(thumbnail) || thumbnail.startsWith('/')) return thumbnail;
+        const filename = thumbnail.replace(/^(?:assets\/images\/products|images\/products|uploads\/products)\//i, '');
+        return `/assets/images/products/${filename.split('/').map(encodeURIComponent).join('/')}`;
+    }
+
+    function addProductCards(products) {
+        if (!Array.isArray(products) || !products.length) return;
+        const cards = document.createElement('div');
+        cards.className = 'uc-product-cards';
+        products.slice(0, 6).forEach(product => {
+            const card = document.createElement('a');
+            card.className = 'uc-product-card';
+            card.href = `/product/${encodeURIComponent(product.id)}`;
+
+            const image = document.createElement('img');
+            image.src = resolveProductImageUrl(product.thumbnail);
+            image.alt = product.name || 'Sản phẩm';
+            image.loading = 'lazy';
+            image.addEventListener('error', () => {
+                image.src = '/images/no-image.svg';
+            }, { once: true });
+            card.appendChild(image);
+            const info = document.createElement('div');
+            info.className = 'uc-product-info';
+            const name = document.createElement('div');
+            name.className = 'uc-product-name';
+            name.textContent = product.name || 'Sản phẩm';
+            const price = document.createElement('div');
+            price.className = 'uc-product-price';
+            price.textContent = formatPrice(product.price);
+            info.append(name, price);
+            if (product.old_price && Number(product.old_price) > Number(product.price)) {
+                const oldPrice = document.createElement('div');
+                oldPrice.className = 'uc-product-original';
+                oldPrice.textContent = formatPrice(product.old_price);
+                info.appendChild(oldPrice);
+            }
+            card.appendChild(info);
+            cards.appendChild(card);
+        });
+        ucMessages.appendChild(cards);
     }
 
     // ===== ADMIN CHAT =====
@@ -674,6 +756,7 @@
         setupEventListeners();
         checkAdminStatus();
         autoResize();
+        loadAIHistory();
     };
 
     window.initChatbox = initChatbox;

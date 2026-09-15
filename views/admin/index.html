@@ -8,10 +8,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin.css?v=20260914-5">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
-<body>
+<body class="admin-shell dashboard-page">
     <div class="admin-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -136,13 +136,13 @@
 
             <div class="page-content">
                 <!-- Low Stock Alert Banner -->
-                <div class="low-stock-alert" id="lowStockAlert" style="display: none;">
+                <div class="low-stock-alert collapsed" id="lowStockAlert" style="display: none;">
                     <div class="low-stock-alert-header">
                         <div class="low-stock-alert-title">
                             <i class="fas fa-exclamation-triangle"></i>
                             <span>Cảnh báo sắp hết hàng (<strong id="lowStockCount">0</strong> sản phẩm)</span>
                         </div>
-                        <button class="low-stock-toggle" onclick="toggleLowStockAlert()" title="Thu gọn/Mở rộng">
+                        <button class="low-stock-toggle" id="lowStockToggle" onclick="toggleLowStockAlert()" title="Mở danh sách sản phẩm" aria-expanded="false" aria-controls="lowStockAlertBody">
                             <i class="fas fa-chevron-down" id="lowStockToggleIcon"></i>
                         </button>
                     </div>
@@ -176,7 +176,7 @@
                 </div>
 
                 <!-- Charts Row -->
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 24px;">
+                <div id="primaryCharts" class="dashboard-grid dashboard-grid-primary">
                     <!-- Revenue Chart -->
                     <div class="card">
                         <div class="card-header">
@@ -187,7 +187,7 @@
                             <span style="font-size: 0.85rem; color: var(--gray-500);">Cập nhật tự động</span>
                         </div>
                         <div class="card-body">
-                            <div style="position: relative; height: 320px;">
+                            <div class="dashboard-chart dashboard-chart-lg">
                                 <canvas id="revenueChart"></canvas>
                             </div>
                         </div>
@@ -202,7 +202,7 @@
                             </h2>
                         </div>
                         <div class="card-body">
-                            <div style="position: relative; height: 320px;">
+                            <div class="dashboard-chart dashboard-chart-lg">
                                 <canvas id="statusChart"></canvas>
                             </div>
                         </div>
@@ -210,7 +210,7 @@
                 </div>
 
                 <!-- Second Charts Row -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+                <div id="secondaryCharts" class="dashboard-grid dashboard-grid-secondary">
                     <!-- 7 Days Chart -->
                     <div class="card">
                         <div class="card-header">
@@ -220,7 +220,7 @@
                             </h2>
                         </div>
                         <div class="card-body">
-                            <div style="position: relative; height: 280px;">
+                            <div class="dashboard-chart dashboard-chart-md">
                                 <canvas id="weekChart"></canvas>
                             </div>
                         </div>
@@ -235,50 +235,15 @@
                             </h2>
                         </div>
                         <div class="card-body">
-                            <div style="position: relative; height: 280px;">
+                            <div class="dashboard-chart dashboard-chart-md">
                                 <canvas id="topProductsChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Top Customers Section -->
-                <div class="card" style="margin-top: 24px;">
-                    <div class="card-header">
-                        <h2 class="card-title">
-                            <i class="fas fa-crown"></i>
-                            Top khách hàng mua nhiều nhất
-                        </h2>
-                        <a href="/admin/users" class="btn btn-secondary btn-sm">
-                            Xem tất cả
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table" id="topCustomersTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Khách hàng</th>
-                                    <th>Liên hệ</th>
-                                    <th>Đơn hàng</th>
-                                    <th>Tổng chi tiêu</th>
-                                    <th>Mua gần nhất</th>
-                                </tr>
-                            </thead>
-                            <tbody id="topCustomersBody">
-                                <tr>
-                                    <td colspan="6" class="text-center" style="padding: 40px; color: var(--gray-400);">
-                                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
                 <!-- Content Grid -->
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                <div id="operationsGrid" class="dashboard-grid dashboard-grid-operations">
                     <!-- Recent Orders -->
                     <div class="card">
                         <div class="card-header">
@@ -291,13 +256,13 @@
                                 <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
-                        <div style="overflow-x: auto;">
+                        <div class="dashboard-table-scroll">
                             <table class="data-table" id="recentOrdersTable"></table>
                         </div>
                     </div>
 
                     <!-- Right Column -->
-                    <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <div class="dashboard-operations-sidebar">
                         <!-- Quick Actions -->
                         <div class="card">
                             <div class="card-header">
@@ -328,16 +293,41 @@
                             </div>
                         </div>
 
-                        <!-- Top Products -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h2 class="card-title">
-                                    <i class="fas fa-fire"></i>
-                                    Top sản phẩm
-                                </h2>
-                            </div>
-                            <div class="card-body" id="topProductsList"></div>
-                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Customers Section -->
+                <div class="card" id="topCustomersSection">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-crown"></i>
+                            Top khách hàng mua nhiều nhất
+                        </h2>
+                        <a href="/admin/users" class="btn btn-secondary btn-sm">
+                            Xem tất cả
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="dashboard-table-scroll">
+                        <table class="data-table" id="topCustomersTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Khách hàng</th>
+                                    <th>Liên hệ</th>
+                                    <th>Đơn hàng</th>
+                                    <th>Tổng chi tiêu</th>
+                                    <th>Mua gần nhất</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topCustomersBody">
+                                <tr>
+                                    <td colspan="6" class="text-center dashboard-loading-cell">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -345,37 +335,12 @@
     </div>
 
     <script>
-        function showConfirm(title, message, onConfirm) {
-            const overlay = document.createElement('div');
-            overlay.className = 'confirm-overlay';
-            overlay.innerHTML = `
-                <div class="confirm-dialog">
-                    <div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div>
-                    <div class="confirm-title">${title}</div>
-                    <div class="confirm-message">${message}</div>
-                    <div class="confirm-actions">
-                        <button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button>
-                        <button class="confirm-btn confirm">Đăng xuất</button>
-                    </div>
-                </div>`;
-            document.body.appendChild(overlay);
-            overlay.querySelector('.confirm-btn.confirm').onclick = () => {
-                overlay.remove();
-                onConfirm();
-            };
-            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-        }
         async function adminLogout() {
             showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất khỏi tài khoản này?', async () => {
                 await fetch('/api/auth/logout', { method: 'POST' });
                 window.location.href = '/login';
             });
         }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadAdminData();
-            await loadChartData();
-        });
 
         // ==================== BIỂU ĐỒ ====================
         let revenueChart, statusChart, weekChart, topProductsChart;
@@ -763,15 +728,21 @@
             else alertBox.classList.remove('urgent');
 
             list.innerHTML = products.map(p => {
-                const thumbStyle = p.thumbnail 
-                    ? `background-image:url('${escapeAttr(p.thumbnail)}')` 
-                    : '';
+                const isCloudinaryThumbnail = typeof p.thumbnail === 'string'
+                    && /^https:\/\/res\.cloudinary\.com\//i.test(p.thumbnail);
+                const isLocalThumbnail = typeof p.thumbnail === 'string' && !/^https?:\/\//i.test(p.thumbnail);
+                const thumbnailUrl = isCloudinaryThumbnail
+                    ? p.thumbnail
+                    : (isLocalThumbnail
+                        ? (p.thumbnail.startsWith('/') ? p.thumbnail : `/assets/images/products/${p.thumbnail}`)
+                        : '');
+                const thumbStyle = thumbnailUrl ? `background-image:url('${escapeAttr(thumbnailUrl)}')` : '';
                 const stockClass = p.stock < 5 ? '' : (p.stock < 10 ? 'warn' : 'ok');
                 const stockLabel = p.stock === 0 ? 'HẾT HÀNG' : (p.stock < 5 ? 'rất ít' : (p.stock < 10 ? 'sắp hết' : 'còn ít'));
                 return `
                     <div class="low-stock-item">
                         <div class="low-stock-item-thumb" style="${thumbStyle}">
-                            ${!p.thumbnail ? '<i class="fas fa-mobile-alt"></i>' : ''}
+                            ${!thumbnailUrl ? '<i class="fas fa-mobile-alt"></i>' : ''}
                         </div>
                         <div class="low-stock-item-info">
                             <div class="low-stock-item-name" title="${escapeAttr(p.name)}">${escapeHtml(p.name)}</div>
@@ -787,12 +758,12 @@
         function toggleLowStockAlert() {
             const alertBox = document.getElementById('lowStockAlert');
             const icon = document.getElementById('lowStockToggleIcon');
+            const button = document.getElementById('lowStockToggle');
             alertBox.classList.toggle('collapsed');
-            if (alertBox.classList.contains('collapsed')) {
-                icon.className = 'fas fa-chevron-up';
-            } else {
-                icon.className = 'fas fa-chevron-down';
-            }
+            const isCollapsed = alertBox.classList.contains('collapsed');
+            icon.className = isCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+            button.setAttribute('aria-expanded', String(!isCollapsed));
+            button.title = isCollapsed ? 'Mở danh sách sản phẩm' : 'Đóng danh sách sản phẩm';
         }
 
         function escapeHtml(s) {
@@ -822,7 +793,7 @@
             }
 
             let html = `<thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Trạng thái</th><th>Ngày đặt</th></tr></thead><tbody>`;
-            orders.slice(0, 6).forEach(o => {
+            orders.slice(0, 5).forEach(o => {
                 html += `<tr>
                     <td><span class="order-code">${o.payment_code || 'N/A'}</span></td>
                     <td>
@@ -1052,15 +1023,18 @@
 
             const allParts = [...urgent, ...parts];
             if (allParts.length > 0) {
-                message.innerHTML = allParts.join(' &nbsp;•&nbsp; ');
+                const totalItems = Number(data.counts.pending_orders || 0)
+                    + Number(data.counts.contacts || 0)
+                    + Number(data.counts.new_orders || 0)
+                    + Number(data.counts.reviews || 0)
+                    + Number(data.counts.low_stock || 0);
+                message.textContent = `${totalItems} mục cần xử lý`;
+                message.title = allParts.join(' • ');
                 banner.style.display = 'flex';
-                // Đổi màu nếu có urgent
-                banner.style.background = urgent.length > 0 
-                    ? 'linear-gradient(135deg, #fee2e2, #fecaca)'
-                    : 'linear-gradient(135deg, #fef3c7, #fde68a)';
-                banner.style.color = urgent.length > 0 ? '#991b1b' : '#92400e';
+                banner.classList.toggle('urgent', urgent.length > 0);
             } else {
                 banner.style.display = 'none';
+                message.removeAttribute('title');
             }
         }
 
@@ -1192,5 +1166,6 @@
             if (notificationInterval) clearInterval(notificationInterval);
         });
     </script>
+    <script src="/js/admin-ui.js?v=20260914-4"></script>
 </body>
 </html>

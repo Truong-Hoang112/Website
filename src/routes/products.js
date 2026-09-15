@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
+const { parseReviewComment } = require('../core/review-comment');
 
 function filterValues(value) {
     const values = value === undefined ? [] : (Array.isArray(value) ? value : [value]);
@@ -224,6 +225,7 @@ router.get('/:id', async (req, res) => {
              ORDER BY r.created_at DESC`,
             [id]
         );
+        reviews.forEach(review => Object.assign(review, parseReviewComment(review.comment)));
 
         // Calculate rating stats
         let avgRating = 0;

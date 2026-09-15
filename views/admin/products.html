@@ -8,9 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin.css?v=20260911">
+    <link rel="stylesheet" href="/css/admin.css?v=20260914-5">
 </head>
-<body>
+<body class="admin-shell">
     <div class="admin-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -294,7 +294,7 @@
                             <div class="gallery-upload-content">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <p class="gallery-upload-text">Kéo thả hoặc bấm để chọn nhiều ảnh</p>
-                                <small style="color: var(--gray-500); display: block; margin-top: 4px;">JPG, PNG, WEBP • Tối đa 10 ảnh</small>
+                                <small style="color: var(--gray-500); display: block; margin-top: 4px;">JPG, PNG, WEBP</small>
                             </div>
                         </div>
                         <div id="galleryPreview" class="gallery-preview"></div>
@@ -313,7 +313,7 @@
                             <label class="toggle">
                                 <input type="checkbox" id="is_featured">
                                 <span class="toggle-slider"></span>
-                                <span style="margin-left: 14px; font-weight: 600;">Hiển thị ở mục Sản phẩm nổi bật</span>
+                                <span class="toggle-label"><i class="fas fa-star"></i> Hiển thị ở mục Sản phẩm nổi bật</span>
                             </label>
                         </div>
                     </div>
@@ -336,14 +336,6 @@
     <script>
         let editingId = null;
 
-        function showConfirm(title, message, onConfirm) {
-            const overlay = document.createElement('div');
-            overlay.className = 'confirm-overlay';
-            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
-            document.body.appendChild(overlay);
-            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
-            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-        }
         async function adminLogout() {
             showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', async () => {
                 await fetch('/api/auth/logout', { method: 'POST' });
@@ -494,10 +486,10 @@
                 products.forEach(p => {
                     const stockClass = p.stock > 10 ? 'badge-success' : p.stock > 0 ? 'badge-warning' : 'badge-danger';
                     const stockText = p.stock > 10 ? 'Còn hàng' : p.stock > 0 ? `Còn ${p.stock}` : 'Hết hàng';
-                    const imgSrc = p.thumbnail ? (p.thumbnail.startsWith('http') ? p.thumbnail : '/assets/images/products/' + p.thumbnail) : '';
+                    const imgSrc = resolveAdminProductImageUrl(p.thumbnail);
                     html += `<tr>
                         <td>
-                            <img src="${imgSrc}" class="product-img" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.style.display='none'">
+                            <img src="${imgSrc}" class="product-img" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.onerror=null;this.src='/images/no-image.svg'">
                         </td>
                         <td><strong>${p.name}</strong><br><span style="color: var(--gray-500); font-size: 0.8rem;">${p.ram ? 'RAM: ' + p.ram : ''}${p.ram && p.storage ? ' | ' : ''}${p.storage ? 'ROM: ' + p.storage : ''}</span></td>
                         <td>${p.brand_name || '-'}</td>
@@ -554,6 +546,13 @@
             if (el) el.checked = !!checked;
         }
 
+        function resolveAdminProductImageUrl(value) {
+            const imageUrl = String(value || '').trim();
+            if (!imageUrl) return '/images/no-image.svg';
+            if (/^(?:https?:)?\/\//i.test(imageUrl) || imageUrl.startsWith('/')) return imageUrl;
+            return '/assets/images/products/' + imageUrl.replace(/^(?:assets\/images\/products|images\/products|uploads\/products)\//i, '');
+        }
+
         async function loadProductData(id) {
             try {
                 const res = await fetch(`/admin/products/${id}`, {
@@ -591,11 +590,25 @@
                 calculateDiscount();
 
                 // Load gallery images
-                if (data.images && data.images.length > 0) {
-                    galleryImages = data.images.map((img, index) => ({
+                const storedImages = Array.isArray(data.images) ? [...data.images] : [];
+                const thumbnailAlreadyInGallery = storedImages.some(img => img.image_url === p.thumbnail);
+                if (p.thumbnail && !thumbnailAlreadyInGallery) {
+                    storedImages.forEach(img => { img.is_primary = 0; });
+                    storedImages.unshift({
+                        id: 'current_thumbnail',
+                        image_url: p.thumbnail,
+                        is_primary: 1,
+                        isLegacyThumbnail: true
+                    });
+                }
+
+                if (storedImages.length > 0) {
+                    const hasStoredPrimary = storedImages.some(img => img.is_primary == 1);
+                    galleryImages = storedImages.map((img, index) => ({
                         id: img.id,
-                        url: '/assets/images/products/' + img.image_url,
-                        isPrimary: img.is_primary == 1 || index === 0,
+                        url: resolveAdminProductImageUrl(img.image_url),
+                        isPrimary: hasStoredPrimary ? img.is_primary == 1 : index === 0,
+                        isLegacyThumbnail: img.isLegacyThumbnail === true,
                         isNew: false,
                         file: null
                     }));
@@ -649,7 +662,7 @@
         }
 
         function removeGalleryImage(id) {
-            galleryImages = galleryImages.filter(img => img.id !== id);
+            galleryImages = galleryImages.filter(img => String(img.id) !== String(id));
             // If removed was primary, set first as primary
             if (!galleryImages.some(img => img.isPrimary) && galleryImages.length > 0) {
                 galleryImages[0].isPrimary = true;
@@ -658,28 +671,28 @@
         }
 
         function setPrimaryImage(id) {
-            galleryImages.forEach(img => img.isPrimary = (img.id === id));
+            galleryImages.forEach(img => img.isPrimary = String(img.id) === String(id));
             renderGalleryPreview();
         }
 
         function renderGalleryPreview() {
             const container = document.getElementById('galleryPreview');
             if (galleryImages.length === 0) {
-                container.innerHTML = '<div class="gallery-empty"><i class="fas fa-image"></i> Chưa có ảnh nào. Bấm vào khung phía trên để thêm.</div>';
+                container.innerHTML = `<div class="gallery-empty"><i class="fas fa-images"></i><p style="margin: 8px 0 0; font-size: 13px;">Chưa có ảnh nào. Kéo thả hoặc bấm vào khung phía trên để thêm.</p></div>`;
                 return;
             }
 
             const primaryIdx = galleryImages.findIndex(img => img.isPrimary);
             const headerHtml = `
                 <div class="gallery-preview-header">
-                    <span><i class="fas fa-images"></i> <span class="badge-count">${galleryImages.length} ảnh</span></span>
-                    <span>${primaryIdx >= 0 ? '<span class="badge-primary"><i class="fas fa-star"></i> Ảnh chính: #' + (primaryIdx + 1) + '</span>' : '<em style="color: var(--gray-500);">Chưa chọn ảnh chính</em>'}</span>
+                    <span><i class="fas fa-images"></i> <span class="badge-count">${galleryImages.length}</span> ảnh</span>
+                    <span>${primaryIdx >= 0 ? '<span class="badge badge-primary"><i class="fas fa-star"></i> Ảnh chính #' + (primaryIdx + 1) + '</span>' : '<em style="color: var(--gray-500);">Chưa chọn ảnh chính</em>'}</span>
                 </div>
+                <div class="gallery-images-grid">
             `;
-
             const imagesHtml = galleryImages.map((img, index) => `
                 <div class="gallery-item ${img.isPrimary ? 'primary' : ''}">
-                    <img src="${img.url}" alt="Ảnh ${index + 1}">
+                    <img src="${img.url}" alt="Ảnh ${index + 1}" onerror="this.onerror=null;this.src='/images/no-image.svg'">
                     ${img.isPrimary ? '<span class="gallery-badge-primary"><i class="fas fa-star"></i> Chính</span>' : ''}
                     <div class="gallery-item-actions">
                         ${!img.isPrimary ? `<button type="button" onclick="event.stopPropagation(); setPrimaryImage('${img.id}')" title="Đặt làm ảnh chính"><i class="fas fa-star"></i></button>` : ''}
@@ -687,8 +700,9 @@
                     </div>
                 </div>
             `).join('');
+            const footerHtml = `</div>`;
 
-            container.innerHTML = headerHtml + imagesHtml;
+            container.innerHTML = headerHtml + imagesHtml + footerHtml;
         }
 
         // Product Variants Management
@@ -765,7 +779,9 @@
             const uploadIndexes = new Map(newGalleryImages.map((img, index) => [img.id, index]));
             formData.append('galleryManifest', JSON.stringify(galleryImages.map(img => img.isNew
                 ? { type: 'new', uploadIndex: uploadIndexes.get(img.id) }
-                : { type: 'existing', id: Number(img.id) }
+                : img.isLegacyThumbnail
+                    ? { type: 'current_thumbnail' }
+                    : { type: 'existing', id: Number(img.id) }
             )));
             // Send primary image index
             const primaryIndex = galleryImages.findIndex(img => img.isPrimary);
@@ -813,7 +829,13 @@
         }
 
         async function deleteProduct(id) {
-            if (!confirm('Bạn có chắc muốn xóa sản phẩm này? Chỉ có thể xóa sản phẩm chưa có trong đơn hàng.')) return;
+            const confirmed = await adminConfirm({
+                title: 'Xóa sản phẩm?',
+                message: 'Sản phẩm chỉ được xóa khi chưa xuất hiện trong đơn hàng. Thao tác này không thể hoàn tác.',
+                confirmText: 'Xóa sản phẩm',
+                icon: 'fa-trash-alt'
+            });
+            if (!confirmed) return;
             
             try {
                 const res = await fetch(`/admin/products/${id}`, {
@@ -862,5 +884,6 @@
             if (e.target === this) closeModal();
         });
     </script>
+    <script src="/js/admin-ui.js?v=20260914-4"></script>
 </body>
 </html>

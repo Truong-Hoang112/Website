@@ -8,355 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin.css">
-    <style>
-        .banner-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            margin-top: 24px;
-        }
-        @media (max-width: 900px) {
-            .banner-grid { grid-template-columns: 1fr; }
-            .banner-side-stack { grid-template-rows: 1fr 1fr; }
-        }
-        .banner-card {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            border: 1px solid var(--gray-100);
-            transition: all 0.3s;
-        }
-        .banner-card:hover {
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-            transform: translateY(-2px);
-        }
-        .banner-preview {
-            position: relative;
-            height: 200px;
-            background: var(--gray-100);
-            background-size: cover;
-            background-position: center;
-            overflow: hidden;
-        }
-        .banner-preview.main {
-            height: 280px;
-        }
-        .banner-preview-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.1));
-            display: flex;
-            align-items: flex-end;
-            padding: 20px;
-            color: white;
-        }
-        .preview-content h3 {
-            font-size: 1.3rem;
-            margin-bottom: 4px;
-        }
-        .preview-content p {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        .banner-side-stack {
-            display: grid;
-            grid-template-rows: 1fr 1fr;
-            gap: 20px;
-        }
-        .banner-info {
-            padding: 18px 20px;
-        }
-        .banner-controls {
-            padding: 16px 20px 20px;
-            border-top: 1px solid var(--gray-100);
-            background: var(--gray-50);
-            margin-top: 16px;
-            border-radius: 0 0 16px 16px;
-        }
-        .banner-info-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .banner-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 12px;
-            background: rgba(226, 27, 27, 0.1);
-            color: var(--primary);
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .banner-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-        .banner-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            color: var(--gray-600);
-        }
-        .toggle-label {
-            font-weight: 500;
-        }
-        .banner-link-info {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px dashed var(--gray-200);
-            font-size: 0.78rem;
-            color: var(--gray-500);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .banner-link-info i {
-            color: var(--gray-400);
-            margin-right: 4px;
-        }
-        .switch {
-            position: relative;
-            width: 40px;
-            height: 22px;
-            background: var(--gray-300);
-            border-radius: 11px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .switch.active {
-            background: #10b981;
-        }
-        .switch::after {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background: white;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            transition: 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .switch.active::after {
-            left: 20px;
-        }
-        .placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--gray-400);
-            font-size: 2.5rem;
-        }
-        .btn-action {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1px solid var(--gray-200);
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--gray-700);
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        .btn-action:hover {
-            background: var(--gray-50);
-            border-color: var(--gray-300);
-        }
-        .btn-action.primary {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        .btn-action.primary:hover {
-            background: #c81818;
-        }
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            padding: 20px;
-        }
-        .modal-overlay.show {
-            display: flex;
-            animation: fadeIn 0.2s ease;
-        }
-        .modal {
-            background: white;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            animation: slideUp 0.25s ease;
-        }
-        .modal-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--gray-100);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .modal-header h2 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin: 0;
-        }
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.3rem;
-            cursor: pointer;
-            color: var(--gray-500);
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-        }
-        .modal-close:hover {
-            background: var(--gray-100);
-        }
-        .modal-body {
-            padding: 24px;
-        }
-        .modal-footer {
-            padding: 16px 24px;
-            border-top: 1px solid var(--gray-100);
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--gray-700);
-        }
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--gray-300);
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        .image-upload-zone {
-            border: 2px dashed var(--gray-300);
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: var(--gray-50);
-        }
-        .image-upload-zone:hover {
-            border-color: var(--primary);
-            background: rgba(226, 27, 27, 0.05);
-        }
-        .image-upload-zone.has-image {
-            padding: 0;
-            border-style: solid;
-            overflow: hidden;
-        }
-        .image-upload-zone img {
-            width: 100%;
-            max-height: 250px;
-            object-fit: cover;
-            display: block;
-        }
-        .upload-icon {
-            font-size: 2.5rem;
-            color: var(--gray-400);
-            margin-bottom: 10px;
-        }
-        .upload-text {
-            color: var(--gray-600);
-            font-size: 0.9rem;
-        }
-        .upload-text small {
-            display: block;
-            color: var(--gray-400);
-            margin-top: 4px;
-        }
-        .position-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .info-box {
-            padding: 14px 16px;
-            background: var(--gray-50);
-            border-radius: 10px;
-            border-left: 3px solid var(--primary);
-        }
-        .info-box h4 {
-            font-size: 0.85rem;
-            margin: 0 0 4px;
-            color: var(--gray-800);
-        }
-        .info-box p {
-            font-size: 0.8rem;
-            color: var(--gray-500);
-            margin: 0;
-        }
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 14px 22px;
-            background: #10b981;
-            color: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            z-index: 10000;
-            font-size: 0.9rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transform: translateX(400px);
-            transition: transform 0.3s;
-        }
-        .toast.show {
-            transform: translateX(0);
-        }
-        .toast.error {
-            background: #ef4444;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/admin.css?v=20260914-5">
 </head>
-<body>
+<body class="admin-shell">
     <div class="admin-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -454,12 +108,12 @@
 
             <div class="page-content">
                 <!-- Hướng dẫn -->
-                <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #fef3c7, #fde68a); border: none;">
+                <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #fff5f5, #fff5f5); border: none;">
                     <div style="display: flex; align-items: center; gap: 14px; padding: 4px;">
                         <i class="fas fa-lightbulb" style="font-size: 1.5rem; color: #f59e0b;"></i>
                         <div>
-                            <h3 style="margin: 0; font-size: 1rem; color: #92400e;">Quản lý 3 banner trang chủ</h3>
-                            <p style="margin: 4px 0 0; font-size: 0.85rem; color: #78350f;">
+                            <h3 style="margin: 0; font-size: 1rem; color: #e21b1b;">Quản lý 3 banner trang chủ</h3>
+                            <p style="margin: 4px 0 0; font-size: 0.85rem; color: #e21b1b;">
                                 Banner chính hiển thị lớn ở giữa, 2 banner phụ nhỏ xếp bên phải. Click "Chỉnh sửa" để thay đổi ảnh, tiêu đề, mô tả và liên kết.
                             </p>
                         </div>
@@ -602,8 +256,8 @@
                             <div id="uploadPlaceholder">
                                 <i class="fas fa-cloud-upload-alt upload-icon"></i>
                                 <div class="upload-text">
-                                    <strong>Click để chọn ảnh</strong>
-                                    <small>JPG, PNG, WEBP (tối đa 5MB)</small>
+                                    <strong id="uploadPrompt">Click để chọn ảnh</strong>
+                                    <small id="uploadHint">JPG, PNG, WEBP (tối đa 5MB/ảnh)</small>
                                 </div>
                             </div>
                             <input type="file" id="imageInput" accept="image/*" style="display: none;">
@@ -645,7 +299,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-action" onclick="closeModal()">Hủy</button>
-                <button class="btn-action primary" onclick="saveBanner()">
+                <button type="button" class="btn-action primary" id="saveBannerButton" onclick="saveBanner()">
                     <i class="fas fa-save"></i>
                     Lưu thay đổi
                 </button>
@@ -662,10 +316,13 @@
     <script>
         // Cache banners theo slot
         let bannersCache = {
-            main: null,    // hero
+            main: [],      // tối đa 10 ảnh hero
             side1: null,   // side
             side2: null    // quick
         };
+        let uploadedImageUrls = [];
+        let bannerUploadPromise = null;
+        let bannerUploadVersion = 0;
 
         function getSlot(position) {
             // Hỗ trợ cả số (0,1,2) và chuỗi ('hero','side','quick')
@@ -718,14 +375,14 @@
 
         function renderBanners(banners) {
             // Reset cache
-            bannersCache = { main: null, side1: null, side2: null };
+            bannersCache = { main: [], side1: null, side2: null };
 
             // Phân loại banner vào 3 slot
             banners.forEach(b => {
                 const pos = b.position;
                 // Đơn giản: 0=main, 1=side1, 2=side2
-                if ((pos === 0 || pos === '0' || pos === 'hero') && !bannersCache.main) {
-                    bannersCache.main = b;
+                if ((pos === 0 || pos === '0' || pos === 'hero') && bannersCache.main.length < 10) {
+                    bannersCache.main.push(b);
                 } else if ((pos === 1 || pos === '1' || pos === 'side') && !bannersCache.side1) {
                     bannersCache.side1 = b;
                 } else if ((pos === 2 || pos === '2' || pos === 'quick') && !bannersCache.side2) {
@@ -739,7 +396,9 @@
             });
         }
 
-        function renderSlot(slot, banner) {
+        function renderSlot(slot, bannerValue) {
+            const mainBanners = slot === 'main' && Array.isArray(bannerValue) ? bannerValue : [];
+            const banner = slot === 'main' ? mainBanners[0] : bannerValue;
             const previewId = slot === 'main' ? 'mainPreview' : slot + 'Preview';
             const switchId = slot + 'Switch';
             const toggleLabelId = slot + 'ToggleLabel';
@@ -749,13 +408,13 @@
             const el = document.getElementById(previewId);
             if (el) {
                 if (banner && banner.image_url) {
-                    const url = banner.image_url.startsWith('/') ? banner.image_url : '/' + banner.image_url;
+                    const url = resolveImageUrl(banner.image_url);
                     el.style.backgroundImage = `url('${url}')`;
                     el.innerHTML = `
                         <div class="banner-preview-overlay">
                             <div class="preview-content">
                                 <h3>${escapeHtml(banner.title || '')}</h3>
-                                <p>${escapeHtml(banner.subtitle || '')}</p>
+                                <p>${escapeHtml(banner.subtitle || '')}${slot === 'main' ? ` · ${mainBanners.length}/10 ảnh` : ''}</p>
                             </div>
                         </div>
                         ${!banner.is_active ? '<div style="position:absolute;top:10px;right:10px;background:rgba(239,68,68,0.9);color:white;padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:600;z-index:2;"><i class="fas fa-eye-slash"></i> Đang ẩn</div>' : ''}
@@ -772,7 +431,7 @@
             const linkInfoEl = document.getElementById(linkInfoId);
 
             if (switchEl && labelEl) {
-                if (banner && banner.is_active == 1) {
+                if (banner && (slot !== 'main' ? banner.is_active == 1 : mainBanners.some(item => item.is_active == 1))) {
                     switchEl.classList.add('active');
                     labelEl.textContent = 'Đang hiển thị';
                     labelEl.style.color = '#10b981';
@@ -795,26 +454,27 @@
 
         // Toggle banner (slot-based)
         async function toggleBanner(slot) {
-            const banner = bannersCache[slot];
+            const slotValue = bannersCache[slot];
+            const banners = slot === 'main' ? slotValue : (slotValue ? [slotValue] : []);
+            const banner = banners[0];
             if (!banner) {
                 showToast('Banner chưa được tạo!', true);
                 return;
             }
             try {
-                const newStatus = !(banner.is_active == 1);
-                const res = await fetch(`/admin/banners/${banner.id}/toggle`, {
-                    method: 'PUT',
-                    credentials: 'include',
+                const newStatus = !banners.some(item => item.is_active == 1);
+                const results = await Promise.all(banners.map(item => fetch(`/admin/banners/${item.id}/toggle`, {
+                    method: 'PUT', credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ is_active: newStatus })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    banner.is_active = newStatus ? 1 : 0;
-                    renderSlot(slot, banner);
+                }).then(res => res.json())));
+                if (results.every(data => data.success)) {
+                    banners.forEach(item => { item.is_active = newStatus ? 1 : 0; });
+                    renderSlot(slot, slotValue);
                     showToast(newStatus ? 'Đã bật banner!' : 'Đã tắt banner!');
                 } else {
-                    showToast(data.error || 'Lỗi khi cập nhật!', true);
+                    const failed = results.find(data => !data.success);
+                    showToast(failed?.error || 'Lỗi khi cập nhật!', true);
                 }
             } catch (e) {
                 console.error(e);
@@ -824,7 +484,7 @@
 
         // Preview banner
         function previewBanner(slot) {
-            const banner = bannersCache[slot];
+            const banner = slot === 'main' ? bannersCache.main[0] : bannersCache[slot];
             if (!banner || !banner.link) {
                 showToast('Banner chưa có liên kết!', true);
                 return;
@@ -834,8 +494,11 @@
 
         // Edit banner (slot-based)
         async function editBanner(slot) {
-            const banner = bannersCache[slot];
-            uploadedImageUrl = banner ? banner.image_url : null;
+            const mainBanners = slot === 'main' ? bannersCache.main : [];
+            const banner = slot === 'main' ? mainBanners[0] : bannersCache[slot];
+            uploadedImageUrls = slot === 'main'
+                ? mainBanners.map(item => item.image_url).slice(0, 10)
+                : (banner?.image_url ? [banner.image_url] : []);
 
             document.getElementById('bannerSlot').value = slot;
             document.getElementById('bannerId').value = banner ? banner.id : '';
@@ -844,12 +507,20 @@
             document.getElementById('bannerPosition').value = banner
                 ? (positionMap[getSlot(banner.position)] || 'hero')
                 : (positionMap[slot] || 'hero');
+            document.getElementById('imageInput').multiple = slot === 'main';
+            document.getElementById('imageInput').value = '';
+            document.getElementById('uploadPrompt').textContent = slot === 'main'
+                ? 'Chọn từ 1 đến 10 ảnh cho banner chính'
+                : 'Chọn 1 ảnh';
+            document.getElementById('uploadHint').textContent = slot === 'main'
+                ? 'Carousel đổi ảnh mỗi 2 giây · tối đa 10 ảnh, 5MB/ảnh'
+                : 'JPG, PNG, WEBP (tối đa 5MB)';
             document.getElementById('uploadZone').classList.remove('has-image');
             document.getElementById('uploadPlaceholder').style.display = 'block';
 
             // Reset image preview
-            const existingImg = document.getElementById('uploadZone').querySelector('img');
-            if (existingImg) existingImg.remove();
+            const existingPreviews = document.getElementById('uploadZone').querySelector('.uploaded-previews');
+            if (existingPreviews) existingPreviews.remove();
 
             if (banner) {
                 document.getElementById('bannerTitle').value = banner.title || '';
@@ -859,9 +530,8 @@
                 document.getElementById('bannerActive').checked = banner.is_active == 1;
                 document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Chỉnh sửa Banner ' + (slot === 'main' ? 'chính' : 'phụ ' + (slot === 'side1' ? '1' : '2'));
 
-                if (banner.image_url) {
-                    const url = banner.image_url.startsWith('/') ? banner.image_url : '/' + banner.image_url;
-                    showPreviewImage(url);
+                if (uploadedImageUrls.length) {
+                    showPreviewImages(uploadedImageUrls.map(resolveImageUrl));
                 }
             } else {
                 document.getElementById('bannerTitle').value = '';
@@ -875,41 +545,73 @@
             document.getElementById('editModal').classList.add('show');
         }
 
+        function resolveImageUrl(value) {
+            if (/^https?:\/\//i.test(value || '')) return value;
+            return value && value.startsWith('/') ? value : '/' + (value || '');
+        }
+
         function setupImageUpload() {
             const input = document.getElementById('imageInput');
             input.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
-                if (!file) return;
+                const files = Array.from(e.target.files || []);
+                if (!file || !files.length) return;
+                const isMain = document.getElementById('bannerSlot').value === 'main';
+                if ((isMain && files.length > 10) || (!isMain && files.length > 1)) {
+                    showToast(isMain ? 'Banner chính chỉ được chọn tối đa 10 ảnh!' : 'Banner phụ chỉ được chọn 1 ảnh!', true);
+                    input.value = '';
+                    return;
+                }
+                const uploadVersion = ++bannerUploadVersion;
+                uploadedImageUrls = [];
+                document.getElementById('saveBannerButton').disabled = true;
 
                 // Show preview ngay
-                const reader = new FileReader();
-                reader.onload = (e) => showPreviewImage(e.target.result);
-                reader.readAsDataURL(file);
+                Promise.all(files.map(selectedFile => new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = event => resolve(event.target.result);
+                    reader.readAsDataURL(selectedFile);
+                }))).then(urls => {
+                    if (uploadVersion === bannerUploadVersion) showPreviewImages(urls);
+                });
 
                 // Upload
                 const formData = new FormData();
-                formData.append('image', file);
+                files.forEach(selectedFile => formData.append(isMain ? 'images' : 'image', selectedFile));
 
-                try {
-                    const res = await fetch('/admin/banners/upload', {
+                const currentUpload = (async () => {
+                    try {
+                    const res = await fetch(isMain ? '/admin/banners/upload-many' : '/admin/banners/upload', {
                         method: 'POST',
                         credentials: 'include',
                         body: formData
                     });
                     const data = await res.json();
-                    if (data.success) {
-                        uploadedImageUrl = data.url;
-                        showToast('Upload ảnh thành công!');
+                    if (data.success && uploadVersion === bannerUploadVersion) {
+                        uploadedImageUrls = isMain ? data.urls : [data.url];
+                        showPreviewImages(uploadedImageUrls.map(resolveImageUrl));
+                        showToast(`Đã tải ${uploadedImageUrls.length} ảnh lên Cloudinary. Hãy lưu thay đổi.`);
                     } else {
-                        showToast(data.error || 'Lỗi upload!', true);
+                        if (uploadVersion === bannerUploadVersion) {
+                            showToast(data.error || 'Lỗi upload!', true);
+                        }
                     }
-                } catch (e) {
-                    showToast('Lỗi khi upload ảnh!', true);
+                    } catch (e) {
+                        if (uploadVersion === bannerUploadVersion) {
+                            showToast('Lỗi khi upload ảnh!', true);
+                        }
+                    }
+                })();
+                bannerUploadPromise = currentUpload;
+                await currentUpload;
+                if (bannerUploadPromise === currentUpload) {
+                    bannerUploadPromise = null;
+                    document.getElementById('saveBannerButton').disabled = false;
                 }
             });
         }
 
-        function showPreviewImage(url) {
+        function showPreviewImages(urls) {
             const zone = document.getElementById('uploadZone');
             const placeholder = document.getElementById('uploadPlaceholder');
             
@@ -917,15 +619,30 @@
             placeholder.style.display = 'none';
             
             // Remove existing img
-            const existingImg = zone.querySelector('img');
-            if (existingImg) existingImg.remove();
-            
-            const img = document.createElement('img');
-            img.src = url;
-            zone.appendChild(img);
+            const existingPreviews = zone.querySelector('.uploaded-previews');
+            if (existingPreviews) existingPreviews.remove();
+
+            const grid = document.createElement('div');
+            grid.className = 'uploaded-previews';
+            urls.forEach((url, index) => {
+                const item = document.createElement('div');
+                item.className = 'uploaded-preview-item';
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = `Banner ${index + 1}`;
+                const number = document.createElement('span');
+                number.textContent = index + 1;
+                item.append(img, number);
+                grid.appendChild(item);
+            });
+            zone.appendChild(grid);
         }
 
         async function saveBanner() {
+            if (bannerUploadPromise) {
+                showToast('Đang chờ tải ảnh lên Cloudinary...');
+                await bannerUploadPromise;
+            }
             const id = document.getElementById('bannerId').value;
             const slot = document.getElementById('bannerSlot').value;
             const position = document.getElementById('bannerPosition').value;
@@ -935,20 +652,27 @@
             const sort_order = parseInt(document.getElementById('bannerSort').value) || 0;
             const is_active = document.getElementById('bannerActive').checked;
 
-            if (!uploadedImageUrl) {
-                showToast('Vui lòng chọn ảnh cho banner!', true);
+            if (!uploadedImageUrls.length) {
+                showToast('Vui lòng chọn ít nhất một ảnh cho banner!', true);
                 return;
             }
 
             try {
                 let res;
-                if (id) {
+                if (slot === 'main') {
+                    res = await fetch('/admin/banners/hero-set', {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, subtitle, link, image_urls: uploadedImageUrls, is_active })
+                    });
+                } else if (id) {
                     // Update
                     res = await fetch(`/admin/banners/${id}`, {
                         method: 'PUT',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ title, subtitle, link, image_url: uploadedImageUrl, is_active, sort_order })
+                        body: JSON.stringify({ title, subtitle, link, image_url: uploadedImageUrls[0], is_active, sort_order })
                     });
                 } else {
                     // Create
@@ -956,12 +680,12 @@
                         method: 'POST',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ position, title, subtitle, link, image_url: uploadedImageUrl, is_active, sort_order })
+                        body: JSON.stringify({ position, title, subtitle, link, image_url: uploadedImageUrls[0], is_active, sort_order })
                     });
                 }
                 const data = await res.json();
                 if (data.success) {
-                    showToast(id ? 'Đã cập nhật banner!' : 'Đã tạo banner mới!');
+                    showToast(slot === 'main' ? `Đã lưu ${uploadedImageUrls.length} ảnh banner chính!` : (id ? 'Đã cập nhật banner!' : 'Đã tạo banner mới!'));
                     closeModal();
                     // Reload để cập nhật cache và UI
                     await loadBanners();
@@ -976,15 +700,23 @@
 
         function closeModal() {
             document.getElementById('editModal').classList.remove('show');
-            uploadedImageUrl = null;
+            bannerUploadVersion++;
+            bannerUploadPromise = null;
+            document.getElementById('saveBannerButton').disabled = false;
+            uploadedImageUrls = [];
         }
 
+        let toastTimer = null;
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMessage').textContent = message;
             toast.classList.toggle('error', isError);
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+                toastTimer = null;
+            }, 3000);
         }
 
         function escapeHtml(text) {
@@ -994,14 +726,6 @@
             return div.innerHTML;
         }
 
-        function showConfirm(title, message, onConfirm) {
-            const overlay = document.createElement('div');
-            overlay.className = 'confirm-overlay';
-            overlay.innerHTML = `<div class="confirm-dialog"><div class="confirm-icon"><i class="fas fa-sign-out-alt"></i></div><div class="confirm-title">${title}</div><div class="confirm-message">${message}</div><div class="confirm-actions"><button class="confirm-btn cancel" onclick="this.closest('.confirm-overlay').remove()">Hủy</button><button class="confirm-btn confirm">Đăng xuất</button></div></div>`;
-            document.body.appendChild(overlay);
-            overlay.querySelector('.confirm-btn.confirm').onclick = () => { overlay.remove(); onConfirm(); };
-            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-        }
         function adminLogout() {
             showConfirm('Đăng xuất?', 'Bạn có chắc muốn đăng xuất?', () => {
                 fetch('/api/auth/logout', { method: 'POST' }).then(() => {
@@ -1015,5 +739,6 @@
             if (e.target.id === 'editModal') closeModal();
         });
     </script>
+    <script src="/js/admin-ui.js?v=20260914-4"></script>
 </body>
 </html>
